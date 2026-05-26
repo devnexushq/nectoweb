@@ -32,12 +32,19 @@ export function ListingsView({
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const tasks: Promise<any>[] = [];
-      if (mode !== "shops") tasks.push(supabase.from("workers").select("*").order("registered_at", { ascending: false }));
-      else tasks.push(Promise.resolve({ data: [] }));
-      if (mode !== "workers") tasks.push(supabase.from("shops").select("*").order("registered_at", { ascending: false }));
-      else tasks.push(Promise.resolve({ data: [] }));
-      const [w, s] = await Promise.all(tasks);
+      const wPromise = mode !== "shops"
+        ? supabase.from("workers").select("*").order("registered_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] });
+      const sPromise = mode !== "workers"
+        ? supabase.from("shops").select("*").order("registered_at", { ascending: false })
+        : Promise.resolve({ data: [] as any[] });
+      const [w, s] = await Promise.all([wPromise, sPromise]);
+      if (cancelled) return;
+      setWorkers((w as any).data ?? []);
+      setShops((s as any).data ?? []);
+      setLoading(false);
+    })();
+
       if (cancelled) return;
       setWorkers(w.data ?? []);
       setShops(s.data ?? []);
