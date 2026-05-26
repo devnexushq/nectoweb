@@ -1,12 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { WorkerProfileView } from "@/components/ProfileViews";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 
-export const Route = createFileRoute("/s/worker/$id")({ component: Page });
 
-function Page() {
+
+export default function Page() {
   const ready = useRoleGuard("shop");
   if (!ready) return null;
   return (

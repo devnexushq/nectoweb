@@ -1,13 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 
-export const Route = createFileRoute("/c/profile")({ component: CustomerProfile });
 
-function CustomerProfile() {
+
+export default function CustomerProfile() {
   const ready = useRoleGuard("customer");
   const [me, setMe] = useState<any>(null);
   useEffect(() => {

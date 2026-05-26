@@ -1,23 +1,23 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Store, User, Users } from "lucide-react";
 import { getRole, getUserId, homePathFor, registerPathFor, setRole, type Role } from "@/lib/role";
 
-export const Route = createFileRoute("/")({ component: Landing });
 
-function Landing() {
+
+export default function Landing() {
   const navigate = useNavigate();
 
   useEffect(() => {
     const role = getRole();
     if (role) {
-      navigate({ to: getUserId() ? homePathFor(role) : registerPathFor(role) });
+      navigate(getUserId() ? homePathFor(role) : registerPathFor(role) );
     }
   }, [navigate]);
 
   function pick(role: Role) {
     setRole(role);
-    navigate({ to: registerPathFor(role) });
+    navigate(registerPathFor(role) );
   }
 
   return (

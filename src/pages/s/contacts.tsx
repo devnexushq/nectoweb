@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { MessageCircle, Phone } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -7,9 +6,9 @@ import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 
-export const Route = createFileRoute("/s/contacts")({ component: ShopContacts });
 
-function ShopContacts() {
+
+export default function ShopContacts() {
   const ready = useRoleGuard("shop");
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

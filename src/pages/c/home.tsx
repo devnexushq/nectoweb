@@ -1,11 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { ListingsView } from "@/components/ListingsView";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 
-export const Route = createFileRoute("/c/home")({ component: CustomerHome });
 
-function CustomerHome() {
+
+export default function CustomerHome() {
   const ready = useRoleGuard("customer");
   if (!ready) return null;
   return (

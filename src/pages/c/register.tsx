@@ -1,13 +1,13 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { setUserId } from "@/lib/role";
 import { Field } from "@/components/FormBits";
 
-export const Route = createFileRoute("/c/register")({ component: CustomerRegister });
 
-function CustomerRegister() {
+
+export default function CustomerRegister() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: "", area: "", phone: "" });
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ function CustomerRegister() {
     if (error || !data) return toast.error("Could not register. Try again.");
     setUserId(data.id);
     toast.success("Welcome to Necto!");
-    navigate({ to: "/c/home" });
+    navigate("/c/home" );
   }
 
   return (

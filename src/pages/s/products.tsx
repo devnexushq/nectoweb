@@ -1,4 +1,3 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2, X } from "lucide-react";
@@ -8,9 +7,9 @@ import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 
-export const Route = createFileRoute("/s/products")({ component: Products });
 
-function Products() {
+
+export default function Products() {
   const ready = useRoleGuard("shop");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

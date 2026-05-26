@@ -1,31 +1,33 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Lock } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
-import { editLockDaysLeft } from "@/routes/w/profile";
 
-export const Route = createFileRoute("/s/profile")({ component: ShopProfilePage });
 
-function ShopProfilePage() {
-  const ready = useRoleGuard("shop");
+
+export default function WorkerProfile() {
+  const ready = useRoleGuard("worker");
   const [me, setMe] = useState<any>(null);
+
   useEffect(() => {
-    const id = getUserId(); if (!id) return;
-    supabase.from("shops").select("*").eq("id", id).maybeSingle().then(({ data }) => setMe(data));
+    const id = getUserId();
+    if (!id) return;
+    supabase.from("workers").select("*").eq("id", id).maybeSingle().then(({ data }) => setMe(data));
   }, []);
+
   const lock = useMemo(() => editLockDaysLeft(me?.registered_at), [me]);
+
   if (!ready) return null;
   return (
-    <AppShell role="shop" title="My Profile">
+    <AppShell role="worker" title="My Profile">
       {me ? (
         <div className="space-y-3">
           <div className="rounded-2xl p-5 bg-white border border-border space-y-2">
-            <Row label="Shop Name" value={me.shop_name} />
-            <Row label="Owner" value={me.owner_name} />
-            <Row label="Category" value={me.category} />
+            <Row label="Name" value={me.name} />
+            <Row label="Job Type" value={me.job_type} />
+            <Row label="Experience" value={`${me.experience} years`} />
             <Row label="Phone" value={me.phone} />
             <Row label="WhatsApp" value={me.whatsapp} />
             <Row label="Area" value={me.area} />
@@ -48,4 +50,10 @@ function Row({ label, value }: { label: string; value: string }) {
       <span className="font-semibold text-right max-w-[60%]">{value}</span>
     </div>
   );
+}
+
+export function editLockDaysLeft(registeredAt?: string): number {
+  if (!registeredAt) return 0;
+  const ms = new Date(registeredAt).getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now();
+  return Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
 }

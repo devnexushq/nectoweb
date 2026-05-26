@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Phone, MessageCircle, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
@@ -6,9 +6,9 @@ import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 
-export const Route = createFileRoute("/s/dashboard")({ component: ShopDashboard });
 
-function ShopDashboard() {
+
+export default function ShopDashboard() {
   const ready = useRoleGuard("shop");
   const [me, setMe] = useState<any>(null);
   const [stats, setStats] = useState({ total: 0, wa: 0, call: 0 });
