@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { MapPin, Star, Store, User } from "lucide-react";
 
 export type ListingCardData = {

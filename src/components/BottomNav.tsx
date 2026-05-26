@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useLocation } from "react-router-dom";
 import { Home, Users, Store, User, Phone, LayoutDashboard, Package } from "lucide-react";
 import type { Role } from "@/lib/role";
 import { cn } from "@/lib/utils";
@@ -28,7 +28,7 @@ const ITEMS: Record<Role, Item[]> = {
 };
 
 export function BottomNav({ role }: { role: Role }) {
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = useLocation().pathname;
   const items = ITEMS[role];
   return (
     <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-border shadow-[0_-2px_12px_rgba(0,0,0,0.04)]">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "@tanstack/react-router";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ContactButtons } from "@/components/ContactButtons";
 import { MapPin, Clock, Briefcase, Star, User } from "lucide-react";
