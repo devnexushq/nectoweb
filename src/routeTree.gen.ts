@@ -10,33 +10,128 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CWorkersRouteImport } from './routes/c/workers'
+import { Route as CShopsRouteImport } from './routes/c/shops'
+import { Route as CRegisterRouteImport } from './routes/c/register'
+import { Route as CProfileRouteImport } from './routes/c/profile'
+import { Route as CHomeRouteImport } from './routes/c/home'
+import { Route as CWorkerIdRouteImport } from './routes/c/worker.$id'
+import { Route as CShopIdRouteImport } from './routes/c/shop.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CWorkersRoute = CWorkersRouteImport.update({
+  id: '/c/workers',
+  path: '/c/workers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CShopsRoute = CShopsRouteImport.update({
+  id: '/c/shops',
+  path: '/c/shops',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CRegisterRoute = CRegisterRouteImport.update({
+  id: '/c/register',
+  path: '/c/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CProfileRoute = CProfileRouteImport.update({
+  id: '/c/profile',
+  path: '/c/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CHomeRoute = CHomeRouteImport.update({
+  id: '/c/home',
+  path: '/c/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CWorkerIdRoute = CWorkerIdRouteImport.update({
+  id: '/c/worker/$id',
+  path: '/c/worker/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CShopIdRoute = CShopIdRouteImport.update({
+  id: '/c/shop/$id',
+  path: '/c/shop/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/c/home': typeof CHomeRoute
+  '/c/profile': typeof CProfileRoute
+  '/c/register': typeof CRegisterRoute
+  '/c/shops': typeof CShopsRoute
+  '/c/workers': typeof CWorkersRoute
+  '/c/shop/$id': typeof CShopIdRoute
+  '/c/worker/$id': typeof CWorkerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/c/home': typeof CHomeRoute
+  '/c/profile': typeof CProfileRoute
+  '/c/register': typeof CRegisterRoute
+  '/c/shops': typeof CShopsRoute
+  '/c/workers': typeof CWorkersRoute
+  '/c/shop/$id': typeof CShopIdRoute
+  '/c/worker/$id': typeof CWorkerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/c/home': typeof CHomeRoute
+  '/c/profile': typeof CProfileRoute
+  '/c/register': typeof CRegisterRoute
+  '/c/shops': typeof CShopsRoute
+  '/c/workers': typeof CWorkersRoute
+  '/c/shop/$id': typeof CShopIdRoute
+  '/c/worker/$id': typeof CWorkerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/c/home'
+    | '/c/profile'
+    | '/c/register'
+    | '/c/shops'
+    | '/c/workers'
+    | '/c/shop/$id'
+    | '/c/worker/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/c/home'
+    | '/c/profile'
+    | '/c/register'
+    | '/c/shops'
+    | '/c/workers'
+    | '/c/shop/$id'
+    | '/c/worker/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/c/home'
+    | '/c/profile'
+    | '/c/register'
+    | '/c/shops'
+    | '/c/workers'
+    | '/c/shop/$id'
+    | '/c/worker/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CHomeRoute: typeof CHomeRoute
+  CProfileRoute: typeof CProfileRoute
+  CRegisterRoute: typeof CRegisterRoute
+  CShopsRoute: typeof CShopsRoute
+  CWorkersRoute: typeof CWorkersRoute
+  CShopIdRoute: typeof CShopIdRoute
+  CWorkerIdRoute: typeof CWorkerIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,12 +143,78 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/c/workers': {
+      id: '/c/workers'
+      path: '/c/workers'
+      fullPath: '/c/workers'
+      preLoaderRoute: typeof CWorkersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/shops': {
+      id: '/c/shops'
+      path: '/c/shops'
+      fullPath: '/c/shops'
+      preLoaderRoute: typeof CShopsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/register': {
+      id: '/c/register'
+      path: '/c/register'
+      fullPath: '/c/register'
+      preLoaderRoute: typeof CRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/profile': {
+      id: '/c/profile'
+      path: '/c/profile'
+      fullPath: '/c/profile'
+      preLoaderRoute: typeof CProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/home': {
+      id: '/c/home'
+      path: '/c/home'
+      fullPath: '/c/home'
+      preLoaderRoute: typeof CHomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/worker/$id': {
+      id: '/c/worker/$id'
+      path: '/c/worker/$id'
+      fullPath: '/c/worker/$id'
+      preLoaderRoute: typeof CWorkerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/shop/$id': {
+      id: '/c/shop/$id'
+      path: '/c/shop/$id'
+      fullPath: '/c/shop/$id'
+      preLoaderRoute: typeof CShopIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CHomeRoute: CHomeRoute,
+  CProfileRoute: CProfileRoute,
+  CRegisterRoute: CRegisterRoute,
+  CShopsRoute: CShopsRoute,
+  CWorkersRoute: CWorkersRoute,
+  CShopIdRoute: CShopIdRoute,
+  CWorkerIdRoute: CWorkerIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
