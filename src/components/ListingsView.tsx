@@ -44,16 +44,11 @@ export function ListingsView({
       setShops((s as any).data ?? []);
       setLoading(false);
     })();
-
-      if (cancelled) return;
-      setWorkers(w.data ?? []);
-      setShops(s.data ?? []);
-      setLoading(false);
-    })();
     return () => {
       cancelled = true;
     };
   }, [mode]);
+
 
   const items: ListingCardData[] = useMemo(() => {
     const q = query.trim().toLowerCase();
