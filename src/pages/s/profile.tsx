@@ -4,7 +4,7 @@ import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
-import { editLockDaysLeft } from "@/routes/w/profile";
+import { editLockDaysLeft } from "@/pages/w/profile";
 
 
 
