@@ -10,17 +10,48 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WShopsRouteImport } from './routes/w/shops'
+import { Route as WRegisterRouteImport } from './routes/w/register'
+import { Route as WProfileRouteImport } from './routes/w/profile'
+import { Route as WDashboardRouteImport } from './routes/w/dashboard'
+import { Route as WContactsRouteImport } from './routes/w/contacts'
 import { Route as CWorkersRouteImport } from './routes/c/workers'
 import { Route as CShopsRouteImport } from './routes/c/shops'
 import { Route as CRegisterRouteImport } from './routes/c/register'
 import { Route as CProfileRouteImport } from './routes/c/profile'
 import { Route as CHomeRouteImport } from './routes/c/home'
+import { Route as WShopIdRouteImport } from './routes/w/shop.$id'
 import { Route as CWorkerIdRouteImport } from './routes/c/worker.$id'
 import { Route as CShopIdRouteImport } from './routes/c/shop.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WShopsRoute = WShopsRouteImport.update({
+  id: '/w/shops',
+  path: '/w/shops',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WRegisterRoute = WRegisterRouteImport.update({
+  id: '/w/register',
+  path: '/w/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WProfileRoute = WProfileRouteImport.update({
+  id: '/w/profile',
+  path: '/w/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WDashboardRoute = WDashboardRouteImport.update({
+  id: '/w/dashboard',
+  path: '/w/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WContactsRoute = WContactsRouteImport.update({
+  id: '/w/contacts',
+  path: '/w/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CWorkersRoute = CWorkersRouteImport.update({
@@ -48,6 +79,11 @@ const CHomeRoute = CHomeRouteImport.update({
   path: '/c/home',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WShopIdRoute = WShopIdRouteImport.update({
+  id: '/w/shop/$id',
+  path: '/w/shop/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CWorkerIdRoute = CWorkerIdRouteImport.update({
   id: '/c/worker/$id',
   path: '/c/worker/$id',
@@ -66,8 +102,14 @@ export interface FileRoutesByFullPath {
   '/c/register': typeof CRegisterRoute
   '/c/shops': typeof CShopsRoute
   '/c/workers': typeof CWorkersRoute
+  '/w/contacts': typeof WContactsRoute
+  '/w/dashboard': typeof WDashboardRoute
+  '/w/profile': typeof WProfileRoute
+  '/w/register': typeof WRegisterRoute
+  '/w/shops': typeof WShopsRoute
   '/c/shop/$id': typeof CShopIdRoute
   '/c/worker/$id': typeof CWorkerIdRoute
+  '/w/shop/$id': typeof WShopIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -76,8 +118,14 @@ export interface FileRoutesByTo {
   '/c/register': typeof CRegisterRoute
   '/c/shops': typeof CShopsRoute
   '/c/workers': typeof CWorkersRoute
+  '/w/contacts': typeof WContactsRoute
+  '/w/dashboard': typeof WDashboardRoute
+  '/w/profile': typeof WProfileRoute
+  '/w/register': typeof WRegisterRoute
+  '/w/shops': typeof WShopsRoute
   '/c/shop/$id': typeof CShopIdRoute
   '/c/worker/$id': typeof CWorkerIdRoute
+  '/w/shop/$id': typeof WShopIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -87,8 +135,14 @@ export interface FileRoutesById {
   '/c/register': typeof CRegisterRoute
   '/c/shops': typeof CShopsRoute
   '/c/workers': typeof CWorkersRoute
+  '/w/contacts': typeof WContactsRoute
+  '/w/dashboard': typeof WDashboardRoute
+  '/w/profile': typeof WProfileRoute
+  '/w/register': typeof WRegisterRoute
+  '/w/shops': typeof WShopsRoute
   '/c/shop/$id': typeof CShopIdRoute
   '/c/worker/$id': typeof CWorkerIdRoute
+  '/w/shop/$id': typeof WShopIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -99,8 +153,14 @@ export interface FileRouteTypes {
     | '/c/register'
     | '/c/shops'
     | '/c/workers'
+    | '/w/contacts'
+    | '/w/dashboard'
+    | '/w/profile'
+    | '/w/register'
+    | '/w/shops'
     | '/c/shop/$id'
     | '/c/worker/$id'
+    | '/w/shop/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -109,8 +169,14 @@ export interface FileRouteTypes {
     | '/c/register'
     | '/c/shops'
     | '/c/workers'
+    | '/w/contacts'
+    | '/w/dashboard'
+    | '/w/profile'
+    | '/w/register'
+    | '/w/shops'
     | '/c/shop/$id'
     | '/c/worker/$id'
+    | '/w/shop/$id'
   id:
     | '__root__'
     | '/'
@@ -119,8 +185,14 @@ export interface FileRouteTypes {
     | '/c/register'
     | '/c/shops'
     | '/c/workers'
+    | '/w/contacts'
+    | '/w/dashboard'
+    | '/w/profile'
+    | '/w/register'
+    | '/w/shops'
     | '/c/shop/$id'
     | '/c/worker/$id'
+    | '/w/shop/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -130,8 +202,14 @@ export interface RootRouteChildren {
   CRegisterRoute: typeof CRegisterRoute
   CShopsRoute: typeof CShopsRoute
   CWorkersRoute: typeof CWorkersRoute
+  WContactsRoute: typeof WContactsRoute
+  WDashboardRoute: typeof WDashboardRoute
+  WProfileRoute: typeof WProfileRoute
+  WRegisterRoute: typeof WRegisterRoute
+  WShopsRoute: typeof WShopsRoute
   CShopIdRoute: typeof CShopIdRoute
   CWorkerIdRoute: typeof CWorkerIdRoute
+  WShopIdRoute: typeof WShopIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -141,6 +219,41 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/w/shops': {
+      id: '/w/shops'
+      path: '/w/shops'
+      fullPath: '/w/shops'
+      preLoaderRoute: typeof WShopsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/w/register': {
+      id: '/w/register'
+      path: '/w/register'
+      fullPath: '/w/register'
+      preLoaderRoute: typeof WRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/w/profile': {
+      id: '/w/profile'
+      path: '/w/profile'
+      fullPath: '/w/profile'
+      preLoaderRoute: typeof WProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/w/dashboard': {
+      id: '/w/dashboard'
+      path: '/w/dashboard'
+      fullPath: '/w/dashboard'
+      preLoaderRoute: typeof WDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/w/contacts': {
+      id: '/w/contacts'
+      path: '/w/contacts'
+      fullPath: '/w/contacts'
+      preLoaderRoute: typeof WContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/c/workers': {
@@ -178,6 +291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CHomeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/w/shop/$id': {
+      id: '/w/shop/$id'
+      path: '/w/shop/$id'
+      fullPath: '/w/shop/$id'
+      preLoaderRoute: typeof WShopIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/c/worker/$id': {
       id: '/c/worker/$id'
       path: '/c/worker/$id'
@@ -202,8 +322,14 @@ const rootRouteChildren: RootRouteChildren = {
   CRegisterRoute: CRegisterRoute,
   CShopsRoute: CShopsRoute,
   CWorkersRoute: CWorkersRoute,
+  WContactsRoute: WContactsRoute,
+  WDashboardRoute: WDashboardRoute,
+  WProfileRoute: WProfileRoute,
+  WRegisterRoute: WRegisterRoute,
+  WShopsRoute: WShopsRoute,
   CShopIdRoute: CShopIdRoute,
   CWorkerIdRoute: CWorkerIdRoute,
+  WShopIdRoute: WShopIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
