@@ -14,7 +14,224 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contacts_log: {
+        Row: {
+          contact_type: string
+          from_name: string | null
+          from_phone: string | null
+          id: string
+          timestamp: string
+          to_id: string
+          to_type: string
+        }
+        Insert: {
+          contact_type: string
+          from_name?: string | null
+          from_phone?: string | null
+          id?: string
+          timestamp?: string
+          to_id: string
+          to_type: string
+        }
+        Update: {
+          contact_type?: string
+          from_name?: string | null
+          from_phone?: string | null
+          id?: string
+          timestamp?: string
+          to_id?: string
+          to_type?: string
+        }
+        Relationships: []
+      }
+      customers: {
+        Row: {
+          area: string
+          created_at: string
+          id: string
+          name: string
+          phone: string
+          role: string
+        }
+        Insert: {
+          area: string
+          created_at?: string
+          id?: string
+          name: string
+          phone: string
+          role?: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+          role?: string
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          photo_url: string | null
+          price: number
+          shop_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          photo_url?: string | null
+          price?: number
+          shop_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          photo_url?: string | null
+          price?: number
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shops: {
+        Row: {
+          area: string
+          business_hours: Json | null
+          category: string
+          description: string | null
+          id: string
+          owner_name: string
+          phone: string
+          photo_url: string | null
+          rating: number
+          registered_at: string
+          shop_name: string
+          visibility: string
+          whatsapp: string
+        }
+        Insert: {
+          area: string
+          business_hours?: Json | null
+          category: string
+          description?: string | null
+          id?: string
+          owner_name: string
+          phone: string
+          photo_url?: string | null
+          rating?: number
+          registered_at?: string
+          shop_name: string
+          visibility?: string
+          whatsapp: string
+        }
+        Update: {
+          area?: string
+          business_hours?: Json | null
+          category?: string
+          description?: string | null
+          id?: string
+          owner_name?: string
+          phone?: string
+          photo_url?: string | null
+          rating?: number
+          registered_at?: string
+          shop_name?: string
+          visibility?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
+      support_queries: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          name: string
+          phone: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          name: string
+          phone: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          name?: string
+          phone?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      workers: {
+        Row: {
+          area: string
+          business_hours: Json | null
+          description: string | null
+          experience: number
+          id: string
+          job_type: string
+          name: string
+          phone: string
+          photo_url: string | null
+          rating: number
+          registered_at: string
+          visibility: string
+          whatsapp: string
+        }
+        Insert: {
+          area: string
+          business_hours?: Json | null
+          description?: string | null
+          experience?: number
+          id?: string
+          job_type: string
+          name: string
+          phone: string
+          photo_url?: string | null
+          rating?: number
+          registered_at?: string
+          visibility?: string
+          whatsapp: string
+        }
+        Update: {
+          area?: string
+          business_hours?: Json | null
+          description?: string | null
+          experience?: number
+          id?: string
+          job_type?: string
+          name?: string
+          phone?: string
+          photo_url?: string | null
+          rating?: number
+          registered_at?: string
+          visibility?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
