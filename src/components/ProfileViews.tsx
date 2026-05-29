@@ -5,7 +5,7 @@ import { ContactButtons } from "@/components/ContactButtons";
 import { MapPin, Clock, Briefcase, Star, User } from "lucide-react";
 
 export function WorkerProfileView() {
-  const { id } = useParams({ strict: false }) as { id: string };
+  const { id } = useParams() as { id: string };
   const [w, setW] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -57,7 +57,7 @@ export function WorkerProfileView() {
 }
 
 export function ShopProfileView() {
-  const { id } = useParams({ strict: false }) as { id: string };
+  const { id } = useParams() as { id: string };
   const [s, setS] = useState<any | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
