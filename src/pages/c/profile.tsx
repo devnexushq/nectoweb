@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
+import { InstallButton } from "@/components/InstallButton";
 
 
 
@@ -18,10 +19,13 @@ export default function CustomerProfile() {
   return (
     <AppShell role="customer" title="My Profile">
       {me ? (
-        <div className="rounded-2xl p-5 bg-white border border-border space-y-2">
-          <Row label="Name" value={me.name} />
-          <Row label="Area" value={me.area} />
-          <Row label="Phone" value={me.phone} />
+        <div className="space-y-3">
+          <div className="rounded-2xl p-5 bg-white border border-border space-y-2">
+            <Row label="Name" value={me.name} />
+            <Row label="Area" value={me.area} />
+            <Row label="Phone" value={me.phone} />
+          </div>
+          <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
         </div>
       ) : <p className="text-sm text-muted-foreground">Loading...</p>}
     </AppShell>

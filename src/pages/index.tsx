@@ -2,6 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Store, User, Users } from "lucide-react";
 import { getRole, getUserId, homePathFor, registerPathFor, setRole, type Role } from "@/lib/role";
+import { InstallButton } from "@/components/InstallButton";
+import { InstallBanner } from "@/components/InstallBanner";
 
 
 
@@ -37,10 +39,15 @@ export default function Landing() {
           <RoleButton icon={Store} label="I have a Shop" sub="List your shop & products" onClick={() => pick("shop")} />
         </div>
 
-        <p className="mt-8 text-xs text-muted-foreground text-center">
+        <div className="mt-6 w-full">
+          <InstallButton className="w-full h-12 rounded-xl" size="lg" />
+        </div>
+
+        <p className="mt-6 text-xs text-muted-foreground text-center">
           Choose one — your role is locked after selection.
         </p>
       </div>
+      <InstallBanner />
     </div>
   );
 }
