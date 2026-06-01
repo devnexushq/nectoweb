@@ -5,6 +5,7 @@ import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 import { editLockDaysLeft } from "@/pages/w/profile";
+import { InstallButton } from "@/components/InstallButton";
 
 
 
@@ -34,6 +35,7 @@ export default function ShopProfilePage() {
           <button disabled={lock > 0} className="w-full h-12 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60 inline-flex items-center justify-center gap-2">
             {lock > 0 ? <><Lock className="h-4 w-4" /> Edit unlocks in {lock} day{lock === 1 ? "" : "s"}</> : "Edit Profile"}
           </button>
+          <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
         </div>
       ) : <p className="text-sm text-muted-foreground">Loading...</p>}
     </AppShell>

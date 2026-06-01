@@ -1,6 +1,7 @@
 import type { Role } from "@/lib/role";
 import { BottomNav } from "./BottomNav";
 import { SupportFab } from "./SupportFab";
+import { InstallBanner } from "./InstallBanner";
 
 export function AppShell({ role, title, children }: { role: Role; title?: string; children: React.ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export function AppShell({ role, title, children }: { role: Role; title?: string
       )}
       <main className="mx-auto max-w-2xl px-4 pt-4">{children}</main>
       <SupportFab />
+      <InstallBanner />
       <BottomNav role={role} />
     </div>
   );
