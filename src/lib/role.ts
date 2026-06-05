@@ -17,6 +17,10 @@ export function getUserId(): string | null {
 export function setUserId(id: string) {
   localStorage.setItem(ID_KEY, id);
 }
+export function clearAccount() {
+  localStorage.removeItem(ROLE_KEY);
+  localStorage.removeItem(ID_KEY);
+}
 
 export function homePathFor(role: Role): string {
   if (role === "customer") return "/c/home";
