@@ -3,12 +3,14 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { setUserId } from "@/lib/role";
+import { useSeo } from "@/lib/seo";
 import { Field } from "@/components/FormBits";
 
 
 
 export default function CustomerRegister() {
   const navigate = useNavigate();
+  useSeo({ title: "Customer Sign Up — NECTO", description: "Join NECTO as a customer to find trusted local workers and shops.", canonical: "/c/register" });
   const [form, setForm] = useState({ name: "", area: "", phone: "" });
   const [loading, setLoading] = useState(false);
 

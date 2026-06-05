@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Store, User, Users } from "lucide-react";
 import { getRole, getUserId, homePathFor, registerPathFor, setRole, type Role } from "@/lib/role";
+import { useSeo } from "@/lib/seo";
 import { InstallButton } from "@/components/InstallButton";
 import { InstallBanner } from "@/components/InstallBanner";
 
@@ -9,6 +10,11 @@ import { InstallBanner } from "@/components/InstallBanner";
 
 export default function Landing() {
   const navigate = useNavigate();
+  useSeo({
+    title: "NECTO — Discover Local, Buy Local",
+    description: "NECTO is a hyperlocal marketplace to discover trusted local workers and shops near you.",
+    canonical: "/",
+  });
 
   useEffect(() => {
     const role = getRole();
