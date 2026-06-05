@@ -4,8 +4,7 @@ import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 import { InstallButton } from "@/components/InstallButton";
-
-
+import { ProfileActions } from "@/components/ProfileActions";
 
 export default function CustomerProfile() {
   const ready = useRoleGuard("customer");
@@ -25,6 +24,7 @@ export default function CustomerProfile() {
             <Row label="Area" value={me.area} />
             <Row label="Phone" value={me.phone} />
           </div>
+          <ProfileActions role="customer" me={me} lockDaysLeft={0} onUpdated={setMe} />
           <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
         </div>
       ) : <p className="text-sm text-muted-foreground">Loading...</p>}
