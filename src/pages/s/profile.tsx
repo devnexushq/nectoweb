@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Lock } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 import { editLockDaysLeft } from "@/pages/w/profile";
 import { InstallButton } from "@/components/InstallButton";
-
-
+import { ProfileActions } from "@/components/ProfileActions";
 
 export default function ShopProfilePage() {
   const ready = useRoleGuard("shop");
@@ -32,9 +30,7 @@ export default function ShopProfilePage() {
             <Row label="Visibility" value={me.visibility === "local" ? "Local Only" : "All India"} />
             <Row label="Description" value={me.description ?? "—"} />
           </div>
-          <button disabled={lock > 0} className="w-full h-12 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60 inline-flex items-center justify-center gap-2">
-            {lock > 0 ? <><Lock className="h-4 w-4" /> Edit unlocks in {lock} day{lock === 1 ? "" : "s"}</> : "Edit Profile"}
-          </button>
+          <ProfileActions role="shop" me={me} lockDaysLeft={lock} onUpdated={setMe} />
           <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
         </div>
       ) : <p className="text-sm text-muted-foreground">Loading...</p>}
