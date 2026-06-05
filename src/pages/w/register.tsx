@@ -3,12 +3,14 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { setUserId } from "@/lib/role";
+import { useSeo } from "@/lib/seo";
 import { Field, HoursAndVisibility, TextArea } from "@/components/FormBits";
 
 
 
 export default function WorkerRegister() {
   const navigate = useNavigate();
+  useSeo({ title: "Worker Sign Up — NECTO", description: "List yourself on NECTO and get discovered by local customers.", canonical: "/w/register" });
   const [form, setForm] = useState({
     name: "", job_type: "", experience: "", phone: "", whatsapp: "", description: "", area: "",
   });

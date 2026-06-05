@@ -1,108 +1,74 @@
+# NECTO Production Audit & SEO Plan
 
-# NECTO — Hyperlocal Marketplace Plan
+## Deployment status
+Live site `https://nectoweb.vercel.app/` returns **HTTP 200** — deployment is healthy. No fix needed there. PWA manifest, icons, and Google verification tag are already in HTML. Vercel SPA fallback (`vercel.json` rewrite) is correct.
 
-A mobile-first marketplace connecting Customers, Workers, and Shops in local areas. Role is chosen once and locked in `localStorage`; each role gets its own UI shell and bottom navigation.
+No build/TS/routing/import errors found in current source. Existing functionality (roles, profiles, 7-day lock, delete, PWA) stays untouched.
 
-## Tech Stack
+## What I will change (SEO + production hardening only — zero business-logic edits)
 
-- React + Vite + TypeScript + React Router + Tailwind
-- Lovable Cloud (Supabase) for database
-- Poppins via Google Fonts
-- Deployable to Vercel (SPA fallback via `vercel.json`)
+### 1. SEO meta + structured data (`index.html`)
+Upgrade the static head with:
+- Canonical: `<link rel="canonical" href="https://nectoweb.vercel.app/" />`
+- Open Graph: `og:site_name=NECTO`, `og:title`, `og:description`, `og:type=website`, `og:url`, `og:image=/icon-512.png`
+- Twitter card: `summary_large_image` + same fields
+- JSON-LD **WebSite** schema (with `SearchAction` placeholder) + **Organization** schema (name NECTO, url, logo)
+- `robots` meta = `index,follow`
 
-## Design System
+### 2. Per-route SEO (lightweight, no new deps)
+Add a tiny `useSeo(title, description, canonicalPath)` hook in `src/lib/seo.ts` that mutates `document.title` and the description/canonical/og tags on route change. Wire into the 4 public-facing pages only:
+- `/` (landing)
+- `/c/register`, `/w/register`, `/s/register`
+All dashboard / contacts / profile / id routes get `noindex` via the same hook (they're private after role selection).
 
-- Background `#FFFFFF`, Primary `#1E3A8A`, Accent `#F97316`
-- Poppins everywhere; clean, minimal, Swiggy/Rapido-style clarity
-- Tokens defined in `index.css` + `tailwind.config.ts` (no hardcoded colors in components)
-- Reusable components: `Button`, `Card`, `SearchBar`, `AreaFilterBar`, `EmptyState`, `BottomNav`, `FloatingHelpButton`, `RatingStars`, `Badge`
+Avoid `react-helmet-async` to keep bundle + risk minimal.
 
-## Routing & Role Gate
+### 3. `public/robots.txt`
+```
+User-agent: *
+Allow: /
+Disallow: /c/home
+Disallow: /c/profile
+Disallow: /c/worker/
+Disallow: /c/shop/
+Disallow: /w/dashboard
+Disallow: /w/contacts
+Disallow: /w/profile
+Disallow: /w/shop/
+Disallow: /s/dashboard
+Disallow: /s/contacts
+Disallow: /s/workers
+Disallow: /s/products
+Disallow: /s/profile
+Disallow: /s/worker/
 
-- `/` landing page with 3 buttons → writes `necto_role` to `localStorage` → routes to that role's registration (or dashboard if already registered, tracked by `necto_user_id`)
-- `RoleGuard` wrapper redirects users to their locked role's section; landing never reappears
-- Route groups:
-  - Customer: `/c/register`, `/c/home`, `/c/workers`, `/c/shops`, `/c/worker/:id`, `/c/shop/:id`, `/c/profile`
-  - Worker: `/w/register`, `/w/dashboard`, `/w/contacts`, `/w/shops`, `/w/shop/:id`, `/w/profile`
-  - Shop: `/s/register`, `/s/dashboard`, `/s/contacts`, `/s/products`, `/s/workers`, `/s/worker/:id`, `/s/profile`
-
-## Two-Level Search (shared component)
-
-- `SearchBar` (Level 1) for service/category keywords
-- After first query, `AreaFilterBar` (Level 2) appears with placeholder "Filter by area..."
-- Results recompute on each keystroke; empty states show "No {term} found in {area}" + "Be the first to register!" CTA routing to the relevant role registration
-
-## Customer Flow
-
-1. Registration form → inserts into `customers`, stores returned id in localStorage
-2. Home: search across workers + shops merged, mixed cards with Worker/Shop badge
-3. Workers / Shops pages: same card grid, filtered to one type
-4. Profile pages: photo, info, big green WhatsApp + big blue Call buttons (wa.me / tel:), reviews placeholder section. Each tap logs to `contacts_log`
-5. Profile tab: shows customer's own info + logout/role-reset hidden (no switching)
-
-## Worker Flow
-
-1. Registration with job type, experience, hours, visibility (Local/All India)
-2. Dashboard: welcome + stat cards (totals from `contacts_log` where `to_id`=worker)
-3. My Profile: read-only for 7 days post `registered_at`; countdown via date diff; editable after
-4. Contacts page: list from `contacts_log` joined to `customers`
-5. Browse Shops: customer-style shop search/cards/profile
-
-## Shop Flow
-
-1. Registration similar to worker
-2. Dashboard with stats
-3. Profile (7-day edit lock)
-4. Contacts page
-5. Products CRUD (name, description, price, photo URL) in `products` table
-6. Browse Workers: same shared search/cards/profile
-
-## Support System
-
-- `FloatingHelpButton` on every authenticated page → modal form (name, phone, message) → inserts into `support_queries` → confirmation toast
-
-## Supabase Tables
-
-Created via migration with RLS + grants:
-
-- `customers(id uuid pk, name, area, phone, role text, created_at)`
-- `workers(id, name, job_type, experience int, phone, whatsapp, description, area, visibility text, business_hours jsonb, photo_url, rating numeric default 0, registered_at)`
-- `shops(id, owner_name, shop_name, category, phone, whatsapp, description, area, visibility, business_hours jsonb, photo_url, rating numeric default 0, registered_at)`
-- `products(id, shop_id fk, name, description, price numeric, photo_url, created_at)`
-- `contacts_log(id, from_phone, to_id uuid, to_type text, contact_type text, timestamp)`
-- `support_queries(id, name, phone, message, status text default 'open', created_at)`
-
-Since the app has no auth (role stored client-side), RLS will be permissive: `anon` + `authenticated` granted SELECT/INSERT on all listing/log tables; UPDATE/DELETE limited to rows matching the stored id passed from the client (enforced via policy on id match). Acceptable for a public directory MVP; documented for user.
-
-## Vercel Deploy
-
-- Add `vercel.json` with SPA rewrite `{ "rewrites": [{ "source": "/(.*)", "destination": "/" }] }`
-- Standard Vite build (`npm run build`, output `dist`)
-- Supabase env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) set in Vercel dashboard
-
-## File Structure (high level)
-
-```text
-src/
-  pages/
-    Landing.tsx
-    customer/  (Register, Home, Workers, Shops, WorkerProfile, ShopProfile, Profile)
-    worker/    (Register, Dashboard, Contacts, Shops, ShopProfile, Profile)
-    shop/      (Register, Dashboard, Contacts, Products, Workers, WorkerProfile, Profile)
-  components/
-    SearchBar, AreaFilterBar, ListingCard, EmptyState,
-    BottomNav (3 variants), FloatingHelpButton, SupportModal,
-    ContactButtons, RatingStars, RoleGuard
-  hooks/ useRole, useListings, useCountdown
-  lib/ supabase.ts, format.ts
-  index.css, main.tsx, App.tsx
-supabase/migrations/0001_init.sql
-vercel.json
+Sitemap: https://nectoweb.vercel.app/sitemap.xml
 ```
 
-## Open Assumption
+### 4. `public/sitemap.xml` + generator
+Add `scripts/generate-sitemap.ts` and `prebuild`/`predev` npm scripts. Entries: `/`, `/c/register`, `/w/register`, `/s/register`, `/c/workers`, `/c/shops` (public discovery). `lastmod` = build date.
 
-- No photo upload backend specified → product/profile photos accept a URL field (Storage bucket can be added later if needed).
-- "Reviews & Rating" section will render the stored `rating` + a static "Reviews coming soon" placeholder since no reviews table was specified.
+### 5. Vercel headers (optional, in `vercel.json`)
+Add long-cache headers for `/assets/*` (immutable, hashed) and `no-cache` for `/index.html` + `/sw.js` to prevent stale-app issues after deploys. Pure perf — no behavior change.
 
-Confirm or tweak and I'll build it.
+### 6. Performance/scalability notes (no code change unless approved)
+- React Query already in place ✓
+- Supabase client lazy via Proxy ✓
+- PWA caching strategies already sane (NetworkFirst HTML) ✓
+- Suggestion (NOT applied without OK): lazy-load route components with `React.lazy` to shrink initial bundle. Flagging for your decision since it touches `App.tsx`.
+
+## Out of scope (won't touch)
+- Auth flow, role logic, 7-day lock, profile edit/delete
+- Supabase schema/RLS
+- PWA service worker
+- `index.html` body / app bootstrap
+
+## Validation
+After edits I'll run `bun run build`, fetch `/robots.txt` + `/sitemap.xml` locally, and confirm no TS errors.
+
+## Deliverables in final message
+Audit report, issues found (none critical), fixes applied list, SEO improvements, deployment safety ✅, scalability notes, readiness score.
+
+---
+
+**Question before I build:** Should I also apply the optional **route-level `React.lazy` code-splitting** in step 6? It improves initial load (LCP) but lightly touches `App.tsx`. Reply yes/no, or just "go" to proceed without it.
