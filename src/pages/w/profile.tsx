@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 import { InstallButton } from "@/components/InstallButton";
 import { ProfileActions } from "@/components/ProfileActions";
+import { LegalInfoSection } from "@/components/LegalInfoSection";
 
 export default function WorkerProfile() {
   const ready = useRoleGuard("worker");
@@ -33,7 +34,7 @@ export default function WorkerProfile() {
             <Row label="Visibility" value={me.visibility === "local" ? "Local Only" : "All India"} />
             <Row label="Description" value={me.description ?? "—"} />
           </div>
-          <ProfileActions role="worker" me={me} lockDaysLeft={lock} onUpdated={setMe} />
+          <ProfileActions role="worker" me={me} lockDaysLeft={lock} onUpdated={setMe} middleSlot={<LegalInfoSection />} />
           <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
         </div>
       ) : <p className="text-sm text-muted-foreground">Loading...</p>}
