@@ -101,6 +101,8 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
         )}
       </button>
 
+      {middleSlot}
+
       <button
         onClick={() => setDelOpen(true)}
         className="w-full h-12 rounded-xl border border-destructive text-destructive font-semibold hover:bg-destructive/10 inline-flex items-center justify-center gap-2"
