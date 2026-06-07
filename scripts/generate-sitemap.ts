@@ -17,6 +17,8 @@ const entries: Entry[] = [
   { path: "/c/register", changefreq: "monthly", priority: "0.8" },
   { path: "/w/register", changefreq: "monthly", priority: "0.8" },
   { path: "/s/register", changefreq: "monthly", priority: "0.8" },
+  { path: "/terms-and-conditions", changefreq: "yearly", priority: "0.3" },
+  { path: "/privacy-policy", changefreq: "yearly", priority: "0.3" },
 ];
 
 const xml = [

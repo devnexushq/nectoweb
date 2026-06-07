@@ -28,6 +28,7 @@ type Props = {
   me: any;
   lockDaysLeft: number;
   onUpdated: (updated: any) => void;
+  middleSlot?: React.ReactNode;
 };
 
 const TABLE: Record<Role, "customers" | "workers" | "shops"> = {
@@ -36,7 +37,7 @@ const TABLE: Record<Role, "customers" | "workers" | "shops"> = {
   shop: "shops",
 };
 
-export function ProfileActions({ role, me, lockDaysLeft, onUpdated }: Props) {
+export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }: Props) {
   const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
   const [delOpen, setDelOpen] = useState(false);
@@ -99,6 +100,8 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated }: Props) {
           </>
         )}
       </button>
+
+      {middleSlot}
 
       <button
         onClick={() => setDelOpen(true)}

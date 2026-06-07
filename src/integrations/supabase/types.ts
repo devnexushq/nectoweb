@@ -46,28 +46,49 @@ export type Database = {
       }
       customers: {
         Row: {
+          account_created_at: string
+          approval_notes: string | null
+          approval_status: string
           area: string
           created_at: string
           id: string
+          last_updated_at: string
           name: string
           phone: string
           role: string
+          terms_accepted: boolean
+          terms_accepted_at: string | null
+          terms_version: string | null
         }
         Insert: {
+          account_created_at?: string
+          approval_notes?: string | null
+          approval_status?: string
           area: string
           created_at?: string
           id?: string
+          last_updated_at?: string
           name: string
           phone: string
           role?: string
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
+          terms_version?: string | null
         }
         Update: {
+          account_created_at?: string
+          approval_notes?: string | null
+          approval_status?: string
           area?: string
           created_at?: string
           id?: string
+          last_updated_at?: string
           name?: string
           phone?: string
           role?: string
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
+          terms_version?: string | null
         }
         Relationships: []
       }
@@ -111,47 +132,68 @@ export type Database = {
       }
       shops: {
         Row: {
+          account_created_at: string
+          approval_notes: string | null
+          approval_status: string
           area: string
           business_hours: Json | null
           category: string
           description: string | null
           id: string
+          last_updated_at: string
           owner_name: string
           phone: string
           photo_url: string | null
           rating: number
           registered_at: string
           shop_name: string
+          terms_accepted: boolean
+          terms_accepted_at: string | null
+          terms_version: string | null
           visibility: string
           whatsapp: string
         }
         Insert: {
+          account_created_at?: string
+          approval_notes?: string | null
+          approval_status?: string
           area: string
           business_hours?: Json | null
           category: string
           description?: string | null
           id?: string
+          last_updated_at?: string
           owner_name: string
           phone: string
           photo_url?: string | null
           rating?: number
           registered_at?: string
           shop_name: string
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           visibility?: string
           whatsapp: string
         }
         Update: {
+          account_created_at?: string
+          approval_notes?: string | null
+          approval_status?: string
           area?: string
           business_hours?: Json | null
           category?: string
           description?: string | null
           id?: string
+          last_updated_at?: string
           owner_name?: string
           phone?: string
           photo_url?: string | null
           rating?: number
           registered_at?: string
           shop_name?: string
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           visibility?: string
           whatsapp?: string
         }
@@ -186,47 +228,68 @@ export type Database = {
       }
       workers: {
         Row: {
+          account_created_at: string
+          approval_notes: string | null
+          approval_status: string
           area: string
           business_hours: Json | null
           description: string | null
           experience: number
           id: string
           job_type: string
+          last_updated_at: string
           name: string
           phone: string
           photo_url: string | null
           rating: number
           registered_at: string
+          terms_accepted: boolean
+          terms_accepted_at: string | null
+          terms_version: string | null
           visibility: string
           whatsapp: string
         }
         Insert: {
+          account_created_at?: string
+          approval_notes?: string | null
+          approval_status?: string
           area: string
           business_hours?: Json | null
           description?: string | null
           experience?: number
           id?: string
           job_type: string
+          last_updated_at?: string
           name: string
           phone: string
           photo_url?: string | null
           rating?: number
           registered_at?: string
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           visibility?: string
           whatsapp: string
         }
         Update: {
+          account_created_at?: string
+          approval_notes?: string | null
+          approval_status?: string
           area?: string
           business_hours?: Json | null
           description?: string | null
           experience?: number
           id?: string
           job_type?: string
+          last_updated_at?: string
           name?: string
           phone?: string
           photo_url?: string | null
           rating?: number
           registered_at?: string
+          terms_accepted?: boolean
+          terms_accepted_at?: string | null
+          terms_version?: string | null
           visibility?: string
           whatsapp?: string
         }

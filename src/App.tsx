@@ -20,6 +20,8 @@ import ShopWorkers from "./pages/s/workers";
 import ShopWorkerProfile from "./pages/s/worker.id";
 import ShopProducts from "./pages/s/products";
 import ShopProfile from "./pages/s/profile";
+import TermsAndConditions from "./pages/legal/terms";
+import PrivacyPolicy from "./pages/legal/privacy";
 
 function NotFound() {
   return (
@@ -57,6 +59,8 @@ export default function App() {
       <Route path="/s/worker/:id" element={<ShopWorkerProfile />} />
       <Route path="/s/products" element={<ShopProducts />} />
       <Route path="/s/profile" element={<ShopProfile />} />
+      <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
