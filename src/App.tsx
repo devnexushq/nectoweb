@@ -70,6 +70,15 @@ export default function App() {
       <Route path="/s/profile" element={<ShopProfile />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin" element={<AdminOverview />} />
+      <Route path="/admin/customers" element={<AdminCustomers />} />
+      <Route path="/admin/workers" element={<AdminWorkers />} />
+      <Route path="/admin/shops" element={<AdminShops />} />
+      <Route path="/admin/products" element={<AdminProducts />} />
+      <Route path="/admin/support" element={<AdminSupport />} />
+      <Route path="/admin/activity" element={<AdminActivity />} />
+      <Route path="/admin/analytics" element={<AdminAnalytics />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
