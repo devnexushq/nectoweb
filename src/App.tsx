@@ -22,6 +22,15 @@ import ShopProducts from "./pages/s/products";
 import ShopProfile from "./pages/s/profile";
 import TermsAndConditions from "./pages/legal/terms";
 import PrivacyPolicy from "./pages/legal/privacy";
+import AdminLogin from "./pages/admin/login";
+import AdminOverview from "./pages/admin/overview";
+import AdminCustomers from "./pages/admin/customers";
+import AdminWorkers from "./pages/admin/workers";
+import AdminShops from "./pages/admin/shops";
+import AdminProducts from "./pages/admin/products";
+import AdminSupport from "./pages/admin/support";
+import AdminActivity from "./pages/admin/activity";
+import AdminAnalytics from "./pages/admin/analytics";
 
 function NotFound() {
   return (
