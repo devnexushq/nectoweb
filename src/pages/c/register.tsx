@@ -55,11 +55,11 @@ function ConsentRow({ agreed, setAgreed }: { agreed: boolean; setAgreed: (v: boo
       <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
       <span className="leading-snug">
         I have read and agree to the{" "}
-        <Link to="/terms-and-conditions" target="_blank" rel="noopener" className="text-primary underline">
+        <Link to="/terms-and-conditions" className="text-primary underline">
           Terms &amp; Conditions
         </Link>{" "}
         and{" "}
-        <Link to="/privacy-policy" target="_blank" rel="noopener" className="text-primary underline">
+        <Link to="/privacy-policy" className="text-primary underline">
           Privacy Policy
         </Link>{" "}
         of Necto.
