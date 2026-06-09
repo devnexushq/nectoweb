@@ -1,133 +1,89 @@
-# Add Terms & Conditions, Privacy Policy, and Legal & Info
 
-## 1. New pages
+# Necto Admin Dashboard — Plan
 
-Create two static, mobile-friendly pages with back arrow (top-left), white background, `#1E3A8A` headings, readable typography, scrollable sections, and `useSeo` for title/description/canonical.
+A self-contained admin area under `/admin/*` powered by real Supabase Auth + a `user_roles` table. Existing public app (localStorage phone-based identity) is untouched.
 
-- `src/pages/legal/terms.tsx` — route `/terms-and-conditions`
-- `src/pages/legal/privacy.tsx` — route `/privacy-policy`
+## 1. Backend (single migration)
 
-Both reuse a small shared layout component `src/components/LegalLayout.tsx`:
+### New tables
+- `app_role` enum: `admin`.
+- `user_roles(id, user_id → auth.users, role, created_at)` — unique(user_id, role).
+- `approval_history(id, entity_type [customer|worker|shop], entity_id, previous_status, new_status, changed_by → auth.users, notes, created_at)`.
+- `activity_logs(id, actor_id [nullable for system], actor_email, action, entity_type, entity_id, metadata jsonb, created_at)`.
+- Indexes on `(entity_type, entity_id)`, `created_at desc`, `approval_status` on customers/workers/shops.
 
-- Max-w-2xl, px-5 py-6, back button (`ArrowLeft` from lucide → `navigate(-1)`).
-- Headings styled `text-[#1E3A8A] font-bold`.
-- Section spacing with horizontal dividers between numbered sections.
-- Content uses the exact copy supplied in the request (Terms 1–10, Privacy 1–11).
+### Security definer function
+- `public.has_role(_user_id uuid, _role app_role) returns boolean` (SECURITY DEFINER, search_path=public).
 
-Register routes in `src/App.tsx` (lazy import alongside existing routes). Add both URLs to `public/sitemap.xml` and `scripts/generate-sitemap.ts`.
+### RLS / GRANTs
+- `user_roles`: select to authenticated (own rows only via `auth.uid() = user_id`); admins can read all via `has_role`. No public insert.
+- `approval_history`, `activity_logs`: admins-only read; inserts via service role (edge functions). Grants to authenticated + service_role.
+- `customers`, `workers`, `shops`, `products`, `support_queries`: keep existing public policies intact. Add additional admin policies: `has_role(auth.uid(),'admin')` → full SELECT/UPDATE. No DELETE policy (logical suspension only).
 
-There is already an About page concept referenced ("About Necto") — if no existing route exists, the Legal & Info "About" item will link to `/` (home) so nothing breaks; we will not create a new About page in this plan unless requested.
+### Triggers (system audit)
+- AFTER INSERT on customers/workers/shops → write to `activity_logs` with `action='registration'`.
+- AFTER UPDATE OF approval_status on customers/workers/shops → write to `approval_history` + `activity_logs`.
 
-## 2. Registration consent checkbox
+### Admin seeding
+After migration runs, you sign up at `/admin/login`. I'll then run a one-line SQL insert into `user_roles` granting your `auth.uid()` the `admin` role.
 
-Edit `src/pages/c/register.tsx`, `src/pages/w/register.tsx`, `src/pages/s/register.tsx`.
+## 2. Edge function: `admin-actions` (verify_jwt=false, validates JWT in code)
 
-Just above the existing submit button, add:
+Single function handling privileged writes so admin RLS is minimal & auditable:
+- `approve | reject | suspend` an entity → updates `approval_status`, `approval_notes`; trigger writes history+log.
+- `update_support_status` → updates `support_queries.status`; writes activity log.
+- `hide_product | restore_product` → toggles a new `products.visibility` column.
+- Validates `has_role(auth.uid(),'admin')` before every action.
 
+Adds `products.visibility` column (`'visible' | 'hidden'`, default `'visible'`) — only field added to existing tables besides what already exists.
+
+## 3. Frontend (`src/pages/admin/*`, fully isolated)
+
+### Routes (added to `App.tsx` only)
 ```
-[ ] I have read and agree to the Terms & Conditions and Privacy Policy of Necto.
+/admin/login         → AdminLogin
+/admin               → Overview (default)
+/admin/customers     → CustomersTable
+/admin/workers       → WorkersTable
+/admin/shops         → ShopsTable
+/admin/products      → ProductsTable
+/admin/support       → SupportTable
+/admin/activity      → ActivityLog
+/admin/analytics     → Analytics
 ```
 
-- Use existing shadcn `Checkbox` (`@/components/ui/checkbox`).
-- Local state `const [agreed, setAgreed] = useState(false)`.
-- "Terms & Conditions" and "Privacy Policy" are `<Link>`s opening `/terms-and-conditions` and `/privacy-policy` in a new tab (`target="_blank" rel="noopener"`), styled with `text-primary underline`.
-- Submit button: add `disabled={loading || !agreed}` to existing disabled prop. No other layout/style change.
-- Validation in `submit()` also rejects when `!agreed` with a toast, as a safety net.
+### Components
+- `AdminLayout` — sidebar (shadcn `sidebar`), top bar with admin email + sign out. Mobile-responsive.
+- `RequireAdmin` guard — checks session via `onAuthStateChange` + `getUser()`, then `has_role` RPC. Redirects non-admins to `/admin/login`.
+- `StatCard`, `DataTable` (search + filter + pagination via TanStack-like manual paging using `range()`), `StatusBadge`, `ApprovalActions`, `DetailDrawer`.
+- Analytics: simple charts via `recharts` (already in shadcn ecosystem; add if missing) — registrations per day (last 30d), approval status breakdown.
 
-All other form behavior, fields, navigation, and Supabase inserts remain unchanged.
+### Styling
+Modern SaaS look, but using existing Necto tokens (primary `#1E3A8A`-family already in CSS). Dark mode opt-in for admin only via a `.admin` scope, no impact on public app.
 
-## 3. Profile pages — add Legal & Info, move Delete to bottom
+## 4. Safety guarantees
 
-Edit `src/pages/c/profile.tsx`, `src/pages/w/profile.tsx`, `src/pages/s/profile.tsx`.
+- Zero edits to `src/pages/c/*`, `src/pages/w/*`, `src/pages/s/*`, `src/components/*` (except `AppShell` left alone). Only `src/App.tsx` gets new routes appended.
+- No changes to existing RLS policies — only additive admin policies.
+- No changes to `.env`, `vercel.json`, auto-gen Supabase files.
+- Approval status remains admin-only metadata; public listings unchanged.
+- `npm run build` will be verified after implementation.
 
-Currently `<ProfileActions>` renders Edit + Delete together. To avoid changing that component's API for other consumers, refactor minimally:
+## 5. Files
 
-- Update `src/components/ProfileActions.tsx` to accept an optional `slot?: React.ReactNode` rendered between the Edit and Delete buttons. Default (when omitted) preserves existing behavior exactly.
-- In each profile page, pass a `<LegalInfoSection />` as the `slot`.
+**New**
+- `supabase/migrations/<ts>_admin.sql`
+- `supabase/functions/admin-actions/index.ts`
+- `src/pages/admin/{login,overview,customers,workers,shops,products,support,activity,analytics}.tsx`
+- `src/components/admin/{AdminLayout,RequireAdmin,StatCard,DataTable,StatusBadge,ApprovalActions,DetailDrawer}.tsx`
+- `src/lib/admin/{api.ts,useAdminAuth.ts}`
 
-New component `src/components/LegalInfoSection.tsx`:
+**Edited**
+- `src/App.tsx` (append admin routes only)
+- `src/integrations/supabase/types.ts` (auto-regen after migration)
 
-- Heading "Legal & Info" (muted small caps style consistent with app).
-- Card with top + bottom dividers, 3 rows: Terms & Conditions, Privacy Policy, About Necto.
-- Each row: lucide icon (FileText, Shield, Info) on left, label, chevron `ChevronRight` on right; full-width clickable `Link` row, `h-12`, hover bg `bg-muted/50`, border between rows.
-- Terms → `/terms-and-conditions`, Privacy → `/privacy-policy`, About → `/` (placeholder until a dedicated About page is requested).
-
-Resulting profile order: details card → Edit Profile → Legal & Info → Delete Profile → InstallButton (existing). InstallButton currently sits at the bottom; keep its current position to preserve PWA install discoverability, since the request only specifies Delete must come after Legal & Info (not after Install). If you want Delete to be the absolute last element, confirm and I'll move InstallButton above Legal & Info instead.
-
-## 4. SEO & deployment safety
-
-- Add `/terms-and-conditions` and `/privacy-policy` to `public/sitemap.xml` and `scripts/generate-sitemap.ts` with `changefreq=yearly, priority=0.3`.
-- `useSeo` titles: "Terms & Conditions — NECTO", "Privacy Policy — NECTO" with canonicals.
-- No DB changes, no env changes, no edge functions — zero deployment risk.
-- After implementation: visual check of `/c/register`, `/w/register`, `/s/register`, `/c/profile`, `/w/profile`, `/s/profile`, `/terms-and-conditions`, `/privacy-policy` in the preview.
-
-## Files touched
-
-- new: `src/components/LegalLayout.tsx`, `src/components/LegalInfoSection.tsx`, `src/pages/legal/terms.tsx`, `src/pages/legal/privacy.tsx`
-- edit: `src/App.tsx`, `src/components/ProfileActions.tsx`, `src/pages/c/register.tsx`, `src/pages/w/register.tsx`, `src/pages/s/register.tsx`, `src/pages/c/profile.tsx`, `src/pages/w/profile.tsx`, `src/pages/s/profile.tsx`, `public/sitemap.xml`, `scripts/generate-sitemap.ts`
-
-No existing functionality, styling, colors, animations, or backend behavior changes.                           When any user submits registration form 
-
-and agrees to Terms & Conditions, save 
-
-complete approval data to Supabase.
-
-Add these fields to customers, 
-
-workers and shops tables:
-
-- terms_accepted (boolean)
-
-- terms_accepted_at (timestamp - server generated)
-
-- terms_version (text - "June 2026 v1.0")
-
-- approval_status (text - "pending/approved/rejected")
-
-- account_created_at (timestamp - server generated)
-
-- last_updated_at (timestamp - server generated)
-
-- approval_notes (text - optional)
-
-IMPORTANT RULES:
-
-- Use server-generated timestamps only
-
-- Never use device/user time
-
-- Save in UTC format
-
-- Do not overwrite historical records
-
-- No duplicate records
-
-- Every registration must create one record
-
-WHEN USER REGISTERS:
-
-- terms_accepted = true
-
-- terms_accepted_at = exact server timestamp
-
-- terms_version = "June 2026 v1.0"
-
-- approval_status = "pending"
-
-- account_created_at = exact server timestamp
-
-DATA MUST BE:
-
-- Traceable
-
-- Accurate
-
-- Consistent after every deployment
-
-- Legally valid proof of user consent
-
-Do not create any admin panel.
-
-Do not change existing UI.
-
-Do not change existing functionality.
+## 6. Post-deploy verification
+- Build passes.
+- `/admin/login` reachable; non-admin sign-in redirected.
+- After granting admin role: overview loads counts, each table paginates, approve/reject writes to `approval_history` + `activity_logs`.
+- Public site (`/`, `/c/*`, `/w/*`, `/s/*`) unchanged — spot-check registration + listings.

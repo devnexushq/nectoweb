@@ -22,6 +22,15 @@ import ShopProducts from "./pages/s/products";
 import ShopProfile from "./pages/s/profile";
 import TermsAndConditions from "./pages/legal/terms";
 import PrivacyPolicy from "./pages/legal/privacy";
+import AdminLogin from "./pages/admin/login";
+import AdminOverview from "./pages/admin/overview";
+import AdminCustomers from "./pages/admin/customers";
+import AdminWorkers from "./pages/admin/workers";
+import AdminShops from "./pages/admin/shops";
+import AdminProducts from "./pages/admin/products";
+import AdminSupport from "./pages/admin/support";
+import AdminActivity from "./pages/admin/activity";
+import AdminAnalytics from "./pages/admin/analytics";
 
 function NotFound() {
   return (
@@ -61,6 +70,15 @@ export default function App() {
       <Route path="/s/profile" element={<ShopProfile />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin" element={<AdminOverview />} />
+      <Route path="/admin/customers" element={<AdminCustomers />} />
+      <Route path="/admin/workers" element={<AdminWorkers />} />
+      <Route path="/admin/shops" element={<AdminShops />} />
+      <Route path="/admin/products" element={<AdminProducts />} />
+      <Route path="/admin/support" element={<AdminSupport />} />
+      <Route path="/admin/activity" element={<AdminActivity />} />
+      <Route path="/admin/analytics" element={<AdminAnalytics />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
