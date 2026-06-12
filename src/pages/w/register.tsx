@@ -30,6 +30,8 @@ export default function WorkerRegister() {
       experience: Number(form.experience) || 0,
       visibility,
       business_hours: hours,
+      approval_status: "approved",
+      approval_notes: null,
       ...consentInsertFields(),
     }).select("id").maybeSingle();
     setLoading(false);
