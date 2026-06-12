@@ -1,7 +1,6 @@
 import { cn } from "@/lib/utils";
 
 const STYLES: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-800 border-amber-200",
   approved: "bg-emerald-100 text-emerald-800 border-emerald-200",
   rejected: "bg-rose-100 text-rose-800 border-rose-200",
   suspended: "bg-slate-200 text-slate-700 border-slate-300",
@@ -13,7 +12,7 @@ const STYLES: Record<string, string> = {
 };
 
 export default function StatusBadge({ status }: { status?: string | null }) {
-  const s = (status ?? "pending").toLowerCase();
+  const s = (status ?? "approved").toLowerCase();
   const cls = STYLES[s] ?? "bg-slate-100 text-slate-700 border-slate-200";
   return (
     <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border capitalize", cls)}>
