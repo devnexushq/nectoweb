@@ -124,6 +124,16 @@ export default function AdminLogin() {
               ? "Need an admin account? Sign up"
               : "Already have an account? Sign in"}
           </button>
+          {mode === "signin" && (
+            <button
+              type="button"
+              onClick={forgot}
+              disabled={busy}
+              className="w-full text-xs text-slate-500 hover:text-slate-900"
+            >
+              Forgot password?
+            </button>
+          )}
         </form>
       </div>
     </div>
