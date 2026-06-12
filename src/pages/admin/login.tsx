@@ -46,6 +46,25 @@ export default function AdminLogin() {
     }
   };
 
+  const forgot = async () => {
+    if (!email) {
+      toast.error("Enter your email above first");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/admin/reset-password`,
+      });
+      if (error) throw error;
+      toast.success("Password reset link sent. Check your email.");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen grid place-items-center bg-slate-50">
@@ -105,6 +124,16 @@ export default function AdminLogin() {
               ? "Need an admin account? Sign up"
               : "Already have an account? Sign in"}
           </button>
+          {mode === "signin" && (
+            <button
+              type="button"
+              onClick={forgot}
+              disabled={busy}
+              className="w-full text-xs text-slate-500 hover:text-slate-900"
+            >
+              Forgot password?
+            </button>
+          )}
         </form>
       </div>
     </div>
