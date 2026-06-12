@@ -7,13 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const ENTITY_TABLE: Record<string, string> = {
-  customer: "customers",
-  worker: "workers",
-  shop: "shops",
-};
-
-const VALID_STATUSES = ["pending", "approved", "rejected", "suspended"];
 const VALID_SUPPORT = ["open", "in_progress", "resolved"];
 
 function json(body: unknown, status = 200) {
@@ -62,50 +55,8 @@ Deno.serve(async (req) => {
 
     const { action } = body;
 
-    // approval actions
     if (["approve", "reject", "suspend", "set_status"].includes(action)) {
-      const entityType = body.entity_type as string;
-      const entityId = body.entity_id as string;
-      const status =
-        action === "approve" ? "approved" :
-        action === "reject" ? "rejected" :
-        action === "suspend" ? "suspended" :
-        body.status as string;
-      const notes = (body.notes as string) ?? null;
-
-      const table = ENTITY_TABLE[entityType];
-      if (!table) return json({ error: "Invalid entity_type" }, 400);
-      if (!entityId) return json({ error: "Missing entity_id" }, 400);
-      if (!VALID_STATUSES.includes(status)) return json({ error: "Invalid status" }, 400);
-
-      // Set auth.uid() context for the trigger by using a user-scoped client when possible.
-      // Service-role client doesn't expose auth.uid(); set actor explicitly via post-update log.
-      const { data: prev } = await admin.from(table).select("approval_status").eq("id", entityId).maybeSingle();
-      const { error: updErr } = await admin
-        .from(table)
-        .update({ approval_status: status, approval_notes: notes })
-        .eq("id", entityId);
-      if (updErr) return json({ error: updErr.message }, 400);
-
-      // Trigger writes approval_history + activity_logs but actor_id will be null (service role).
-      // Overwrite the most recent rows with the real actor.
-      await admin
-        .from("approval_history")
-        .update({ changed_by: userId })
-        .eq("entity_type", entityType)
-        .eq("entity_id", entityId)
-        .is("changed_by", null);
-
-      await admin.from("activity_logs").insert({
-        actor_id: userId,
-        actor_email: userEmail,
-        action: action,
-        entity_type: entityType,
-        entity_id: entityId,
-        metadata: { from: prev?.approval_status ?? null, to: status, notes },
-      });
-
-      return json({ ok: true });
+      return json({ error: "Manual approval workflow is disabled" }, 410);
     }
 
     if (action === "update_support_status") {
