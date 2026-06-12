@@ -5,13 +5,13 @@ import StatCard from "@/components/admin/StatCard";
 import StatusBadge from "@/components/admin/StatusBadge";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Users, Hammer, Store, Package, LifeBuoy, Clock,
+  Users, Hammer, Store, Package, LifeBuoy,
   CheckCircle2, XCircle, UserPlus, Activity,
 } from "lucide-react";
 
 type Counts = {
   customers: number; workers: number; shops: number; products: number;
-  support: number; pending: number; approved: number; rejected: number; today: number;
+  support: number; approved: number; rejected: number; today: number;
 };
 
 type ActivityRow = {
@@ -30,13 +30,12 @@ export default function AdminOverview() {
       const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
       const todayIso = startToday.toISOString();
 
-      const [c, w, s, p, sq, pend, app, rej, todayC, todayW, todayS, act] = await Promise.all([
+      const [c, w, s, p, sq, app, rej, todayC, todayW, todayS, act] = await Promise.all([
         supabase.from("customers").select("*", head),
         supabase.from("workers").select("*", head),
         supabase.from("shops").select("*", head),
         supabase.from("products").select("*", head),
         supabase.from("support_queries").select("*", head),
-        supabase.from("customers").select("*", head).eq("approval_status", "pending"),
         supabase.from("customers").select("*", head).eq("approval_status", "approved"),
         supabase.from("customers").select("*", head).eq("approval_status", "rejected"),
         supabase.from("customers").select("*", head).gte("created_at", todayIso),
@@ -46,10 +45,6 @@ export default function AdminOverview() {
           .order("created_at", { ascending: false }).limit(10),
       ]);
 
-      const pendAll = await Promise.all([
-        supabase.from("workers").select("*", head).eq("approval_status", "pending"),
-        supabase.from("shops").select("*", head).eq("approval_status", "pending"),
-      ]);
       const appAll = await Promise.all([
         supabase.from("workers").select("*", head).eq("approval_status", "approved"),
         supabase.from("shops").select("*", head).eq("approval_status", "approved"),
@@ -65,7 +60,6 @@ export default function AdminOverview() {
         shops: s.count ?? 0,
         products: p.count ?? 0,
         support: sq.count ?? 0,
-        pending: (pend.count ?? 0) + (pendAll[0].count ?? 0) + (pendAll[1].count ?? 0),
         approved: (app.count ?? 0) + (appAll[0].count ?? 0) + (appAll[1].count ?? 0),
         rejected: (rej.count ?? 0) + (rejAll[0].count ?? 0) + (rejAll[1].count ?? 0),
         today: (todayC.count ?? 0) + (todayW.count ?? 0) + (todayS.count ?? 0),
@@ -85,7 +79,6 @@ export default function AdminOverview() {
           <StatCard label="Shops" value={loading ? "—" : counts!.shops} icon={Store} accent="bg-sky-50 text-sky-600" />
           <StatCard label="Products" value={loading ? "—" : counts!.products} icon={Package} accent="bg-purple-50 text-purple-600" />
           <StatCard label="Support" value={loading ? "—" : counts!.support} icon={LifeBuoy} accent="bg-rose-50 text-rose-600" />
-          <StatCard label="Pending" value={loading ? "—" : counts!.pending} icon={Clock} accent="bg-amber-50 text-amber-600" />
           <StatCard label="Approved" value={loading ? "—" : counts!.approved} icon={CheckCircle2} accent="bg-emerald-50 text-emerald-600" />
           <StatCard label="Rejected" value={loading ? "—" : counts!.rejected} icon={XCircle} accent="bg-rose-50 text-rose-600" />
           <StatCard label="New today" value={loading ? "—" : counts!.today} icon={UserPlus} accent="bg-slate-100 text-slate-700" />
