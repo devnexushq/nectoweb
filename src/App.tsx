@@ -55,12 +55,14 @@ export default function App() {
       <Route path="/c/profile" element={<CustomerProfile />} />
       <Route path="/c/worker/:id" element={<CustomerWorkerProfile />} />
       <Route path="/c/shop/:id" element={<CustomerShopProfile />} />
+      <Route path="/worker/register" element={<WorkerRegister />} />
       <Route path="/w/register" element={<WorkerRegister />} />
       <Route path="/w/dashboard" element={<WorkerDashboard />} />
       <Route path="/w/contacts" element={<WorkerContacts />} />
       <Route path="/w/shops" element={<WorkerShops />} />
       <Route path="/w/shop/:id" element={<WorkerShopProfile />} />
       <Route path="/w/profile" element={<WorkerProfile />} />
+      <Route path="/shop/register" element={<ShopRegister />} />
       <Route path="/s/register" element={<ShopRegister />} />
       <Route path="/s/dashboard" element={<ShopDashboard />} />
       <Route path="/s/contacts" element={<ShopContacts />} />
