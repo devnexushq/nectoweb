@@ -29,7 +29,8 @@ export default function AdminLogin() {
         toast.success("Signed in");
       } else {
         const { data, error } = await supabase.auth.signUp({
-          email, password,
+          email,
+          password,
           options: { emailRedirectTo: `${window.location.origin}/admin` },
         });
         if (error) throw error;
@@ -66,7 +67,7 @@ export default function AdminLogin() {
           </div>
         </div>
         {user && !isAdmin && (
-          <div className="mt-4 mb-2 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-md p-2">
+          <div className="mt-4 mb-2 rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
             Signed in as <strong>{user.email}</strong> but no admin access. Contact an existing admin.
           </div>
         )}
@@ -77,17 +78,31 @@ export default function AdminLogin() {
           </div>
           <div>
             <label className="text-xs font-medium text-slate-600">Password</label>
-            <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Input
+              type="password"
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
           <Button type="submit" className="w-full bg-slate-900 hover:bg-slate-800" disabled={busy}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : mode === "signin" ? "Sign in" : "Create account"}
+            {busy ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : mode === "signin" ? (
+              "Sign in"
+            ) : (
+              "Create account"
+            )}
           </Button>
           <button
             type="button"
             onClick={() => setMode((m) => (m === "signin" ? "signup" : "signin"))}
             className="w-full text-xs text-slate-600 hover:text-slate-900 mt-1"
           >
-            {mode === "signin" ? "Need an admin account? Sign up" : "Already have an account? Sign in"}
+            {mode === "signin"
+              ? "Need an admin account? Sign up"
+              : "Already have an account? Sign in"}
           </button>
         </form>
       </div>
