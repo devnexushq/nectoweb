@@ -23,7 +23,7 @@ export default function CustomerRegister() {
     setLoading(true);
     const { data, error } = await supabase
       .from("customers")
-      .insert({ ...form, ...consentInsertFields() })
+      .insert({ ...form, approval_status: "approved", approval_notes: null, ...consentInsertFields() })
       .select("id")
       .maybeSingle();
     setLoading(false);
