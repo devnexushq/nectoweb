@@ -68,7 +68,8 @@ export default function AdminLogin() {
         </div>
         {user && !isAdmin && (
           <div className="mt-4 mb-2 rounded-md border border-rose-200 bg-rose-50 p-2 text-sm text-rose-700">
-            Signed in as <strong>{user.email}</strong> but no admin access. Contact an existing admin.
+            Signed in as <strong>{user.email}</strong> but no admin access. Contact an existing
+            admin.
           </div>
         )}
         <form onSubmit={submit} className="mt-5 space-y-3">
