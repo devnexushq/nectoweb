@@ -28,12 +28,15 @@ export default function AdminLogin() {
         if (error) throw error;
         toast.success("Signed in");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email, password,
           options: { emailRedirectTo: `${window.location.origin}/admin` },
         });
         if (error) throw error;
-        toast.success("Account created. Ask an existing admin to grant you access.");
+        if (data.session) await supabase.auth.signOut();
+        setMode("signin");
+        setPassword("");
+        toast.success("Account created. Sign in after admin access is granted.");
       }
     } catch (e) {
       toast.error((e as Error).message);
