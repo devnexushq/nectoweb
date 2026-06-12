@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { setUserId } from "@/lib/role";
 import { useSeo } from "@/lib/seo";
 import { Field, HoursAndVisibility, TextArea } from "@/components/FormBits";
+import RegistrationNav from "@/components/RegistrationNav";
 import { Checkbox } from "@/components/ui/checkbox";
 import { consentInsertFields } from "@/lib/legal";
 
@@ -37,32 +38,38 @@ export default function ShopRegister() {
   }
 
   return (
-    <div className="min-h-screen bg-white px-5 py-8 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-primary">Shop Registration</h1>
-      <p className="text-sm text-muted-foreground mt-1">List your shop on Necto.</p>
-      <form onSubmit={submit} className="mt-6 space-y-4">
-        <Field label="Owner Name" value={form.owner_name} onChange={(e) => setForm({ ...form, owner_name: e.target.value })} />
-        <Field label="Shop Name" value={form.shop_name} onChange={(e) => setForm({ ...form, shop_name: e.target.value })} />
-        <Field label="Category / Type of Shop" placeholder="Grocery, Hardware, Pharmacy..." value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
-        <Field label="Phone Number" inputMode="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-        <Field label="WhatsApp Number" inputMode="tel" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
-        <TextArea label="Shop Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-        <Field label="Area / City" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
-        <HoursAndVisibility hours={hours} setHours={setHours} visibility={visibility} setVisibility={setVisibility} />
-        <label className="flex items-start gap-3 text-sm text-foreground cursor-pointer select-none pt-2">
-          <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
-          <span className="leading-snug">
-            I have read and agree to the{" "}
-            <Link to="/terms-and-conditions" className="text-primary underline">Terms &amp; Conditions</Link>{" "}
-            and{" "}
-            <Link to="/privacy-policy" className="text-primary underline">Privacy Policy</Link>{" "}
-            of Necto.
-          </span>
-        </label>
-        <button disabled={loading || !agreed} className="w-full h-12 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60">
-          {loading ? "Submitting..." : "Submit"}
-        </button>
-      </form>
+    <div className="min-h-screen bg-white">
+      <RegistrationNav />
+      <main className="mx-auto w-full max-w-md px-5 py-8 sm:py-10">
+        <h1 className="text-2xl font-bold text-primary">Shop Registration</h1>
+        <p className="text-sm text-muted-foreground mt-1">List your shop on Necto.</p>
+        <Link to="/" className="mt-3 inline-flex text-sm font-medium text-primary underline underline-offset-4">
+          Choose Different Account Type
+        </Link>
+        <form onSubmit={submit} className="mt-6 space-y-4">
+          <Field label="Owner Name" value={form.owner_name} onChange={(e) => setForm({ ...form, owner_name: e.target.value })} />
+          <Field label="Shop Name" value={form.shop_name} onChange={(e) => setForm({ ...form, shop_name: e.target.value })} />
+          <Field label="Category / Type of Shop" placeholder="Grocery, Hardware, Pharmacy..." value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+          <Field label="Phone Number" inputMode="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <Field label="WhatsApp Number" inputMode="tel" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
+          <TextArea label="Shop Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <Field label="Area / City" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
+          <HoursAndVisibility hours={hours} setHours={setHours} visibility={visibility} setVisibility={setVisibility} />
+          <label className="flex items-start gap-3 text-sm text-foreground cursor-pointer select-none pt-2">
+            <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
+            <span className="leading-snug">
+              I have read and agree to the{" "}
+              <Link to="/terms-and-conditions" className="text-primary underline">Terms &amp; Conditions</Link>{" "}
+              and{" "}
+              <Link to="/privacy-policy" className="text-primary underline">Privacy Policy</Link>{" "}
+              of Necto.
+            </span>
+          </label>
+          <button disabled={loading || !agreed} className="w-full h-12 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60">
+            {loading ? "Submitting..." : "Submit"}
+          </button>
+        </form>
+      </main>
     </div>
   );
 }
