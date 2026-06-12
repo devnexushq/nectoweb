@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { setUserId } from "@/lib/role";
 import { useSeo } from "@/lib/seo";
 import { Field } from "@/components/FormBits";
-import RegistrationNav from "@/components/RegistrationNav";
+import RegistrationNav, { ChooseDifferentAccountTypeLink } from "@/components/RegistrationNav";
 import { Checkbox } from "@/components/ui/checkbox";
 import { consentInsertFields } from "@/lib/legal";
 
@@ -39,9 +39,7 @@ export default function CustomerRegister() {
       <main className="mx-auto w-full max-w-md px-5 py-8 sm:py-10">
         <h1 className="text-2xl font-bold text-primary">Customer Registration</h1>
         <p className="text-sm text-muted-foreground mt-1">Tell us a bit about yourself.</p>
-        <Link to="/" className="mt-3 inline-flex text-sm font-medium text-primary underline underline-offset-4">
-          Choose Different Account Type
-        </Link>
+        <ChooseDifferentAccountTypeLink />
         <form onSubmit={submit} className="mt-6 space-y-4">
           <Field label="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <Field label="Area / City" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
