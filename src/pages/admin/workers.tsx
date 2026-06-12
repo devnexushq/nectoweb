@@ -3,12 +3,11 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 import DataTable, { Column } from "@/components/admin/DataTable";
 import StatusBadge from "@/components/admin/StatusBadge";
-import ApprovalActions from "@/components/admin/ApprovalActions";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
 type Worker = Tables<"workers">;
-const STATUSES = ["all", "pending", "approved", "rejected", "suspended"];
+const STATUSES = ["all", "approved", "rejected", "suspended"];
 
 export default function AdminWorkers() {
   const [rows, setRows] = useState<Worker[]>([]);
@@ -32,8 +31,6 @@ export default function AdminWorkers() {
     { key: "area", header: "Area", render: (r) => r.area },
     { key: "reg", header: "Registered", render: (r) => new Date(r.registered_at).toLocaleDateString() },
     { key: "status", header: "Status", render: (r) => <StatusBadge status={r.approval_status} /> },
-    { key: "actions", header: "Actions",
-      render: (r) => <ApprovalActions entity="worker" id={r.id} currentStatus={r.approval_status} onChanged={load} /> },
   ];
 
   return (
