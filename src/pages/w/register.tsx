@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { setUserId } from "@/lib/role";
 import { useSeo } from "@/lib/seo";
 import { Field, HoursAndVisibility, TextArea } from "@/components/FormBits";
+import RegistrationNav from "@/components/RegistrationNav";
 import { Checkbox } from "@/components/ui/checkbox";
 import { consentInsertFields } from "@/lib/legal";
 
@@ -39,32 +40,38 @@ export default function WorkerRegister() {
   }
 
   return (
-    <div className="min-h-screen bg-white px-5 py-8 max-w-md mx-auto">
-      <h1 className="text-2xl font-bold text-primary">Worker Registration</h1>
-      <p className="text-sm text-muted-foreground mt-1">Get discovered by local customers.</p>
-      <form onSubmit={submit} className="mt-6 space-y-4">
-        <Field label="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <Field label="Job Type" placeholder="Electrician, Plumber, Doctor..." value={form.job_type} onChange={(e) => setForm({ ...form, job_type: e.target.value })} />
-        <Field label="Years of Experience" inputMode="numeric" value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} />
-        <Field label="Phone Number" inputMode="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-        <Field label="WhatsApp Number" inputMode="tel" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
-        <TextArea label="Description (what you do)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-        <Field label="Area / City" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
-        <HoursAndVisibility hours={hours} setHours={setHours} visibility={visibility} setVisibility={setVisibility} />
-        <label className="flex items-start gap-3 text-sm text-foreground cursor-pointer select-none pt-2">
-          <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
-          <span className="leading-snug">
-            I have read and agree to the{" "}
-            <Link to="/terms-and-conditions" className="text-primary underline">Terms &amp; Conditions</Link>{" "}
-            and{" "}
-            <Link to="/privacy-policy" className="text-primary underline">Privacy Policy</Link>{" "}
-            of Necto.
-          </span>
-        </label>
-        <button disabled={loading || !agreed} className="w-full h-12 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60">
-          {loading ? "Submitting..." : "Submit"}
-        </button>
-      </form>
+    <div className="min-h-screen bg-white">
+      <RegistrationNav />
+      <main className="mx-auto w-full max-w-md px-5 py-8 sm:py-10">
+        <h1 className="text-2xl font-bold text-primary">Worker Registration</h1>
+        <p className="text-sm text-muted-foreground mt-1">Get discovered by local customers.</p>
+        <Link to="/" className="mt-3 inline-flex text-sm font-medium text-primary underline underline-offset-4">
+          Choose Different Account Type
+        </Link>
+        <form onSubmit={submit} className="mt-6 space-y-4">
+          <Field label="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <Field label="Job Type" placeholder="Electrician, Plumber, Doctor..." value={form.job_type} onChange={(e) => setForm({ ...form, job_type: e.target.value })} />
+          <Field label="Years of Experience" inputMode="numeric" value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} />
+          <Field label="Phone Number" inputMode="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <Field label="WhatsApp Number" inputMode="tel" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
+          <TextArea label="Description (what you do)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <Field label="Area / City" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
+          <HoursAndVisibility hours={hours} setHours={setHours} visibility={visibility} setVisibility={setVisibility} />
+          <label className="flex items-start gap-3 text-sm text-foreground cursor-pointer select-none pt-2">
+            <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
+            <span className="leading-snug">
+              I have read and agree to the{" "}
+              <Link to="/terms-and-conditions" className="text-primary underline">Terms &amp; Conditions</Link>{" "}
+              and{" "}
+              <Link to="/privacy-policy" className="text-primary underline">Privacy Policy</Link>{" "}
+              of Necto.
+            </span>
+          </label>
+          <button disabled={loading || !agreed} className="w-full h-12 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60">
+            {loading ? "Submitting..." : "Submit"}
+          </button>
+        </form>
+      </main>
     </div>
   );
 }
