@@ -28,6 +28,8 @@ export default function ShopRegister() {
     setLoading(true);
     const { data, error } = await supabase.from("shops").insert({
       ...form, visibility, business_hours: hours,
+      approval_status: "approved",
+      approval_notes: null,
       ...consentInsertFields(),
     }).select("id").maybeSingle();
     setLoading(false);
