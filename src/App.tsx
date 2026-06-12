@@ -23,6 +23,7 @@ import ShopProfile from "./pages/s/profile";
 import TermsAndConditions from "./pages/legal/terms";
 import PrivacyPolicy from "./pages/legal/privacy";
 import AdminLogin from "./pages/admin/login";
+import AdminResetPassword from "./pages/admin/reset-password";
 import AdminOverview from "./pages/admin/overview";
 import AdminCustomers from "./pages/admin/customers";
 import AdminWorkers from "./pages/admin/workers";
@@ -73,6 +74,7 @@ export default function App() {
       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/reset-password" element={<AdminResetPassword />} />
       <Route path="/admin" element={<AdminOverview />} />
       <Route path="/admin/customers" element={<AdminCustomers />} />
       <Route path="/admin/workers" element={<AdminWorkers />} />
