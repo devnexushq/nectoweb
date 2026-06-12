@@ -3,13 +3,12 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 import DataTable, { Column } from "@/components/admin/DataTable";
 import StatusBadge from "@/components/admin/StatusBadge";
-import ApprovalActions from "@/components/admin/ApprovalActions";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 
 type Customer = Tables<"customers">;
 
-const STATUSES = ["all", "pending", "approved", "rejected", "suspended"];
+const STATUSES = ["all", "approved", "rejected", "suspended"];
 
 export default function AdminCustomers() {
   const [rows, setRows] = useState<Customer[]>([]);
@@ -39,9 +38,6 @@ export default function AdminCustomers() {
         : <span className="text-xs text-rose-700">No</span>
     },
     { key: "updated", header: "Updated", render: (r) => new Date(r.last_updated_at).toLocaleDateString() },
-    { key: "actions", header: "Actions",
-      render: (r) => <ApprovalActions entity="customer" id={r.id} currentStatus={r.approval_status} onChanged={load} />,
-    },
   ];
 
   return (
