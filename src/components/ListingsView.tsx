@@ -7,6 +7,8 @@ import { EmptyState } from "@/components/EmptyState";
 type Mode = "workers" | "shops" | "mixed";
 
 const VISIBILITY_ALL: ("local" | "all_india")[] = ["local", "all_india"];
+const PUBLIC_WORKER_COLUMNS = "id,name,job_type,description,area,rating,photo_url,visibility,registered_at";
+const PUBLIC_SHOP_COLUMNS = "id,shop_name,category,description,area,rating,photo_url,visibility,registered_at";
 
 export function ListingsView({
   mode,
@@ -17,8 +19,8 @@ export function ListingsView({
 }: {
   mode: Mode;
   hrefPrefix: string;
-  registerCtaTo: string;
-  registerCtaLabel: string;
+  registerCtaTo?: string;
+  registerCtaLabel?: string;
   placeholder?: string;
 }) {
   const [query, setQuery] = useState("");
@@ -33,10 +35,10 @@ export function ListingsView({
     (async () => {
       setLoading(true);
       const wPromise = mode !== "shops"
-        ? supabase.from("workers").select("*").order("registered_at", { ascending: false })
+        ? supabase.from("workers").select(PUBLIC_WORKER_COLUMNS).order("registered_at", { ascending: false })
         : Promise.resolve({ data: [] as any[] });
       const sPromise = mode !== "workers"
-        ? supabase.from("shops").select("*").order("registered_at", { ascending: false })
+        ? supabase.from("shops").select(PUBLIC_SHOP_COLUMNS).order("registered_at", { ascending: false })
         : Promise.resolve({ data: [] as any[] });
       const [w, s] = await Promise.all([wPromise, sPromise]);
       if (cancelled) return;
@@ -127,7 +129,7 @@ export function ListingsView({
                 ? `No results found for "${query}"${area.trim() ? ` in ${area}` : ""}`
                 : "Nothing here yet"
             }
-            subtitle={query.trim() ? `Be the first to register as ${query}!` : "Check back soon."}
+            subtitle={query.trim() ? "Try a nearby skill, shop category, or area." : "Check back soon."}
             ctaLabel={registerCtaLabel}
             ctaTo={registerCtaTo}
           />
