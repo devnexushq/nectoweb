@@ -10,14 +10,18 @@ import CustomerShopProfile from "./pages/c/shop.id";
 import WorkerRegister from "./pages/w/register";
 import WorkerDashboard from "./pages/w/dashboard";
 import WorkerContacts from "./pages/w/contacts";
+import WorkerWorkers from "./pages/w/workers";
 import WorkerShops from "./pages/w/shops";
+import WorkerWorkerProfile from "./pages/w/worker.id";
 import WorkerShopProfile from "./pages/w/shop.id";
 import WorkerProfile from "./pages/w/profile";
 import ShopRegister from "./pages/s/register";
 import ShopDashboard from "./pages/s/dashboard";
 import ShopContacts from "./pages/s/contacts";
 import ShopWorkers from "./pages/s/workers";
+import ShopShops from "./pages/s/shops";
 import ShopWorkerProfile from "./pages/s/worker.id";
+import ShopShopProfile from "./pages/s/shop.id";
 import ShopProducts from "./pages/s/products";
 import ShopProfile from "./pages/s/profile";
 import TermsAndConditions from "./pages/legal/terms";
@@ -32,6 +36,12 @@ import AdminProducts from "./pages/admin/products";
 import AdminSupport from "./pages/admin/support";
 import AdminActivity from "./pages/admin/activity";
 import AdminAnalytics from "./pages/admin/analytics";
+import {
+  PublicShopProfilePage,
+  PublicShopsPage,
+  PublicWorkerProfilePage,
+  PublicWorkersPage,
+} from "./components/PublicDiscoveryPages";
 
 function NotFound() {
   return (
@@ -49,6 +59,10 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/workers" element={<PublicWorkersPage hrefPrefix="" />} />
+      <Route path="/shops" element={<PublicShopsPage hrefPrefix="" />} />
+      <Route path="/worker/:id" element={<PublicWorkerProfilePage backTo="/workers" />} />
+      <Route path="/shop/:id" element={<PublicShopProfilePage backTo="/shops" />} />
       <Route path="/c/register" element={<CustomerRegister />} />
       <Route path="/c/home" element={<CustomerHome />} />
       <Route path="/c/workers" element={<CustomerWorkers />} />
@@ -60,7 +74,9 @@ export default function App() {
       <Route path="/w/register" element={<WorkerRegister />} />
       <Route path="/w/dashboard" element={<WorkerDashboard />} />
       <Route path="/w/contacts" element={<WorkerContacts />} />
+      <Route path="/w/workers" element={<WorkerWorkers />} />
       <Route path="/w/shops" element={<WorkerShops />} />
+      <Route path="/w/worker/:id" element={<WorkerWorkerProfile />} />
       <Route path="/w/shop/:id" element={<WorkerShopProfile />} />
       <Route path="/w/profile" element={<WorkerProfile />} />
       <Route path="/shop/register" element={<ShopRegister />} />
@@ -68,7 +84,9 @@ export default function App() {
       <Route path="/s/dashboard" element={<ShopDashboard />} />
       <Route path="/s/contacts" element={<ShopContacts />} />
       <Route path="/s/workers" element={<ShopWorkers />} />
+      <Route path="/s/shops" element={<ShopShops />} />
       <Route path="/s/worker/:id" element={<ShopWorkerProfile />} />
+      <Route path="/s/shop/:id" element={<ShopShopProfile />} />
       <Route path="/s/products" element={<ShopProducts />} />
       <Route path="/s/profile" element={<ShopProfile />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
