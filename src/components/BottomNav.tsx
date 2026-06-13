@@ -5,6 +5,12 @@ import { cn } from "@/lib/utils";
 
 type Item = { to: string; label: string; icon: React.ComponentType<{ className?: string }> };
 
+const ROLE_PREFIX: Record<Role, string> = {
+  customer: "/c",
+  worker: "/w",
+  shop: "/s",
+};
+
 const ITEMS: Record<Role, Item[]> = {
   customer: [
     { to: "/c/home", label: "Home", icon: Home },
@@ -28,14 +34,28 @@ const ITEMS: Record<Role, Item[]> = {
   ],
 };
 
+function isActivePath(pathname: string, role: Role, item: Item) {
+  if (pathname === item.to || pathname.startsWith(item.to + "/")) return true;
+
+  const prefix = ROLE_PREFIX[role];
+  if (item.label === "Workers") {
+    return pathname === "/workers" || pathname.startsWith("/worker/") || pathname.startsWith(`${prefix}/worker/`);
+  }
+  if (item.label === "Shops") {
+    return pathname === "/shops" || pathname.startsWith("/shop/") || pathname.startsWith(`${prefix}/shop/`);
+  }
+  return false;
+}
+
 export function BottomNav({ role }: { role: Role }) {
   const pathname = useLocation().pathname;
   const items = ITEMS[role];
   return (
     <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-border shadow-[0_-2px_12px_rgba(0,0,0,0.04)]">
       <ul className="mx-auto max-w-2xl grid" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
-        {items.map(({ to, label, icon: Icon }) => {
-          const active = pathname === to || pathname.startsWith(to + "/");
+        {items.map((item) => {
+          const { to, label, icon: Icon } = item;
+          const active = isActivePath(pathname, role, item);
           return (
             <li key={to}>
               <Link
