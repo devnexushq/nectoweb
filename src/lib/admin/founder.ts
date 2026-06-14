@@ -1,9 +1,17 @@
 import type { User } from "@supabase/supabase-js";
 
-export const FOUNDER_EMAIL = "nexivon.official@gmail.com";
+const configuredFounderEmails = (import.meta.env.VITE_FOUNDER_EMAILS ?? "")
+  .split(",")
+  .map((email: string) => email.trim().toLowerCase())
+  .filter(Boolean);
 
 export function isFounderUser(user: User | null | undefined) {
-  return user?.email?.toLowerCase() === FOUNDER_EMAIL;
+  const email = user?.email?.toLowerCase();
+  return Boolean(email && configuredFounderEmails.includes(email));
+}
+
+export function hasFounderAccessConfigured() {
+  return configuredFounderEmails.length > 0;
 }
 
 export function maskEmail(email?: string | null) {
