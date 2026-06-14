@@ -36,6 +36,10 @@ import AdminProducts from "./pages/admin/products";
 import AdminSupport from "./pages/admin/support";
 import AdminActivity from "./pages/admin/activity";
 import AdminAnalytics from "./pages/admin/analytics";
+import AdminSecurity from "./pages/admin/security";
+import AdminSystemHealth from "./pages/admin/health";
+import AdminSeoCenter from "./pages/admin/seo";
+import FounderVault from "./pages/admin/founder-vault";
 import {
   PublicShopProfilePage,
   PublicShopsPage,
@@ -101,6 +105,10 @@ export default function App() {
       <Route path="/admin/support" element={<AdminSupport />} />
       <Route path="/admin/activity" element={<AdminActivity />} />
       <Route path="/admin/analytics" element={<AdminAnalytics />} />
+      <Route path="/admin/security" element={<AdminSecurity />} />
+      <Route path="/admin/health" element={<AdminSystemHealth />} />
+      <Route path="/admin/seo" element={<AdminSeoCenter />} />
+      <Route path="/admin/founder-vault" element={<FounderVault />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
