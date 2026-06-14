@@ -10,15 +10,12 @@ import {
 import { Users, Hammer, Store, Package, LifeBuoy } from "lucide-react";
 
 type DayRow = { date: string; customers: number; workers: number; shops: number };
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: "#f59e0b", approved: "#10b981", rejected: "#ef4444", suspended: "#64748b",
-};
+type AccountHealthRow = { name: string; value: number; color: string };
 
 export default function AdminAnalytics() {
   const [counts, setCounts] = useState({ c: 0, w: 0, s: 0, p: 0, sq: 0 });
   const [growth, setGrowth] = useState<DayRow[]>([]);
-  const [approvals, setApprovals] = useState<{ name: string; value: number }[]>([]);
+  const [accountHealth, setAccountHealth] = useState<AccountHealthRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,7 +24,7 @@ export default function AdminAnalytics() {
       const since = new Date(); since.setDate(since.getDate() - 29); since.setHours(0,0,0,0);
       const sinceIso = since.toISOString();
 
-      const [c, w, s, p, sq, custRows, wRows, sRows, pendC, appC, rejC, susC, pendW, appW, rejW, susW, pendS, appS, rejS, susS]
+      const [c, w, s, p, sq, custRows, wRows, sRows, pendingC, activeC, rejectedC, suspendedC, pendingW, activeW, rejectedW, suspendedW, pendingS, activeS, rejectedS, suspendedS]
         = await Promise.all([
         supabase.from("customers").select("*", head),
         supabase.from("workers").select("*", head),
@@ -53,7 +50,6 @@ export default function AdminAnalytics() {
 
       setCounts({ c: c.count ?? 0, w: w.count ?? 0, s: s.count ?? 0, p: p.count ?? 0, sq: sq.count ?? 0 });
 
-      // Build last 30 days bucket
       const bucket: Record<string, DayRow> = {};
       for (let i = 0; i < 30; i++) {
         const d = new Date(since); d.setDate(since.getDate() + i);
@@ -69,11 +65,13 @@ export default function AdminAnalytics() {
       (sRows.data ?? []).forEach((r: { registered_at: string }) => bump(r.registered_at, "shops"));
       setGrowth(Object.values(bucket));
 
-      setApprovals([
-        { name: "pending",   value: (pendC.count ?? 0) + (pendW.count ?? 0) + (pendS.count ?? 0) },
-        { name: "approved",  value: (appC.count ?? 0)  + (appW.count ?? 0)  + (appS.count ?? 0) },
-        { name: "rejected",  value: (rejC.count ?? 0)  + (rejW.count ?? 0)  + (rejS.count ?? 0) },
-        { name: "suspended", value: (susC.count ?? 0)  + (susW.count ?? 0)  + (susS.count ?? 0) },
+      const active = (activeC.count ?? 0) + (activeW.count ?? 0) + (activeS.count ?? 0);
+      const needsReview = (pendingC.count ?? 0) + (pendingW.count ?? 0) + (pendingS.count ?? 0) + (rejectedC.count ?? 0) + (rejectedW.count ?? 0) + (rejectedS.count ?? 0);
+      const restricted = (suspendedC.count ?? 0) + (suspendedW.count ?? 0) + (suspendedS.count ?? 0);
+      setAccountHealth([
+        { name: "Active", value: active, color: "#10b981" },
+        { name: "Needs review", value: needsReview, color: "#f59e0b" },
+        { name: "Restricted", value: restricted, color: "#64748b" },
       ]);
 
       setLoading(false);
@@ -85,15 +83,15 @@ export default function AdminAnalytics() {
     <RequireAdmin>
       <AdminLayout title="Analytics">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
-          <StatCard label="Customers" value={loading ? "—" : counts.c} icon={Users} accent="bg-indigo-50 text-indigo-600" />
-          <StatCard label="Workers" value={loading ? "—" : counts.w} icon={Hammer} accent="bg-amber-50 text-amber-600" />
-          <StatCard label="Shops" value={loading ? "—" : counts.s} icon={Store} accent="bg-sky-50 text-sky-600" />
-          <StatCard label="Products" value={loading ? "—" : counts.p} icon={Package} accent="bg-purple-50 text-purple-600" />
-          <StatCard label="Support" value={loading ? "—" : counts.sq} icon={LifeBuoy} accent="bg-rose-50 text-rose-600" />
+          <StatCard label="Customers" value={loading ? "-" : counts.c} icon={Users} accent="bg-indigo-50 text-indigo-600" />
+          <StatCard label="Workers" value={loading ? "-" : counts.w} icon={Hammer} accent="bg-amber-50 text-amber-600" />
+          <StatCard label="Shops" value={loading ? "-" : counts.s} icon={Store} accent="bg-sky-50 text-sky-600" />
+          <StatCard label="Products" value={loading ? "-" : counts.p} icon={Package} accent="bg-purple-50 text-purple-600" />
+          <StatCard label="Support" value={loading ? "-" : counts.sq} icon={LifeBuoy} accent="bg-rose-50 text-rose-600" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6">
-          <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+          <div className="lg:col-span-2 rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
             <h2 className="text-sm font-semibold mb-3">Registration growth (last 30 days)</h2>
             <div className="h-72">
               <ResponsiveContainer>
@@ -111,13 +109,14 @@ export default function AdminAnalytics() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-            <h2 className="text-sm font-semibold mb-3">Approval status breakdown</h2>
+          <div className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+            <h2 className="text-sm font-semibold mb-1">Account health breakdown</h2>
+            <p className="mb-3 text-xs text-slate-500">Live account availability and moderation snapshot.</p>
             <div className="h-72">
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={approvals} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90}>
-                    {approvals.map((a) => <Cell key={a.name} fill={STATUS_COLORS[a.name]} />)}
+                  <Pie data={accountHealth} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90}>
+                    {accountHealth.map((a) => <Cell key={a.name} fill={a.color} />)}
                   </Pie>
                   <Tooltip />
                   <Legend />
