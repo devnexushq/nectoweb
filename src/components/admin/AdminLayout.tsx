@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Hammer, Store, Package, LifeBuoy, ScrollText,
   BarChart3, LogOut, Menu, X, Search, Bell, ShieldCheck, Server,
-  Globe2, Crown, Zap, PanelLeftClose, PanelLeftOpen,
+  Globe2, Crown, Zap, PanelLeftClose, PanelLeftOpen, ArrowRight,
 } from "lucide-react";
 import { signOutAdmin, useAdminAuth } from "@/lib/admin/auth";
 import { isFounderUser, maskEmail } from "@/lib/admin/founder";
@@ -29,11 +29,25 @@ export default function AdminLayout({ children, title }: { children: ReactNode; 
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const navItems = useMemo(() => (isFounderUser(user) ? [...NAV, FOUNDER_NAV] : NAV), [user]);
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const founder = isFounderUser(user);
+  const navItems = useMemo(() => (founder ? [...NAV, FOUNDER_NAV] : NAV), [founder]);
+  const quickActions = useMemo(() => [
+    { to: "/admin/customers", label: "Open users", description: "Review customers, workers, and shops", icon: Users },
+    { to: "/admin/support", label: "Support center", description: "Check open support requests", icon: LifeBuoy },
+    { to: "/admin/analytics", label: "Analytics", description: "View growth and platform trends", icon: BarChart3 },
+    { to: "/admin/health", label: "System health", description: "Check deployment and database status", icon: Server },
+    ...(founder ? [{ to: "/admin/founder-vault", label: "Founder Vault", description: "Open founder-only command center", icon: Crown }] : []),
+  ], [founder]);
 
   const handleSignOut = async () => {
     await signOutAdmin();
     navigate("/admin/login", { replace: true });
+  };
+
+  const openQuickAction = (to: string) => {
+    setQuickActionsOpen(false);
+    navigate(to);
   };
 
   const Sidebar = (
@@ -76,7 +90,50 @@ export default function AdminLayout({ children, title }: { children: ReactNode; 
             <div className="min-w-0"><div className="text-[11px] uppercase tracking-wide text-slate-500">Command Center</div><h1 className="truncate text-base font-semibold md:text-xl">{title}</h1></div>
             <div className="ml-auto hidden w-80 items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 shadow-sm lg:flex"><Search className="h-4 w-4 text-slate-400" /><input className="w-full bg-transparent text-sm outline-none" placeholder="Search users, tickets, products..." /></div>
             <button className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white/80 text-slate-600 shadow-sm transition hover:-translate-y-0.5" aria-label="Notifications"><Bell className="h-4 w-4" /></button>
-            <button className="hidden h-10 items-center gap-2 rounded-xl bg-slate-950 px-3 text-sm font-medium text-white shadow-lg shadow-slate-900/15 transition hover:-translate-y-0.5 sm:inline-flex"><Zap className="h-4 w-4" /> Quick actions</button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setQuickActionsOpen((value) => !value)}
+                className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-950 px-3 text-sm font-medium text-white shadow-lg shadow-slate-900/15 transition hover:-translate-y-0.5"
+                aria-expanded={quickActionsOpen}
+                aria-haspopup="menu"
+              >
+                <Zap className="h-4 w-4" />
+                <span className="hidden sm:inline">Quick actions</span>
+              </button>
+              {quickActionsOpen && (
+                <>
+                  <button className="fixed inset-0 z-10 cursor-default" aria-label="Close quick actions" onClick={() => setQuickActionsOpen(false)} />
+                  <div className="absolute right-0 z-20 mt-3 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15">
+                    <div className="border-b border-slate-100 px-4 py-3">
+                      <div className="text-sm font-semibold text-slate-950">Quick actions</div>
+                      <div className="text-xs text-slate-500">Jump to important admin work instantly.</div>
+                    </div>
+                    <div className="p-2" role="menu">
+                      {quickActions.map((action) => {
+                        const Icon = action.icon;
+                        return (
+                          <button
+                            key={action.to}
+                            type="button"
+                            role="menuitem"
+                            onClick={() => openQuickAction(action.to)}
+                            className="group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-50"
+                          >
+                            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-950 text-white shadow-sm"><Icon className="h-4 w-4" /></span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-sm font-semibold text-slate-900">{action.label}</span>
+                              <span className="block truncate text-xs text-slate-500">{action.description}</span>
+                            </span>
+                            <ArrowRight className="h-4 w-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-600" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
         <main className="flex-1 p-4 md:p-6">{children}</main>
