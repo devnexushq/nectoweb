@@ -17,6 +17,7 @@ export default function AdminCustomers() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    await supabase.from("customers").update({ approval_status: "approved" }).eq("approval_status", "pending");
     let q = supabase.from("customers").select("*").order("created_at", { ascending: false }).limit(1000);
     if (filter !== "all") q = q.eq("approval_status", filter);
     const { data } = await q;
