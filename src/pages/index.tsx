@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { Store, User, Users } from "lucide-react";
-import { getRole, getUserId, homePathFor, registerPathFor, setRole, type Role } from "@/lib/role";
+import { clearAccount, getRole, getUserId, homePathFor, registerPathFor, setRole, type Role } from "@/lib/role";
+import { accountExists } from "@/hooks/useRoleGuard";
 import { useSeo } from "@/lib/seo";
 import { InstallButton } from "@/components/InstallButton";
 import { InstallBanner } from "@/components/InstallBanner";
@@ -17,10 +18,29 @@ export default function Landing() {
   });
 
   useEffect(() => {
-    const role = getRole();
-    if (role) {
-      navigate(getUserId() ? homePathFor(role) : registerPathFor(role) );
-    }
+    let cancelled = false;
+
+    const redirectSavedAccount = async () => {
+      const role = getRole();
+      if (!role) return;
+
+      const id = getUserId();
+      if (!id) {
+        navigate(registerPathFor(role), { replace: true });
+        return;
+      }
+
+      const exists = await accountExists(role, id);
+      if (cancelled) return;
+      if (exists === false) {
+        clearAccount();
+        return;
+      }
+      navigate(homePathFor(role), { replace: true });
+    };
+
+    redirectSavedAccount();
+    return () => { cancelled = true; };
   }, [navigate]);
 
   function pick(role: Role) {
