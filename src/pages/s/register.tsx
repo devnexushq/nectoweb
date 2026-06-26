@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { setUserId } from "@/lib/role";
+import { setRole, setUserId } from "@/lib/role";
 import { useSeo } from "@/lib/seo";
 import { Field, HoursAndVisibility, TextArea } from "@/components/FormBits";
 import RegistrationNav, { ChooseDifferentAccountTypeLink } from "@/components/RegistrationNav";
@@ -34,9 +34,10 @@ export default function ShopRegister() {
     }).select("id").maybeSingle();
     setLoading(false);
     if (error || !data) return toast.error("Could not register. Try again.");
+    setRole("shop");
     setUserId(data.id);
     toast.success("Successfully Registered! Welcome to Necto.");
-    navigate("/s/dashboard" );
+    navigate("/s/dashboard", { replace: true });
   }
 
   return (
