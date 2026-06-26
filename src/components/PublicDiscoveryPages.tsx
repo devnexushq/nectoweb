@@ -4,7 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ListingsView } from "@/components/ListingsView";
 import { ShopProfileView, WorkerProfileView } from "@/components/ProfileViews";
-import { getRole, getUserId, homePathFor, registerPathFor, type Role } from "@/lib/role";
+import { clearAccount, getRole, getUserId, homePathFor, registerPathFor, type Role } from "@/lib/role";
+import { accountExists } from "@/hooks/useRoleGuard";
 
 const ROLE_PREFIX: Record<Role, string> = {
   customer: "/c",
@@ -17,20 +18,39 @@ function useDiscoveryAccess(requiredRole?: Role) {
   const [role, setRole] = useState<Role | null>(null);
 
   useEffect(() => {
-    const currentRole = getRole();
-    if (!currentRole) {
-      navigate("/");
-      return;
-    }
-    if (requiredRole && currentRole !== requiredRole) {
-      navigate(homePathFor(currentRole));
-      return;
-    }
-    if (!getUserId()) {
-      navigate(registerPathFor(currentRole));
-      return;
-    }
-    setRole(requiredRole ?? currentRole);
+    let cancelled = false;
+
+    const validate = async () => {
+      setRole(null);
+      const currentRole = getRole();
+      if (!currentRole) {
+        navigate("/", { replace: true });
+        return;
+      }
+      if (requiredRole && currentRole !== requiredRole) {
+        navigate(homePathFor(currentRole), { replace: true });
+        return;
+      }
+
+      const id = getUserId();
+      if (!id) {
+        navigate(registerPathFor(currentRole), { replace: true });
+        return;
+      }
+
+      const exists = await accountExists(currentRole, id);
+      if (cancelled) return;
+      if (exists === false) {
+        clearAccount();
+        navigate("/", { replace: true });
+        return;
+      }
+
+      setRole(requiredRole ?? currentRole);
+    };
+
+    validate();
+    return () => { cancelled = true; };
   }, [navigate, requiredRole]);
 
   return role;
