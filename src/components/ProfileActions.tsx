@@ -79,7 +79,7 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
     if (error) return toast.error("Could not delete profile");
     clearAccount();
     toast.success("Profile deleted");
-    navigate("/");
+    navigate("/", { replace: true });
   }
 
   return (
