@@ -10,7 +10,7 @@ import {
   type Role,
 } from "@/lib/role";
 
-async function accountExists(role: Role, id: string): Promise<boolean | null> {
+export async function accountExists(role: Role, id: string): Promise<boolean | null> {
   const query = role === "customer"
     ? supabase.from("customers").select("id").eq("id", id).maybeSingle()
     : role === "worker"
