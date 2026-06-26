@@ -16,6 +16,7 @@ export default function AdminWorkers() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    await supabase.from("workers").update({ approval_status: "approved" }).eq("approval_status", "pending");
     let q = supabase.from("workers").select("*").order("registered_at", { ascending: false }).limit(1000);
     if (filter !== "all") q = q.eq("approval_status", filter);
     const { data } = await q;
