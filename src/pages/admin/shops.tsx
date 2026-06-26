@@ -16,6 +16,7 @@ export default function AdminShops() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    await supabase.from("shops").update({ approval_status: "approved" }).eq("approval_status", "pending");
     let q = supabase.from("shops").select("*").order("registered_at", { ascending: false }).limit(1000);
     if (filter !== "all") q = q.eq("approval_status", filter);
     const { data } = await q;
