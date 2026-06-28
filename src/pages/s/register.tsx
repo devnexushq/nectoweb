@@ -11,7 +11,7 @@ import { consentInsertFields } from "@/lib/legal";
 
 export default function ShopRegister() {
   const navigate = useNavigate();
-  useSeo({ title: "Shop Sign Up — NECTO", description: "List your shop on NECTO and reach hyperlocal customers.", canonical: "/s/register" });
+  useSeo({ title: "Shop Sign Up | NECTO", description: "List your shop on NECTO and reach hyperlocal customers.", canonical: "/s/register", noindex: true });
   const [form, setForm] = useState({
     owner_name: "", shop_name: "", category: "", phone: "", whatsapp: "", description: "", area: "",
   });
