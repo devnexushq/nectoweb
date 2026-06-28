@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useSeo } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -11,6 +12,7 @@ export default function AdminResetPassword() {
   const [ready, setReady] = useState(false);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  useSeo({ title: "Reset Admin Password | NECTO", description: "Secure NECTO admin password reset.", canonical: "/admin/reset-password", noindex: true });
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
