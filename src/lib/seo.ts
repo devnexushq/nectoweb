@@ -1,10 +1,15 @@
 import { useEffect } from "react";
 
+const SITE_NAME = "NECTO";
+const DEFAULT_IMAGE = "https://nectoweb.vercel.app/icon-512.png";
+
 type SeoOptions = {
   title: string;
   description?: string;
-  canonical?: string; // path like "/c/register"
+  canonical?: string;
   noindex?: boolean;
+  image?: string;
+  type?: "website" | "article" | "profile";
 };
 
 function upsertMeta(selector: string, create: () => HTMLElement, setAttr: (el: HTMLElement) => void) {
@@ -16,84 +21,73 @@ function upsertMeta(selector: string, create: () => HTMLElement, setAttr: (el: H
   setAttr(el);
 }
 
-/**
- * Lightweight per-route SEO. Mutates document.head — safe for CSR SPA.
- */
-export function useSeo({ title, description, canonical, noindex }: SeoOptions) {
+function setNamedMeta(name: string, content: string) {
+  upsertMeta(
+    `meta[name="${name}"]`,
+    () => {
+      const m = document.createElement("meta");
+      m.setAttribute("name", name);
+      return m;
+    },
+    (el) => el.setAttribute("content", content),
+  );
+}
+
+function setPropertyMeta(property: string, content: string) {
+  upsertMeta(
+    `meta[property="${property}"]`,
+    () => {
+      const m = document.createElement("meta");
+      m.setAttribute("property", property);
+      return m;
+    },
+    (el) => el.setAttribute("content", content),
+  );
+}
+
+function absoluteUrl(value: string) {
+  if (value.startsWith("http")) return value;
+  return `${window.location.origin}${value.startsWith("/") ? value : `/${value}`}`;
+}
+
+export function useSeo({ title, description, canonical, noindex, image = DEFAULT_IMAGE, type = "website" }: SeoOptions) {
   useEffect(() => {
+    const canonicalHref = canonical ? absoluteUrl(canonical) : window.location.href.split("#")[0];
+    const robots = noindex
+      ? "noindex,nofollow,noarchive"
+      : "index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1";
+    const resolvedImage = absoluteUrl(image);
+
     if (title) document.title = title;
 
-    if (description) {
-      upsertMeta(
-        'meta[name="description"]',
-        () => {
-          const m = document.createElement("meta");
-          m.setAttribute("name", "description");
-          return m;
-        },
-        (el) => el.setAttribute("content", description),
-      );
-    }
+    setNamedMeta("description", description ?? "NECTO helps people discover trusted local workers, shops, services, and products near them.");
+    setNamedMeta("robots", robots);
+    setNamedMeta("googlebot", robots);
+    setNamedMeta("application-name", SITE_NAME);
+    setNamedMeta("twitter:card", "summary_large_image");
+    setNamedMeta("twitter:title", title);
+    setNamedMeta("twitter:description", description ?? "Discover trusted local workers and shops near you with NECTO.");
+    setNamedMeta("twitter:image", resolvedImage);
+    setNamedMeta("twitter:image:alt", "NECTO local marketplace app logo");
 
     upsertMeta(
-      'meta[name="robots"]',
+      'link[rel="canonical"]',
       () => {
-        const m = document.createElement("meta");
-        m.setAttribute("name", "robots");
-        return m;
+        const l = document.createElement("link");
+        l.setAttribute("rel", "canonical");
+        return l;
       },
-      (el) =>
-        el.setAttribute(
-          "content",
-          noindex ? "noindex,nofollow" : "index,follow,max-image-preview:large",
-        ),
+      (el) => el.setAttribute("href", canonicalHref),
     );
 
-    if (canonical) {
-      const href = canonical.startsWith("http")
-        ? canonical
-        : `${window.location.origin}${canonical}`;
-      upsertMeta(
-        'link[rel="canonical"]',
-        () => {
-          const l = document.createElement("link");
-          l.setAttribute("rel", "canonical");
-          return l;
-        },
-        (el) => el.setAttribute("href", href),
-      );
-      upsertMeta(
-        'meta[property="og:url"]',
-        () => {
-          const m = document.createElement("meta");
-          m.setAttribute("property", "og:url");
-          return m;
-        },
-        (el) => el.setAttribute("content", href),
-      );
-    }
-
-    if (title) {
-      upsertMeta(
-        'meta[property="og:title"]',
-        () => {
-          const m = document.createElement("meta");
-          m.setAttribute("property", "og:title");
-          return m;
-        },
-        (el) => el.setAttribute("content", title),
-      );
-    }
-    if (description) {
-      upsertMeta(
-        'meta[property="og:description"]',
-        () => {
-          const m = document.createElement("meta");
-          m.setAttribute("property", "og:description");
-          return m;
-        },
-        (el) => el.setAttribute("content", description),
-      );
-    }
-  }, [title, description, canonical, noindex]);
+    setPropertyMeta("og:locale", "en_IN");
+    setPropertyMeta("og:site_name", SITE_NAME);
+    setPropertyMeta("og:type", type);
+    setPropertyMeta("og:title", title);
+    setPropertyMeta("og:description", description ?? "Discover trusted local workers and shops near you with NECTO.");
+    setPropertyMeta("og:url", canonicalHref);
+    setPropertyMeta("og:image", resolvedImage);
+    setPropertyMeta("og:image:secure_url", resolvedImage);
+    setPropertyMeta("og:image:alt", "NECTO local marketplace app logo");
+  }, [title, description, canonical, noindex, image, type]);
 }
