@@ -1,18 +1,27 @@
 User-agent: *
 Allow: /
+
+Disallow: /admin
+Disallow: /admin/
 Disallow: /c/home
 Disallow: /c/profile
+Disallow: /c/activity
 Disallow: /c/worker/
 Disallow: /c/shop/
 Disallow: /w/dashboard
 Disallow: /w/contacts
 Disallow: /w/profile
+Disallow: /w/activity
+Disallow: /w/worker/
 Disallow: /w/shop/
 Disallow: /s/dashboard
 Disallow: /s/contacts
 Disallow: /s/workers
+Disallow: /s/shops
 Disallow: /s/products
 Disallow: /s/profile
+Disallow: /s/activity
 Disallow: /s/worker/
+Disallow: /s/shop/
 
 Sitemap: https://nectoweb.vercel.app/sitemap.xml
