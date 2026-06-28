@@ -11,7 +11,7 @@ import { consentInsertFields } from "@/lib/legal";
 
 export default function WorkerRegister() {
   const navigate = useNavigate();
-  useSeo({ title: "Worker Sign Up — NECTO", description: "List yourself on NECTO and get discovered by local customers.", canonical: "/w/register" });
+  useSeo({ title: "Worker Sign Up | NECTO", description: "List yourself on NECTO and get discovered by local customers.", canonical: "/w/register", noindex: true });
   const [form, setForm] = useState({
     name: "", job_type: "", experience: "", phone: "", whatsapp: "", description: "", area: "",
   });
