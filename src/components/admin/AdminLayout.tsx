@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Users, Hammer, Store, Package, LifeBuoy, ScrollText,
   BarChart3, LogOut, Menu, X, Search, Bell, ShieldCheck, Server,
-  Globe2, Crown, Zap, PanelLeftClose, PanelLeftOpen, ArrowRight,
+  Globe2, Crown, Zap, PanelLeftClose, PanelLeftOpen, ArrowRight, Megaphone,
 } from "lucide-react";
 import { signOutAdmin, useAdminAuth } from "@/lib/admin/auth";
 import { isFounderUser, maskEmail } from "@/lib/admin/founder";
@@ -16,6 +16,7 @@ const NAV = [
   { to: "/admin/shops", label: "Shops", icon: Store },
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/support", label: "Support", icon: LifeBuoy },
+  { to: "/admin/official-updates", label: "Official Updates", icon: Megaphone },
   { to: "/admin/activity", label: "Audit Logs", icon: ScrollText },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/admin/security", label: "Security", icon: ShieldCheck },
@@ -34,6 +35,7 @@ export default function AdminLayout({ children, title }: { children: ReactNode; 
   const navItems = useMemo(() => (founder ? [...NAV, FOUNDER_NAV] : NAV), [founder]);
   const quickActions = useMemo(() => [
     { to: "/admin/customers", label: "Open users", description: "Review customers, workers, and shops", icon: Users },
+    { to: "/admin/official-updates", label: "Official updates", description: "Publish Necto announcements", icon: Megaphone },
     { to: "/admin/support", label: "Support center", description: "Check open support requests", icon: LifeBuoy },
     { to: "/admin/analytics", label: "Analytics", description: "View growth and platform trends", icon: BarChart3 },
     { to: "/admin/health", label: "System health", description: "Check deployment and database status", icon: Server },
