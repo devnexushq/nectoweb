@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Store, User, Users } from "lucide-react";
 import { clearAccount, getRole, getUserId, homePathFor, registerPathFor, setRole, type Role } from "@/lib/role";
 import { accountExists } from "@/hooks/useRoleGuard";
@@ -11,6 +11,7 @@ import { InstallBanner } from "@/components/InstallBanner";
 
 export default function Landing() {
   const navigate = useNavigate();
+  const [checkingSavedAccount, setCheckingSavedAccount] = useState(() => Boolean(getRole()));
   useSeo({
     title: "NECTO — Discover Local, Buy Local",
     description: "NECTO is a hyperlocal marketplace to discover trusted local workers and shops near you.",
@@ -22,7 +23,10 @@ export default function Landing() {
 
     const redirectSavedAccount = async () => {
       const role = getRole();
-      if (!role) return;
+      if (!role) {
+        setCheckingSavedAccount(false);
+        return;
+      }
 
       const id = getUserId();
       if (!id) {
@@ -34,6 +38,7 @@ export default function Landing() {
       if (cancelled) return;
       if (exists === false) {
         clearAccount();
+        setCheckingSavedAccount(false);
         return;
       }
       navigate(homePathFor(role), { replace: true });
@@ -45,8 +50,10 @@ export default function Landing() {
 
   function pick(role: Role) {
     setRole(role);
-    navigate(registerPathFor(role) );
+    navigate(registerPathFor(role));
   }
+
+  if (checkingSavedAccount) return <NectoBootSplash />;
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -74,6 +81,20 @@ export default function Landing() {
         </p>
       </div>
       <InstallBanner />
+    </div>
+  );
+}
+
+function NectoBootSplash() {
+  return (
+    <div className="min-h-screen grid place-items-center bg-white px-6">
+      <div className="text-center">
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-primary shadow-lg">
+          <span className="text-3xl font-extrabold text-white">N</span>
+        </div>
+        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-primary">NECTO</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Opening your account...</p>
+      </div>
     </div>
   );
 }
