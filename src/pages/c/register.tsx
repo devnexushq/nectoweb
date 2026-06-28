@@ -11,7 +11,7 @@ import { consentInsertFields } from "@/lib/legal";
 
 export default function CustomerRegister() {
   const navigate = useNavigate();
-  useSeo({ title: "Customer Sign Up — NECTO", description: "Join NECTO as a customer to find trusted local workers and shops.", canonical: "/c/register" });
+  useSeo({ title: "Customer Sign Up | NECTO", description: "Join NECTO as a customer to find trusted local workers and shops.", canonical: "/c/register", noindex: true });
   const [form, setForm] = useState({ name: "", area: "", phone: "" });
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
