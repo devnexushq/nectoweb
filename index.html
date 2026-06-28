@@ -1,59 +1,105 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-IN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>NECTO — Discover Local, Buy Local</title>
-    <meta name="description" content="NECTO is a hyperlocal marketplace to discover trusted local workers and shops near you." />
-    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <title>NECTO | Discover Trusted Local Workers & Shops Near You</title>
+    <meta name="description" content="NECTO is a trusted hyperlocal marketplace for discovering nearby workers, local shops, services, products, phone contacts, and WhatsApp-ready businesses in India." />
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
+    <meta name="googlebot" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1" />
+    <meta name="application-name" content="NECTO" />
+    <meta name="apple-mobile-web-app-title" content="NECTO" />
+    <meta name="author" content="NECTO" />
+    <meta name="publisher" content="NECTO" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="color-scheme" content="light" />
+    <meta name="geo.region" content="IN-OD" />
+    <meta name="geo.placename" content="Odisha, India" />
     <link rel="canonical" href="https://nectoweb.vercel.app/" />
     <meta name="google-site-verification" content="pB496FaGsOX08nE30KVpUw_muClkaPcg0MG7oxULwjk" />
 
     <!-- Open Graph -->
+    <meta property="og:locale" content="en_IN" />
     <meta property="og:site_name" content="NECTO" />
-    <meta property="og:title" content="NECTO — Discover Local, Buy Local" />
-    <meta property="og:description" content="NECTO is a hyperlocal marketplace to discover trusted local workers and shops near you." />
+    <meta property="og:title" content="NECTO | Discover Trusted Local Workers & Shops Near You" />
+    <meta property="og:description" content="Find nearby workers, trusted local shops, services, products, phone contacts, and WhatsApp-ready businesses with NECTO." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://nectoweb.vercel.app/" />
     <meta property="og:image" content="https://nectoweb.vercel.app/icon-512.png" />
+    <meta property="og:image:secure_url" content="https://nectoweb.vercel.app/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="NECTO local marketplace app logo" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="NECTO — Discover Local, Buy Local" />
-    <meta name="twitter:description" content="Discover trusted local workers and shops near you." />
+    <meta name="twitter:title" content="NECTO | Discover Trusted Local Workers & Shops Near You" />
+    <meta name="twitter:description" content="Discover local workers and shops near you with NECTO, a trusted hyperlocal marketplace built for India." />
     <meta name="twitter:image" content="https://nectoweb.vercel.app/icon-512.png" />
+    <meta name="twitter:image:alt" content="NECTO local marketplace app logo" />
 
     <!-- PWA -->
     <meta name="theme-color" content="#1E3A8A" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Necto" />
     <link rel="icon" type="image/png" href="/icon-192.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-    <!-- Structured Data: WebSite -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "NECTO",
-        "alternateName": "Necto",
-        "url": "https://nectoweb.vercel.app/"
-      }
-    </script>
-    <!-- Structured Data: Organization -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "NECTO",
-        "url": "https://nectoweb.vercel.app/",
-        "logo": "https://nectoweb.vercel.app/icon-512.png"
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://nectoweb.vercel.app/#organization",
+            "name": "NECTO",
+            "alternateName": "Necto",
+            "url": "https://nectoweb.vercel.app/",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://nectoweb.vercel.app/icon-512.png",
+              "width": 512,
+              "height": 512
+            },
+            "description": "NECTO is a trusted hyperlocal marketplace connecting customers with nearby workers and local shops in India.",
+            "areaServed": {
+              "@type": "Country",
+              "name": "India"
+            }
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://nectoweb.vercel.app/#website",
+            "url": "https://nectoweb.vercel.app/",
+            "name": "NECTO",
+            "alternateName": "Necto",
+            "publisher": { "@id": "https://nectoweb.vercel.app/#organization" },
+            "inLanguage": "en-IN"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://nectoweb.vercel.app/#webapp",
+            "name": "NECTO",
+            "url": "https://nectoweb.vercel.app/",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Android, iOS, Windows, macOS, Web",
+            "browserRequirements": "Requires JavaScript. Works in modern browsers.",
+            "description": "A hyperlocal marketplace app to discover trusted local workers, shops, services, and products.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "INR"
+            },
+            "publisher": { "@id": "https://nectoweb.vercel.app/#organization" }
+          }
+        ]
       }
     </script>
   </head>
