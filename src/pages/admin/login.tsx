@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/lib/admin/auth";
+import { useSeo } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  useSeo({ title: "Admin Login | NECTO", description: "Secure NECTO admin login.", canonical: "/admin/login", noindex: true });
 
   useEffect(() => {
     if (!loading && user && isAdmin) navigate("/admin", { replace: true });
