@@ -24,6 +24,7 @@ import ShopWorkerProfile from "./pages/s/worker.id";
 import ShopShopProfile from "./pages/s/shop.id";
 import ShopProducts from "./pages/s/products";
 import ShopProfile from "./pages/s/profile";
+import ActivityPage from "./pages/ActivityPage";
 import TermsAndConditions from "./pages/legal/terms";
 import PrivacyPolicy from "./pages/legal/privacy";
 import AdminLogin from "./pages/admin/login";
@@ -39,6 +40,7 @@ import AdminAnalytics from "./pages/admin/analytics";
 import AdminSecurity from "./pages/admin/security";
 import AdminSystemHealth from "./pages/admin/health";
 import AdminSeoCenter from "./pages/admin/seo";
+import AdminOfficialUpdates from "./pages/admin/official-updates";
 import FounderVault from "./pages/admin/founder-vault";
 import {
   PublicShopProfilePage,
@@ -69,6 +71,7 @@ export default function App() {
       <Route path="/shop/:id" element={<PublicShopProfilePage backTo="/shops" />} />
       <Route path="/c/register" element={<CustomerRegister />} />
       <Route path="/c/home" element={<CustomerHome />} />
+      <Route path="/c/activity" element={<ActivityPage role="customer" />} />
       <Route path="/c/workers" element={<CustomerWorkers />} />
       <Route path="/c/shops" element={<CustomerShops />} />
       <Route path="/c/profile" element={<CustomerProfile />} />
@@ -77,6 +80,7 @@ export default function App() {
       <Route path="/worker/register" element={<WorkerRegister />} />
       <Route path="/w/register" element={<WorkerRegister />} />
       <Route path="/w/dashboard" element={<WorkerDashboard />} />
+      <Route path="/w/activity" element={<ActivityPage role="worker" />} />
       <Route path="/w/contacts" element={<WorkerContacts />} />
       <Route path="/w/workers" element={<WorkerWorkers />} />
       <Route path="/w/shops" element={<WorkerShops />} />
@@ -86,6 +90,7 @@ export default function App() {
       <Route path="/shop/register" element={<ShopRegister />} />
       <Route path="/s/register" element={<ShopRegister />} />
       <Route path="/s/dashboard" element={<ShopDashboard />} />
+      <Route path="/s/activity" element={<ActivityPage role="shop" />} />
       <Route path="/s/contacts" element={<ShopContacts />} />
       <Route path="/s/workers" element={<ShopWorkers />} />
       <Route path="/s/shops" element={<ShopShops />} />
@@ -104,6 +109,7 @@ export default function App() {
       <Route path="/admin/products" element={<AdminProducts />} />
       <Route path="/admin/support" element={<AdminSupport />} />
       <Route path="/admin/activity" element={<AdminActivity />} />
+      <Route path="/admin/official-updates" element={<AdminOfficialUpdates />} />
       <Route path="/admin/analytics" element={<AdminAnalytics />} />
       <Route path="/admin/security" element={<AdminSecurity />} />
       <Route path="/admin/health" element={<AdminSystemHealth />} />
