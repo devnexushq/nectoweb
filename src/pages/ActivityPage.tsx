@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import { ArrowLeft, ChevronRight, Clock, ExternalLink, MapPin, Megaphone, Sparkles, Tag, X } from "lucide-react";
+import { ChevronRight, Clock, ExternalLink, MapPin, Megaphone, Sparkles, Tag, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
@@ -19,6 +19,12 @@ type ActivityCategory = "official" | "shop-offers" | "new-near-you";
 
 function categoryPath(role: Role, category: ActivityCategory) {
   return `${getActivityPath(role)}/${category}`;
+}
+
+function roleHomePath(role: Role) {
+  if (role === "customer") return "/c/home";
+  if (role === "worker") return "/w/dashboard";
+  return "/s/dashboard";
 }
 
 function shopPath(role: Role, shopId: string | null | undefined) {
@@ -78,7 +84,7 @@ export default function ActivityPage({ role }: { role: Role }) {
   const hasNewOffers = offers.some((item) => !viewedIds.has(item.id));
 
   return (
-    <AppShell role={role} title="Activity">
+    <AppShell role={role} title="Activity" backTo={roleHomePath(role)} backLabel="Back to home">
       <p className="text-sm text-muted-foreground">Stay updated with what's happening on Necto.</p>
 
       <div className="mt-5 grid gap-3">
@@ -175,8 +181,7 @@ export function ActivityCategoryPage({ role, category }: { role: Role; category:
 
   if (category === "new-near-you") {
     return (
-      <AppShell role={role} title={title}>
-        <BackToActivity role={role} />
+      <AppShell role={role} title={title} backTo={getActivityPath(role)} backLabel="Back to Activity">
         <div className="mt-5 rounded-3xl border border-border bg-white p-8 text-center shadow-sm">
           <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 text-amber-700">
             <Clock className="h-6 w-6" />
@@ -189,9 +194,7 @@ export function ActivityCategoryPage({ role, category }: { role: Role; category:
   }
 
   return (
-    <AppShell role={role} title={title}>
-      <BackToActivity role={role} />
-
+    <AppShell role={role} title={title} backTo={getActivityPath(role)} backLabel="Back to Activity">
       <section className="mt-5 rounded-2xl border border-border bg-white p-4 shadow-sm">
         {category === "official" ? (
           <p className="text-sm text-muted-foreground">Newest official updates appear first.</p>
@@ -221,14 +224,6 @@ export function ActivityCategoryPage({ role, category }: { role: Role; category:
 
       {selected && <ActivityDetailModal item={selected} onClose={() => setSelected(null)} />}
     </AppShell>
-  );
-}
-
-function BackToActivity({ role }: { role: Role }) {
-  return (
-    <Link to={getActivityPath(role)} className="inline-flex h-10 items-center gap-2 rounded-xl border border-border bg-white px-3 text-sm font-bold text-foreground shadow-sm hover:bg-muted">
-      <ArrowLeft className="h-4 w-4" /> Back
-    </Link>
   );
 }
 
