@@ -21,6 +21,17 @@ export type ActivityFeedItem = {
   created_at: string;
   updated_at: string;
   expires_at: string | null;
+  linked_shop_id?: string | null;
+  offer_start_at?: string | null;
+  offer_end_at?: string | null;
+  category?: string | null;
+  discount_text?: string | null;
+  shops?: {
+    shop_name: string | null;
+    photo_url: string | null;
+    category: string | null;
+    area: string | null;
+  } | null;
 };
 
 type ProfileLocation = {
@@ -101,6 +112,28 @@ export async function fetchOfficialUpdates(role: Role, userId: string) {
   const now = Date.now();
   return ((data ?? []) as ActivityFeedItem[]).filter((item) => {
     const notExpired = !item.expires_at || new Date(item.expires_at).getTime() > now;
+    return notExpired && isVisibleForRole(item, role, profile);
+  });
+}
+
+export async function fetchVisibleShopOffers(role: Role, userId: string) {
+  const profile = await fetchProfileLocation(role, userId);
+  const { data, error } = await db
+    .from("activity_feed")
+    .select("*, shops!activity_feed_linked_shop_id_fkey(shop_name, photo_url, category, area)")
+    .eq("type", "offer")
+    .eq("status", "published")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.warn("[Activity] Could not load shop offers", error.message);
+    return [] as ActivityFeedItem[];
+  }
+
+  const now = Date.now();
+  return ((data ?? []) as ActivityFeedItem[]).filter((item) => {
+    const expiry = item.offer_end_at ?? item.expires_at;
+    const notExpired = !expiry || new Date(expiry).getTime() >= now;
     return notExpired && isVisibleForRole(item, role, profile);
   });
 }

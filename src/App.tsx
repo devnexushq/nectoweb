@@ -23,6 +23,9 @@ import ShopShops from "./pages/s/shops";
 import ShopWorkerProfile from "./pages/s/worker.id";
 import ShopShopProfile from "./pages/s/shop.id";
 import ShopProducts from "./pages/s/products";
+import ShopOffersPage from "./pages/s/offers";
+import ShopOfferEditor from "./pages/s/offer-editor";
+import ShopOfferView from "./pages/s/offer-view";
 import ShopProfile from "./pages/s/profile";
 import ActivityPage from "./pages/ActivityPage";
 import TermsAndConditions from "./pages/legal/terms";
@@ -41,6 +44,7 @@ import AdminSecurity from "./pages/admin/security";
 import AdminSystemHealth from "./pages/admin/health";
 import AdminSeoCenter from "./pages/admin/seo";
 import AdminOfficialUpdates from "./pages/admin/official-updates";
+import AdminShopOffers from "./pages/admin/shop-offers";
 import FounderVault from "./pages/admin/founder-vault";
 import {
   PublicShopProfilePage,
@@ -97,6 +101,10 @@ export default function App() {
       <Route path="/s/worker/:id" element={<ShopWorkerProfile />} />
       <Route path="/s/shop/:id" element={<ShopShopProfile />} />
       <Route path="/s/products" element={<ShopProducts />} />
+      <Route path="/s/offers" element={<ShopOffersPage />} />
+      <Route path="/s/offers/new" element={<ShopOfferEditor />} />
+      <Route path="/s/offers/:id" element={<ShopOfferView />} />
+      <Route path="/s/offers/:id/edit" element={<ShopOfferEditor />} />
       <Route path="/s/profile" element={<ShopProfile />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -110,6 +118,7 @@ export default function App() {
       <Route path="/admin/support" element={<AdminSupport />} />
       <Route path="/admin/activity" element={<AdminActivity />} />
       <Route path="/admin/official-updates" element={<AdminOfficialUpdates />} />
+      <Route path="/admin/shop-offers" element={<AdminShopOffers />} />
       <Route path="/admin/analytics" element={<AdminAnalytics />} />
       <Route path="/admin/security" element={<AdminSecurity />} />
       <Route path="/admin/health" element={<AdminSystemHealth />} />

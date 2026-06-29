@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Phone, MessageCircle, Users } from "lucide-react";
+import { Phone, MessageCircle, Plus, Tag, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +39,26 @@ export default function ShopDashboard() {
         <Stat icon={MessageCircle} label="WhatsApp" value={stats.wa} accent />
         <Stat icon={Phone} label="Calls" value={stats.call} />
       </div>
+
+      <section className="mt-6 rounded-2xl border border-primary/15 bg-gradient-to-br from-white to-primary/5 p-4 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary text-white shadow-sm">
+            <Tag className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-black text-primary">Shop Offers</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Create and manage promotional offers for your customers.</p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          <Link to="/s/offers/new" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white hover:bg-primary/90">
+            <Plus className="h-4 w-4" /> Create Offer
+          </Link>
+          <Link to="/s/offers" className="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-white px-4 text-sm font-bold text-foreground hover:bg-muted">
+            Manage Offers
+          </Link>
+        </div>
+      </section>
 
       <div className="mt-6 grid grid-cols-2 gap-3">
         <QuickAction to="/s/products" label="Manage Products" />
