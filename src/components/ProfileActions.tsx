@@ -37,6 +37,36 @@ const TABLE: Record<Role, "customers" | "workers" | "shops"> = {
   shop: "shops",
 };
 
+const DELETE_COPY: Record<Role, { title: string; summary: string; details: string[] }> = {
+  customer: {
+    title: "Delete customer profile?",
+    summary: "Use this only if you no longer want to use this customer account on Necto.",
+    details: [
+      "Your customer profile and saved local account details will be removed.",
+      "You will be signed out of this role and taken back to the account type selection page.",
+      "To use Necto again as a customer, you will need to register again.",
+    ],
+  },
+  worker: {
+    title: "Delete worker profile?",
+    summary: "Use this only if you no longer want customers to discover your worker profile on Necto.",
+    details: [
+      "Your public worker profile will be removed from worker listings and search results.",
+      "Customers will no longer be able to open your worker profile or contact you from it.",
+      "You will be signed out of this role and must register again to list yourself later.",
+    ],
+  },
+  shop: {
+    title: "Delete shop profile?",
+    summary: "Use this only if you no longer want your shop to appear on Necto.",
+    details: [
+      "Your public shop profile will be removed from shop listings and search results.",
+      "Customers will no longer be able to open your shop profile or contact your shop from it.",
+      "You will be signed out of this role and must register again to list the shop later.",
+    ],
+  },
+};
+
 export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }: Props) {
   const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
@@ -46,6 +76,7 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
   const [deleting, setDeleting] = useState(false);
 
   const locked = role !== "customer" && lockDaysLeft > 0;
+  const deleteCopy = DELETE_COPY[role];
 
   function openEdit() {
     setForm(me);
@@ -103,12 +134,25 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
 
       {middleSlot}
 
-      <button
-        onClick={() => setDelOpen(true)}
-        className="w-full h-12 rounded-xl border border-destructive text-destructive font-semibold hover:bg-destructive/10 inline-flex items-center justify-center gap-2"
-      >
-        <Trash2 className="h-4 w-4" /> Delete Profile
-      </button>
+      <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 rounded-full bg-destructive/10 p-2 text-destructive">
+            <Trash2 className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-sm font-bold text-destructive">Delete profile</h3>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+              {deleteCopy.summary} This removes your current profile from Necto and cannot be undone.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => setDelOpen(true)}
+          className="mt-3 w-full h-12 rounded-xl border border-destructive text-destructive font-semibold hover:bg-destructive/10 inline-flex items-center justify-center gap-2"
+        >
+          <Trash2 className="h-4 w-4" /> Delete Profile
+        </button>
+      </div>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
@@ -139,10 +183,17 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
       <AlertDialog open={delOpen} onOpenChange={setDelOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete your profile?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently remove your profile and data from Necto.
-              This action cannot be undone.
+            <AlertDialogTitle>{deleteCopy.title}</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>{deleteCopy.summary}</p>
+                <ul className="list-disc space-y-1 pl-5">
+                  {deleteCopy.details.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+                <p className="font-medium text-destructive">This action is permanent and cannot be undone.</p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
