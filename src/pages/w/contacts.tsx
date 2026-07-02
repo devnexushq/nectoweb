@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
+import { withTimeout } from "@/lib/safeAsync";
 
 
 
@@ -14,9 +15,12 @@ export default function WorkerContacts() {
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     const id = getUserId();
-    if (!id) return;
-    supabase.from("contacts_log").select("*").eq("to_id", id).eq("to_type", "worker").order("timestamp", { ascending: false }).then(({ data }) => {
-      setLogs(data ?? []);
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    withTimeout(supabase.from("contacts_log").select("*").eq("to_id", id).eq("to_type", "worker").order("timestamp", { ascending: false })).then((result) => {
+      setLogs(result?.data ?? []);
       setLoading(false);
     });
   }, []);

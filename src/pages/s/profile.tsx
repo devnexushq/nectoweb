@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
+import { withTimeout } from "@/lib/safeAsync";
 import { editLockDaysLeft } from "@/pages/w/profile";
 import { InstallButton } from "@/components/InstallButton";
 import { ProfileActions } from "@/components/ProfileActions";
@@ -11,9 +12,17 @@ import { LegalInfoSection } from "@/components/LegalInfoSection";
 export default function ShopProfilePage() {
   const ready = useRoleGuard("shop");
   const [me, setMe] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
-    const id = getUserId(); if (!id) return;
-    supabase.from("shops").select("*").eq("id", id).maybeSingle().then(({ data }) => setMe(data));
+    const id = getUserId();
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    withTimeout(supabase.from("shops").select("*").eq("id", id).maybeSingle()).then((result) => {
+      setMe(result?.data ?? null);
+      setLoading(false);
+    });
   }, []);
   const lock = useMemo(() => editLockDaysLeft(me?.registered_at), [me]);
   if (!ready) return null;
@@ -34,7 +43,7 @@ export default function ShopProfilePage() {
           <ProfileActions role="shop" me={me} lockDaysLeft={lock} onUpdated={setMe} middleSlot={<LegalInfoSection />} />
           <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
         </div>
-      ) : <p className="text-sm text-muted-foreground">Loading...</p>}
+      ) : <p className="text-sm text-muted-foreground">{loading ? "Loading..." : "Profile not found."}</p>}
     </AppShell>
   );
 }

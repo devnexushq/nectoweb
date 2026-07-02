@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ContactButtons } from "@/components/ContactButtons";
 import { MapPin, Clock, Briefcase, Star, User } from "lucide-react";
+import { withTimeout } from "@/lib/safeAsync";
 
 const PUBLIC_WORKER_DETAIL_COLUMNS = "id,name,job_type,experience,phone,whatsapp,description,area,business_hours,rating,photo_url";
 const PUBLIC_SHOP_DETAIL_COLUMNS = "id,shop_name,owner_name,category,phone,whatsapp,description,area,business_hours,rating,photo_url";
@@ -14,8 +15,8 @@ export function WorkerProfileView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.from("workers").select(PUBLIC_WORKER_DETAIL_COLUMNS).eq("id", id).maybeSingle().then(({ data }) => {
-      setW(data);
+    withTimeout(supabase.from("workers").select(PUBLIC_WORKER_DETAIL_COLUMNS).eq("id", id).maybeSingle()).then((result) => {
+      setW(result?.data ?? null);
       setLoading(false);
     });
   }, [id]);
@@ -68,10 +69,11 @@ export function ShopProfileView() {
 
   useEffect(() => {
     (async () => {
-      const [{ data }, { data: prods }] = await Promise.all([
+      const result = await withTimeout(Promise.all([
         supabase.from("shops").select(PUBLIC_SHOP_DETAIL_COLUMNS).eq("id", id).maybeSingle(),
         supabase.from("products").select(PUBLIC_PRODUCT_COLUMNS).eq("shop_id", id).eq("visibility", "visible").order("created_at", { ascending: false }),
-      ]);
+      ]));
+      const [{ data }, { data: prods }] = result ?? [{ data: null }, { data: [] as any[] }];
       setS(data);
       setProducts(prods ?? []);
       setLoading(false);

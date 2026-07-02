@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SearchBar, AreaFilterBar } from "@/components/SearchBar";
 import { ListingCard, type ListingCardData } from "@/components/ListingCard";
 import { EmptyState } from "@/components/EmptyState";
+import { withTimeout } from "@/lib/safeAsync";
 
 type Mode = "workers" | "shops" | "mixed";
 
@@ -40,8 +41,9 @@ export function ListingsView({
       const sPromise = mode !== "workers"
         ? supabase.from("shops").select(PUBLIC_SHOP_COLUMNS).order("registered_at", { ascending: false })
         : Promise.resolve({ data: [] as any[] });
-      const [w, s] = await Promise.all([wPromise, sPromise]);
+      const result = await withTimeout(Promise.all([wPromise, sPromise]));
       if (cancelled) return;
+      const [w, s] = result ?? [{ data: [] as any[] }, { data: [] as any[] }];
       setWorkers((w as any).data ?? []);
       setShops((s as any).data ?? []);
       setLoading(false);

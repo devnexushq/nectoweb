@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
+import { withTimeout } from "@/lib/safeAsync";
 import { InstallButton } from "@/components/InstallButton";
 import { ProfileActions } from "@/components/ProfileActions";
 import { LegalInfoSection } from "@/components/LegalInfoSection";
@@ -10,10 +11,17 @@ import { LegalInfoSection } from "@/components/LegalInfoSection";
 export default function CustomerProfile() {
   const ready = useRoleGuard("customer");
   const [me, setMe] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const id = getUserId();
-    if (!id) return;
-    supabase.from("customers").select("*").eq("id", id).maybeSingle().then(({ data }) => setMe(data));
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    withTimeout(supabase.from("customers").select("*").eq("id", id).maybeSingle()).then((result) => {
+      setMe(result?.data ?? null);
+      setLoading(false);
+    });
   }, []);
   if (!ready) return null;
   return (
@@ -28,7 +36,7 @@ export default function CustomerProfile() {
           <ProfileActions role="customer" me={me} lockDaysLeft={0} onUpdated={setMe} middleSlot={<LegalInfoSection />} />
           <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
         </div>
-      ) : <p className="text-sm text-muted-foreground">Loading...</p>}
+      ) : <p className="text-sm text-muted-foreground">{loading ? "Loading..." : "Profile not found."}</p>}
     </AppShell>
   );
 }

@@ -3,6 +3,7 @@ import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
+import { withTimeout } from "@/lib/safeAsync";
 import { InstallButton } from "@/components/InstallButton";
 import { ProfileActions } from "@/components/ProfileActions";
 import { LegalInfoSection } from "@/components/LegalInfoSection";
@@ -10,11 +11,18 @@ import { LegalInfoSection } from "@/components/LegalInfoSection";
 export default function WorkerProfile() {
   const ready = useRoleGuard("worker");
   const [me, setMe] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const id = getUserId();
-    if (!id) return;
-    supabase.from("workers").select("*").eq("id", id).maybeSingle().then(({ data }) => setMe(data));
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    withTimeout(supabase.from("workers").select("*").eq("id", id).maybeSingle()).then((result) => {
+      setMe(result?.data ?? null);
+      setLoading(false);
+    });
   }, []);
 
   const lock = useMemo(() => editLockDaysLeft(me?.registered_at), [me]);
@@ -37,7 +45,7 @@ export default function WorkerProfile() {
           <ProfileActions role="worker" me={me} lockDaysLeft={lock} onUpdated={setMe} middleSlot={<LegalInfoSection />} />
           <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
         </div>
-      ) : <p className="text-sm text-muted-foreground">Loading...</p>}
+      ) : <p className="text-sm text-muted-foreground">{loading ? "Loading..." : "Profile not found."}</p>}
     </AppShell>
   );
 }

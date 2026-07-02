@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { withTimeout } from "@/lib/safeAsync";
 import {
   clearAccount,
   getRole,
@@ -10,6 +11,8 @@ import {
   type Role,
 } from "@/lib/role";
 
+const ACCOUNT_CHECK_TIMEOUT_MS = 4500;
+
 export async function accountExists(role: Role, id: string): Promise<boolean | null> {
   const query = role === "customer"
     ? supabase.from("customers").select("id").eq("id", id).maybeSingle()
@@ -17,7 +20,10 @@ export async function accountExists(role: Role, id: string): Promise<boolean | n
       ? supabase.from("workers").select("id").eq("id", id).maybeSingle()
       : supabase.from("shops").select("id").eq("id", id).maybeSingle();
 
-  const { data, error } = await query;
+  const result = await withTimeout(query, ACCOUNT_CHECK_TIMEOUT_MS);
+  if (!result) return null;
+
+  const { data, error } = result;
   if (error) return null;
   return Boolean(data);
 }

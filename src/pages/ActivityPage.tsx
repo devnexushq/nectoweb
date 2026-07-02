@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { getUserId, type Role } from "@/lib/role";
+import { withTimeout } from "@/lib/safeAsync";
 import {
   fetchOfficialUpdates,
   fetchVisibleShopOffers,
@@ -54,12 +55,13 @@ function useActivityData(role: Role, ready: boolean) {
       if (!userId) return;
       setLoading(true);
       const key = getActivityViewerKey(role, userId);
-      const [officialItems, offerItems, viewed] = await Promise.all([
+      const result = await withTimeout(Promise.all([
         fetchOfficialUpdates(role, userId),
         fetchVisibleShopOffers(role, userId),
         fetchViewedActivityIds(key),
-      ]);
+      ]));
       if (!cancelled) {
+        const [officialItems, offerItems, viewed] = result ?? [[], [], new Set<string>()];
         setUpdates(officialItems);
         setOffers(offerItems);
         setViewedIds(viewed);
