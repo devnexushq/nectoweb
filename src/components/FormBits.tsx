@@ -46,8 +46,18 @@ export function HoursAndVisibility({
       <div>
         <label className="text-sm font-medium">Business Hours</label>
         <div className="mt-1 grid grid-cols-2 gap-2">
-          <input type="time" value={hours.from} onChange={(e) => setHours({ ...hours, from: e.target.value })} className="h-11 px-3 rounded-lg border border-border focus:border-primary outline-none" />
-          <input type="time" value={hours.to} onChange={(e) => setHours({ ...hours, to: e.target.value })} className="h-11 px-3 rounded-lg border border-border focus:border-primary outline-none" />
+          <input
+            type="time"
+            value={hours.from}
+            onChange={(e) => setHours({ ...hours, from: e.target.value })}
+            className="h-11 px-3 rounded-lg border border-border focus:border-primary outline-none"
+          />
+          <input
+            type="time"
+            value={hours.to}
+            onChange={(e) => setHours({ ...hours, to: e.target.value })}
+            className="h-11 px-3 rounded-lg border border-border focus:border-primary outline-none"
+          />
         </div>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {DAYS.map((d) => (
@@ -56,7 +66,9 @@ export function HoursAndVisibility({
               key={d}
               onClick={() => toggleDay(d)}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-                hours.days.includes(d) ? "bg-primary text-white border-primary" : "bg-white text-muted-foreground border-border"
+                hours.days.includes(d)
+                  ? "bg-primary text-white border-primary"
+                  : "bg-white text-muted-foreground border-border"
               }`}
             >
               {d}
@@ -73,17 +85,26 @@ export function Field(props: React.InputHTMLAttributes<HTMLInputElement> & { lab
   return (
     <div>
       <label className="text-sm font-medium">{label}</label>
-      <input {...rest} className="mt-1 w-full h-11 px-3 rounded-lg border border-border focus:border-primary outline-none" />
+      <input
+        {...rest}
+        className="mt-1 w-full h-11 px-3 rounded-lg border border-border focus:border-primary outline-none"
+      />
     </div>
   );
 }
 
-export function TextArea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
+export function TextArea(
+  props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string },
+) {
   const { label, ...rest } = props;
   return (
     <div>
       <label className="text-sm font-medium">{label}</label>
-      <textarea {...rest} rows={3} className="mt-1 w-full px-3 py-2 rounded-lg border border-border focus:border-primary outline-none" />
+      <textarea
+        {...rest}
+        rows={3}
+        className="mt-1 w-full px-3 py-2 rounded-lg border border-border focus:border-primary outline-none"
+      />
     </div>
   );
 }

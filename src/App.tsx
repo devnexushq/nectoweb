@@ -59,7 +59,9 @@ function NotFound() {
       <div>
         <h1 className="text-3xl font-bold text-primary">404</h1>
         <p className="text-muted-foreground mt-2">Page not found</p>
-        <Link to="/" className="inline-block mt-4 px-4 py-2 rounded-md bg-primary text-white">Go home</Link>
+        <Link to="/" className="inline-block mt-4 px-4 py-2 rounded-md bg-primary text-white">
+          Go home
+        </Link>
       </div>
     </div>
   );
@@ -76,9 +78,18 @@ export default function App() {
       <Route path="/c/register" element={<CustomerRegister />} />
       <Route path="/c/home" element={<CustomerHome />} />
       <Route path="/c/activity" element={<ActivityPage role="customer" />} />
-      <Route path="/c/activity/official" element={<ActivityCategoryPage role="customer" category="official" />} />
-      <Route path="/c/activity/shop-offers" element={<ActivityCategoryPage role="customer" category="shop-offers" />} />
-      <Route path="/c/activity/new-near-you" element={<ActivityCategoryPage role="customer" category="new-near-you" />} />
+      <Route
+        path="/c/activity/official"
+        element={<ActivityCategoryPage role="customer" category="official" />}
+      />
+      <Route
+        path="/c/activity/shop-offers"
+        element={<ActivityCategoryPage role="customer" category="shop-offers" />}
+      />
+      <Route
+        path="/c/activity/new-near-you"
+        element={<ActivityCategoryPage role="customer" category="new-near-you" />}
+      />
       <Route path="/c/workers" element={<CustomerWorkers />} />
       <Route path="/c/shops" element={<CustomerShops />} />
       <Route path="/c/profile" element={<CustomerProfile />} />
@@ -88,9 +99,18 @@ export default function App() {
       <Route path="/w/register" element={<WorkerRegister />} />
       <Route path="/w/dashboard" element={<WorkerDashboard />} />
       <Route path="/w/activity" element={<ActivityPage role="worker" />} />
-      <Route path="/w/activity/official" element={<ActivityCategoryPage role="worker" category="official" />} />
-      <Route path="/w/activity/shop-offers" element={<ActivityCategoryPage role="worker" category="shop-offers" />} />
-      <Route path="/w/activity/new-near-you" element={<ActivityCategoryPage role="worker" category="new-near-you" />} />
+      <Route
+        path="/w/activity/official"
+        element={<ActivityCategoryPage role="worker" category="official" />}
+      />
+      <Route
+        path="/w/activity/shop-offers"
+        element={<ActivityCategoryPage role="worker" category="shop-offers" />}
+      />
+      <Route
+        path="/w/activity/new-near-you"
+        element={<ActivityCategoryPage role="worker" category="new-near-you" />}
+      />
       <Route path="/w/contacts" element={<WorkerContacts />} />
       <Route path="/w/workers" element={<WorkerWorkers />} />
       <Route path="/w/shops" element={<WorkerShops />} />
@@ -101,9 +121,18 @@ export default function App() {
       <Route path="/s/register" element={<ShopRegister />} />
       <Route path="/s/dashboard" element={<ShopDashboard />} />
       <Route path="/s/activity" element={<ActivityPage role="shop" />} />
-      <Route path="/s/activity/official" element={<ActivityCategoryPage role="shop" category="official" />} />
-      <Route path="/s/activity/shop-offers" element={<ActivityCategoryPage role="shop" category="shop-offers" />} />
-      <Route path="/s/activity/new-near-you" element={<ActivityCategoryPage role="shop" category="new-near-you" />} />
+      <Route
+        path="/s/activity/official"
+        element={<ActivityCategoryPage role="shop" category="official" />}
+      />
+      <Route
+        path="/s/activity/shop-offers"
+        element={<ActivityCategoryPage role="shop" category="shop-offers" />}
+      />
+      <Route
+        path="/s/activity/new-near-you"
+        element={<ActivityCategoryPage role="shop" category="new-near-you" />}
+      />
       <Route path="/s/contacts" element={<ShopContacts />} />
       <Route path="/s/workers" element={<ShopWorkers />} />
       <Route path="/s/shops" element={<ShopShops />} />

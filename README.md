@@ -129,32 +129,37 @@ Necto includes:
 
 ## 🛠 Technology Stack
 
-| Layer | Technology |
-|---------|------------|
-| Frontend | React + Vite |
-| Backend | Supabase |
-| Database | PostgreSQL |
-| Hosting | Vercel |
-| Styling | Tailwind CSS |
-| PWA | Web App Manifest |
+| Layer    | Technology       |
+| -------- | ---------------- |
+| Frontend | React + Vite     |
+| Backend  | Supabase         |
+| Database | PostgreSQL       |
+| Hosting  | Vercel           |
+| Styling  | Tailwind CSS     |
+| PWA      | Web App Manifest |
 
 ---
 
 ## 🌍 Growth Roadmap
 
 ### Phase 1
+
 Koira, Odisha
 
 ### Phase 2
+
 Sundargarh District
 
 ### Phase 3
+
 Odisha Expansion
 
 ### Phase 4
+
 Tier-2 & Tier-3 Cities Across India
 
 ### Phase 5
+
 Nationwide Expansion
 
 ---

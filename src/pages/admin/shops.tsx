@@ -16,21 +16,38 @@ export default function AdminShops() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    await supabase.from("shops").update({ approval_status: "approved" }).eq("approval_status", "pending");
-    let q = supabase.from("shops").select("*").order("registered_at", { ascending: false }).limit(1000);
+    await supabase
+      .from("shops")
+      .update({ approval_status: "approved" })
+      .eq("approval_status", "pending");
+    let q = supabase
+      .from("shops")
+      .select("*")
+      .order("registered_at", { ascending: false })
+      .limit(1000);
     if (filter !== "all") q = q.eq("approval_status", filter);
     const { data } = await q;
     setRows((data as Shop[]) ?? []);
     setLoading(false);
   }, [filter]);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const columns: Column<Shop>[] = [
-    { key: "name", header: "Shop", render: (r) => <span className="font-medium">{r.shop_name}</span> },
+    {
+      key: "name",
+      header: "Shop",
+      render: (r) => <span className="font-medium">{r.shop_name}</span>,
+    },
     { key: "owner", header: "Owner", render: (r) => r.owner_name },
     { key: "phone", header: "Phone", render: (r) => r.phone },
     { key: "area", header: "Area", render: (r) => r.area },
-    { key: "reg", header: "Registered", render: (r) => new Date(r.registered_at).toLocaleDateString() },
+    {
+      key: "reg",
+      header: "Registered",
+      render: (r) => new Date(r.registered_at).toLocaleDateString(),
+    },
     { key: "status", header: "Status", render: (r) => <StatusBadge status={r.approval_status} /> },
   ];
 
@@ -38,16 +55,25 @@ export default function AdminShops() {
     <RequireAdmin>
       <AdminLayout title="Shops">
         <DataTable
-          rows={rows} columns={columns} loading={loading}
+          rows={rows}
+          columns={columns}
+          loading={loading}
           searchPlaceholder="Search shops..."
           searchFields={(r) => `${r.shop_name} ${r.owner_name} ${r.phone} ${r.area} ${r.category}`}
           filters={
             <div className="flex gap-1.5 flex-wrap">
               {STATUSES.map((s) => (
-                <button key={s} onClick={() => setFilter(s)}
+                <button
+                  key={s}
+                  onClick={() => setFilter(s)}
                   className={`px-3 h-9 rounded-md text-xs font-medium border capitalize ${
-                    filter === s ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                  }`}>{s}</button>
+                    filter === s
+                      ? "bg-slate-900 text-white border-slate-900"
+                      : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  {s}
+                </button>
               ))}
             </div>
           }
