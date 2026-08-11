@@ -69,7 +69,8 @@ export function markDismissed() {
 function readAnalytics(): Analytics {
   try {
     const raw = localStorage.getItem(ANALYTICS_KEY);
-    if (!raw) return { prompt_impressions: 0, install_button_clicks: 0, installs: 0, dismissals: 0 };
+    if (!raw)
+      return { prompt_impressions: 0, install_button_clicks: 0, installs: 0, dismissals: 0 };
     return JSON.parse(raw);
   } catch {
     return { prompt_impressions: 0, install_button_clicks: 0, installs: 0, dismissals: 0 };
@@ -83,7 +84,9 @@ export function bumpAnalytics(key: keyof Analytics) {
   // hook for any external analytics
   try {
     (window as any).dataLayer?.push?.({ event: `pwa_${key}` });
-  } catch {}
+  } catch {
+    // Ignore external analytics push errors
+  }
 }
 
 export function getAnalytics(): Analytics {

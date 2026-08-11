@@ -7,8 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 import { withTimeout } from "@/lib/safeAsync";
 
-
-
 export default function WorkerContacts() {
   const ready = useRoleGuard("worker");
   const [logs, setLogs] = useState<any[]>([]);
@@ -19,7 +17,14 @@ export default function WorkerContacts() {
       setLoading(false);
       return;
     }
-    withTimeout(supabase.from("contacts_log").select("*").eq("to_id", id).eq("to_type", "worker").order("timestamp", { ascending: false })).then((result) => {
+    withTimeout(
+      supabase
+        .from("contacts_log")
+        .select("*")
+        .eq("to_id", id)
+        .eq("to_type", "worker")
+        .order("timestamp", { ascending: false }),
+    ).then((result) => {
       setLogs(result?.data ?? []);
       setLoading(false);
     });
@@ -30,10 +35,15 @@ export default function WorkerContacts() {
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading...</p>
       ) : logs.length === 0 ? (
-        <EmptyState title="No contacts yet" subtitle="When customers reach out, you'll see them here." />
+        <EmptyState
+          title="No contacts yet"
+          subtitle="When customers reach out, you'll see them here."
+        />
       ) : (
         <ul className="space-y-2">
-          {logs.map((l) => <ContactRow key={l.id} l={l} />)}
+          {logs.map((l) => (
+            <ContactRow key={l.id} l={l} />
+          ))}
         </ul>
       )}
     </AppShell>
@@ -44,12 +54,16 @@ function ContactRow({ l }: { l: any }) {
   const wa = l.contact_type === "whatsapp";
   return (
     <li className="flex items-center gap-3 p-3 rounded-xl bg-white border border-border">
-      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${wa ? "bg-[#25d366]/15 text-[#25d366]" : "bg-primary/10 text-primary"}`}>
+      <div
+        className={`h-10 w-10 rounded-full flex items-center justify-center ${wa ? "bg-[#25d366]/15 text-[#25d366]" : "bg-primary/10 text-primary"}`}
+      >
         {wa ? <MessageCircle className="h-5 w-5" /> : <Phone className="h-5 w-5" />}
       </div>
       <div className="flex-1 min-w-0">
         <div className="font-semibold text-sm">{wa ? "WhatsApp contact" : "Call contact"}</div>
-        <div className="text-xs text-muted-foreground">{new Date(l.timestamp).toLocaleString()}</div>
+        <div className="text-xs text-muted-foreground">
+          {new Date(l.timestamp).toLocaleString()}
+        </div>
       </div>
     </li>
   );

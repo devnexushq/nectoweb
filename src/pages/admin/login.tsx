@@ -15,7 +15,12 @@ export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  useSeo({ title: "Admin Login | NECTO", description: "Secure NECTO admin login.", canonical: "/admin/login", noindex: true });
+  useSeo({
+    title: "Admin Login | NECTO",
+    description: "Secure NECTO admin login.",
+    canonical: "/admin/login",
+    noindex: true,
+  });
 
   useEffect(() => {
     if (!loading && user && isAdmin) navigate("/admin", { replace: true });

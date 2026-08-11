@@ -6,8 +6,6 @@ import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 
-
-
 export default function ShopDashboard() {
   const ready = useRoleGuard("shop");
   const [me, setMe] = useState<any>(null);
@@ -47,14 +45,22 @@ export default function ShopDashboard() {
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-black text-primary">Shop Offers</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Create and manage promotional offers for your customers.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Create and manage promotional offers for your customers.
+            </p>
           </div>
         </div>
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          <Link to="/s/offers/new" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white hover:bg-primary/90">
+          <Link
+            to="/s/offers/new"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white hover:bg-primary/90"
+          >
             <Plus className="h-4 w-4" /> Create Offer
           </Link>
-          <Link to="/s/offers" className="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-white px-4 text-sm font-bold text-foreground hover:bg-muted">
+          <Link
+            to="/s/offers"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-border bg-white px-4 text-sm font-bold text-foreground hover:bg-muted"
+          >
             Manage Offers
           </Link>
         </div>
@@ -72,7 +78,9 @@ export default function ShopDashboard() {
 
 function Stat({ icon: Icon, label, value, accent }: any) {
   return (
-    <div className={`rounded-2xl p-3 border ${accent ? "bg-accent/10 border-accent/30" : "bg-white border-border"}`}>
+    <div
+      className={`rounded-2xl p-3 border ${accent ? "bg-accent/10 border-accent/30" : "bg-white border-border"}`}
+    >
       <Icon className={`h-5 w-5 ${accent ? "text-accent" : "text-primary"}`} />
       <div className="text-2xl font-extrabold mt-2">{value}</div>
       <div className="text-[11px] text-muted-foreground uppercase tracking-wide">{label}</div>
@@ -81,7 +89,10 @@ function Stat({ icon: Icon, label, value, accent }: any) {
 }
 function QuickAction({ to, label }: { to: string; label: string }) {
   return (
-    <Link to={to} className="rounded-xl p-4 bg-white border border-border hover:border-primary text-sm font-semibold text-foreground">
+    <Link
+      to={to}
+      className="rounded-xl p-4 bg-white border border-border hover:border-primary text-sm font-semibold text-foreground"
+    >
       {label}
     </Link>
   );

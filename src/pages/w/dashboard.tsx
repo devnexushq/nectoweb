@@ -6,8 +6,6 @@ import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 
-
-
 export default function WorkerDashboard() {
   const ready = useRoleGuard("worker");
   const [me, setMe] = useState<any>(null);
@@ -19,7 +17,11 @@ export default function WorkerDashboard() {
     (async () => {
       const [{ data: w }, { data: logs }] = await Promise.all([
         supabase.from("workers").select("*").eq("id", id).maybeSingle(),
-        supabase.from("contacts_log").select("contact_type").eq("to_id", id).eq("to_type", "worker"),
+        supabase
+          .from("contacts_log")
+          .select("contact_type")
+          .eq("to_id", id)
+          .eq("to_type", "worker"),
       ]);
       setMe(w);
       const total = logs?.length ?? 0;
@@ -31,7 +33,9 @@ export default function WorkerDashboard() {
   if (!ready) return null;
   return (
     <AppShell role="worker" title="Dashboard">
-      <h2 className="text-xl font-bold">Welcome back{me?.name ? `, ${me.name.split(" ")[0]}` : ""} 👋</h2>
+      <h2 className="text-xl font-bold">
+        Welcome back{me?.name ? `, ${me.name.split(" ")[0]}` : ""} 👋
+      </h2>
       <p className="text-sm text-muted-foreground">Here's how customers are reaching you.</p>
 
       <div className="grid grid-cols-3 gap-3 mt-4">
@@ -51,7 +55,9 @@ export default function WorkerDashboard() {
 
 function Stat({ icon: Icon, label, value, accent }: any) {
   return (
-    <div className={`rounded-2xl p-3 border ${accent ? "bg-accent/10 border-accent/30" : "bg-white border-border"}`}>
+    <div
+      className={`rounded-2xl p-3 border ${accent ? "bg-accent/10 border-accent/30" : "bg-white border-border"}`}
+    >
       <Icon className={`h-5 w-5 ${accent ? "text-accent" : "text-primary"}`} />
       <div className="text-2xl font-extrabold mt-2">{value}</div>
       <div className="text-[11px] text-muted-foreground uppercase tracking-wide">{label}</div>
@@ -60,7 +66,10 @@ function Stat({ icon: Icon, label, value, accent }: any) {
 }
 function QuickAction({ to, label }: { to: string; label: string }) {
   return (
-    <Link to={to} className="rounded-xl p-4 bg-white border border-border hover:border-primary text-sm font-semibold text-foreground">
+    <Link
+      to={to}
+      className="rounded-xl p-4 bg-white border border-border hover:border-primary text-sm font-semibold text-foreground"
+    >
       {label}
     </Link>
   );

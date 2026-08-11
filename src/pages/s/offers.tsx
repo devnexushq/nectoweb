@@ -54,13 +54,18 @@ export default function ShopOffersPage() {
     }
   }
 
-  useEffect(() => { if (ready) load(); }, [ready]);
+  useEffect(() => {
+    if (ready) load();
+  }, [ready]);
 
   const grouped = useMemo(() => {
-    return SECTIONS.reduce((acc, section) => {
-      acc[section.key] = offers.filter((offer) => bucketFor(offer) === section.key);
-      return acc;
-    }, {} as Record<Bucket, ShopOffer[]>);
+    return SECTIONS.reduce(
+      (acc, section) => {
+        acc[section.key] = offers.filter((offer) => bucketFor(offer) === section.key);
+        return acc;
+      },
+      {} as Record<Bucket, ShopOffer[]>,
+    );
   }, [offers]);
 
   async function hideOffer(offer: ShopOffer) {
@@ -106,7 +111,10 @@ export default function ShopOffersPage() {
         category: offer.category ?? "",
         discount_text: offer.discount_text ?? "",
         offer_start_at: (offer.offer_start_at ?? new Date().toISOString()).slice(0, 10),
-        offer_end_at: (offer.offer_end_at ?? offer.expires_at ?? new Date().toISOString()).slice(0, 10),
+        offer_end_at: (offer.offer_end_at ?? offer.expires_at ?? new Date().toISOString()).slice(
+          0,
+          10,
+        ),
         city: offer.city ?? "",
         area: offer.area ?? "",
         district: offer.district ?? "",
@@ -129,47 +137,110 @@ export default function ShopOffersPage() {
     <AppShell role="shop" title="Shop Offers">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">Create, publish, hide, and track your local promotional offers.</p>
+          <p className="text-sm text-muted-foreground">
+            Create, publish, hide, and track your local promotional offers.
+          </p>
         </div>
-        <Link to="/s/offers/new" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white shadow-sm hover:bg-primary/90">
+        <Link
+          to="/s/offers/new"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white shadow-sm hover:bg-primary/90"
+        >
           <Plus className="h-4 w-4" /> Create Offer
         </Link>
       </div>
 
       {loading ? (
-        <div className="mt-5 rounded-2xl border border-border bg-white p-8 text-center text-sm text-muted-foreground">Loading offers...</div>
+        <div className="mt-5 rounded-2xl border border-border bg-white p-8 text-center text-sm text-muted-foreground">
+          Loading offers...
+        </div>
       ) : offers.length === 0 ? (
-        <EmptyState title="No offers yet" subtitle="Create your first offer to appear in the Activity Center." ctaLabel="Create Offer" ctaTo="/s/offers/new" />
+        <EmptyState
+          title="No offers yet"
+          subtitle="Create your first offer to appear in the Activity Center."
+          ctaLabel="Create Offer"
+          ctaTo="/s/offers/new"
+        />
       ) : (
         <div className="mt-5 space-y-5">
           {SECTIONS.map((section) => (
-            <section key={section.key} className="rounded-2xl border border-border bg-white shadow-sm">
+            <section
+              key={section.key}
+              className="rounded-2xl border border-border bg-white shadow-sm"
+            >
               <div className="flex items-center gap-2 border-b border-border px-4 py-3">
                 <Tag className="h-4 w-4 text-primary" />
                 <h2 className="font-bold text-foreground">{section.title}</h2>
-                <span className="ml-auto rounded-full bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground">{grouped[section.key].length}</span>
+                <span className="ml-auto rounded-full bg-muted px-2.5 py-1 text-xs font-bold text-muted-foreground">
+                  {grouped[section.key].length}
+                </span>
               </div>
               <div className="divide-y divide-border">
                 {grouped[section.key].length === 0 ? (
                   <div className="p-5 text-sm text-muted-foreground">{section.empty}</div>
-                ) : grouped[section.key].map((offer) => (
-                  <article key={offer.id} className="p-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">{offer.status}</span>
-                      <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground">{offer.category}</span>
-                      <time className="ml-auto text-xs text-muted-foreground">Ends {new Date(offer.offer_end_at ?? offer.expires_at ?? offer.created_at).toLocaleDateString()}</time>
-                    </div>
-                    <h3 className="mt-2 text-base font-bold">{offer.title}</h3>
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{offer.message}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Link to={`/s/offers/${offer.id}`} className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted"><Eye className="h-4 w-4" />View</Link>
-                      <Link to={`/s/offers/${offer.id}/edit`} className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted"><Edit3 className="h-4 w-4" />Edit</Link>
-                      <button disabled={busyId === offer.id} onClick={() => hideOffer(offer)} className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted disabled:opacity-60"><EyeOff className="h-4 w-4" />Hide</button>
-                      <button disabled={busyId === offer.id} onClick={() => duplicateOffer(offer)} className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted disabled:opacity-60"><Copy className="h-4 w-4" />Duplicate</button>
-                      <button disabled={busyId === offer.id} onClick={() => removeOffer(offer)} className="inline-flex h-9 items-center gap-2 rounded-lg border border-destructive/20 px-3 text-sm font-semibold text-destructive hover:bg-destructive/5 disabled:opacity-60"><Trash2 className="h-4 w-4" />Delete</button>
-                    </div>
-                  </article>
-                ))}
+                ) : (
+                  grouped[section.key].map((offer) => (
+                    <article key={offer.id} className="p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-primary">
+                          {offer.status}
+                        </span>
+                        <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground">
+                          {offer.category}
+                        </span>
+                        <time className="ml-auto text-xs text-muted-foreground">
+                          Ends{" "}
+                          {new Date(
+                            offer.offer_end_at ?? offer.expires_at ?? offer.created_at,
+                          ).toLocaleDateString()}
+                        </time>
+                      </div>
+                      <h3 className="mt-2 text-base font-bold">{offer.title}</h3>
+                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                        {offer.message}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Link
+                          to={`/s/offers/${offer.id}`}
+                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted"
+                        >
+                          <Eye className="h-4 w-4" />
+                          View
+                        </Link>
+                        <Link
+                          to={`/s/offers/${offer.id}/edit`}
+                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                          Edit
+                        </Link>
+                        <button
+                          disabled={busyId === offer.id}
+                          onClick={() => hideOffer(offer)}
+                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted disabled:opacity-60"
+                        >
+                          <EyeOff className="h-4 w-4" />
+                          Hide
+                        </button>
+                        <button
+                          disabled={busyId === offer.id}
+                          onClick={() => duplicateOffer(offer)}
+                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted disabled:opacity-60"
+                        >
+                          <Copy className="h-4 w-4" />
+                          Duplicate
+                        </button>
+                        <button
+                          disabled={busyId === offer.id}
+                          onClick={() => removeOffer(offer)}
+                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-destructive/20 px-3 text-sm font-semibold text-destructive hover:bg-destructive/5 disabled:opacity-60"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete
+                        </button>
+                      </div>
+                    </article>
+                  ))
+                )}
               </div>
             </section>
           ))}

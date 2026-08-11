@@ -16,7 +16,8 @@ export default function PrivacyPolicy() {
         <>
           <p>Please read carefully before using Necto.</p>
           <p className="mt-2">
-            Effective Date: June 2026<br />
+            Effective Date: June 2026
+            <br />
             Platform: Necto — Discover Local, Buy Local
           </p>
         </>
