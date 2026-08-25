@@ -5,17 +5,22 @@ import { ContactButtons } from "@/components/ContactButtons";
 import { MapPin, Clock, Briefcase, Star, User } from "lucide-react";
 import { withTimeout } from "@/lib/safeAsync";
 
-const PUBLIC_WORKER_DETAIL_COLUMNS = "id,name,job_type,experience,phone,whatsapp,description,area,business_hours,rating,photo_url";
-const PUBLIC_SHOP_DETAIL_COLUMNS = "id,shop_name,owner_name,category,phone,whatsapp,description,area,business_hours,rating,photo_url";
+const PUBLIC_WORKER_DETAIL_COLUMNS =
+  "id,name,job_type,experience,phone,whatsapp,description,area,business_hours,rating,photo_url";
+const PUBLIC_SHOP_DETAIL_COLUMNS =
+  "id,shop_name,owner_name,category,phone,whatsapp,description,area,business_hours,rating,photo_url";
 const PUBLIC_PRODUCT_COLUMNS = "id,name,price,photo_url,visibility,created_at";
 
 export function WorkerProfileView() {
   const { id } = useParams() as { id: string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [w, setW] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    withTimeout(supabase.from("workers").select(PUBLIC_WORKER_DETAIL_COLUMNS).eq("id", id).maybeSingle()).then((result) => {
+    withTimeout(
+      supabase.from("workers").select(PUBLIC_WORKER_DETAIL_COLUMNS).eq("id", id).maybeSingle(),
+    ).then((result) => {
       setW(result?.data ?? null);
       setLoading(false);
     });
@@ -38,16 +43,27 @@ export function WorkerProfileView() {
           <h2 className="text-xl font-bold">{w.name}</h2>
           <p className="text-sm text-primary font-medium mt-0.5">{w.job_type}</p>
           <div className="flex flex-wrap gap-3 mt-3 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><Briefcase className="h-4 w-4" />{w.experience} yrs exp</span>
-            <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{w.area}</span>
-            <span className="inline-flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" />{Number(w.rating ?? 0).toFixed(1)}</span>
+            <span className="inline-flex items-center gap-1">
+              <Briefcase className="h-4 w-4" />
+              {w.experience} yrs exp
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="h-4 w-4" />
+              {w.area}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Star className="h-4 w-4 fill-accent text-accent" />
+              {Number(w.rating ?? 0).toFixed(1)}
+            </span>
           </div>
           {w.business_hours && (
             <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-1">
               <Clock className="h-4 w-4" /> {formatHours(w.business_hours)}
             </p>
           )}
-          {w.description && <p className="mt-3 text-sm text-foreground leading-relaxed">{w.description}</p>}
+          {w.description && (
+            <p className="mt-3 text-sm text-foreground leading-relaxed">{w.description}</p>
+          )}
         </div>
       </div>
 
@@ -55,7 +71,9 @@ export function WorkerProfileView() {
 
       <section className="rounded-2xl p-4 bg-white border border-border">
         <h3 className="font-semibold mb-2">Reviews & Rating</h3>
-        <p className="text-sm text-muted-foreground">Average rating {Number(w.rating ?? 0).toFixed(1)} / 5. Reviews coming soon.</p>
+        <p className="text-sm text-muted-foreground">
+          Average rating {Number(w.rating ?? 0).toFixed(1)} / 5. Reviews coming soon.
+        </p>
       </section>
     </div>
   );
@@ -63,16 +81,26 @@ export function WorkerProfileView() {
 
 export function ShopProfileView() {
   const { id } = useParams() as { id: string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [s, setS] = useState<any | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const result = await withTimeout(Promise.all([
-        supabase.from("shops").select(PUBLIC_SHOP_DETAIL_COLUMNS).eq("id", id).maybeSingle(),
-        supabase.from("products").select(PUBLIC_PRODUCT_COLUMNS).eq("shop_id", id).eq("visibility", "visible").order("created_at", { ascending: false }),
-      ]));
+      const result = await withTimeout(
+        Promise.all([
+          supabase.from("shops").select(PUBLIC_SHOP_DETAIL_COLUMNS).eq("id", id).maybeSingle(),
+          supabase
+            .from("products")
+            .select(PUBLIC_PRODUCT_COLUMNS)
+            .eq("shop_id", id)
+            .eq("visibility", "visible")
+            .order("created_at", { ascending: false }),
+        ]),
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const [{ data }, { data: prods }] = result ?? [{ data: null }, { data: [] as any[] }];
       setS(data);
       setProducts(prods ?? []);
@@ -98,15 +126,23 @@ export function ShopProfileView() {
           <p className="text-sm text-muted-foreground mt-0.5">Owner: {s.owner_name}</p>
           <p className="text-sm text-primary font-medium mt-0.5">{s.category}</p>
           <div className="flex flex-wrap gap-3 mt-3 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{s.area}</span>
-            <span className="inline-flex items-center gap-1"><Star className="h-4 w-4 fill-accent text-accent" />{Number(s.rating ?? 0).toFixed(1)}</span>
+            <span className="inline-flex items-center gap-1">
+              <MapPin className="h-4 w-4" />
+              {s.area}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Star className="h-4 w-4 fill-accent text-accent" />
+              {Number(s.rating ?? 0).toFixed(1)}
+            </span>
           </div>
           {s.business_hours && (
             <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-1">
               <Clock className="h-4 w-4" /> {formatHours(s.business_hours)}
             </p>
           )}
-          {s.description && <p className="mt-3 text-sm text-foreground leading-relaxed">{s.description}</p>}
+          {s.description && (
+            <p className="mt-3 text-sm text-foreground leading-relaxed">{s.description}</p>
+          )}
         </div>
       </div>
 
@@ -121,11 +157,17 @@ export function ShopProfileView() {
             {products.map((p) => (
               <div key={p.id} className="rounded-lg border border-border overflow-hidden">
                 <div className="h-24 bg-muted flex items-center justify-center">
-                  {p.photo_url ? <img src={p.photo_url} alt={p.name} className="h-full w-full object-cover" /> : <span className="text-xs text-muted-foreground">No image</span>}
+                  {p.photo_url ? (
+                    <img src={p.photo_url} alt={p.name} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">No image</span>
+                  )}
                 </div>
                 <div className="p-2">
                   <div className="text-sm font-semibold truncate">{p.name}</div>
-                  <div className="text-xs text-accent font-bold">₹{Number(p.price).toLocaleString()}</div>
+                  <div className="text-xs text-accent font-bold">
+                    ₹{Number(p.price).toLocaleString()}
+                  </div>
                 </div>
               </div>
             ))}
@@ -135,17 +177,20 @@ export function ShopProfileView() {
 
       <section className="rounded-2xl p-4 bg-white border border-border">
         <h3 className="font-semibold mb-2">Reviews & Rating</h3>
-        <p className="text-sm text-muted-foreground">Average rating {Number(s.rating ?? 0).toFixed(1)} / 5. Reviews coming soon.</p>
+        <p className="text-sm text-muted-foreground">
+          Average rating {Number(s.rating ?? 0).toFixed(1)} / 5. Reviews coming soon.
+        </p>
       </section>
     </div>
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function formatHours(h: any): string {
   if (!h) return "";
   if (typeof h === "string") return h;
   const from = h.from ?? "";
   const to = h.to ?? "";
-  const days = Array.isArray(h.days) ? h.days.join(", ") : h.days ?? "";
+  const days = Array.isArray(h.days) ? h.days.join(", ") : (h.days ?? "");
   return [from && to ? `${from} – ${to}` : "", days].filter(Boolean).join(" • ");
 }

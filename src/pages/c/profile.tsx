@@ -10,6 +10,7 @@ import { LegalInfoSection } from "@/components/LegalInfoSection";
 
 export default function CustomerProfile() {
   const ready = useRoleGuard("customer");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [me, setMe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -18,10 +19,12 @@ export default function CustomerProfile() {
       setLoading(false);
       return;
     }
-    withTimeout(supabase.from("customers").select("*").eq("id", id).maybeSingle()).then((result) => {
-      setMe(result?.data ?? null);
-      setLoading(false);
-    });
+    withTimeout(supabase.from("customers").select("*").eq("id", id).maybeSingle()).then(
+      (result) => {
+        setMe(result?.data ?? null);
+        setLoading(false);
+      },
+    );
   }, []);
   if (!ready) return null;
   return (
@@ -33,10 +36,20 @@ export default function CustomerProfile() {
             <Row label="Area" value={me.area} />
             <Row label="Phone" value={me.phone} />
           </div>
-          <ProfileActions role="customer" me={me} lockDaysLeft={0} onUpdated={setMe} middleSlot={<LegalInfoSection />} />
+          <ProfileActions
+            role="customer"
+            me={me}
+            lockDaysLeft={0}
+            onUpdated={setMe}
+            middleSlot={<LegalInfoSection />}
+          />
           <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
         </div>
-      ) : <p className="text-sm text-muted-foreground">{loading ? "Loading..." : "Profile not found."}</p>}
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {loading ? "Loading..." : "Profile not found."}
+        </p>
+      )}
     </AppShell>
   );
 }

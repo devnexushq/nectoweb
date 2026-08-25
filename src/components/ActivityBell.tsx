@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bell } from "lucide-react";
 import type { Role } from "@/lib/role";
-import { getActivityPath, fetchOfficialUpdates, fetchViewedActivityIds, getActivityViewerKey, fetchVisibleShopOffers } from "@/lib/activity";
+import {
+  getActivityPath,
+  fetchOfficialUpdates,
+  fetchViewedActivityIds,
+  getActivityViewerKey,
+  fetchVisibleShopOffers,
+} from "@/lib/activity";
 import { getUserId } from "@/lib/role";
 
 export function ActivityBell({ role }: { role: Role }) {
@@ -20,7 +26,10 @@ export function ActivityBell({ role }: { role: Role }) {
 
       const viewerKey = getActivityViewerKey(role, userId);
       const [updates, viewedIds] = await Promise.all([
-        Promise.all([fetchOfficialUpdates(role, userId), fetchVisibleShopOffers(role, userId)]).then(([official, offers]) => [...official, ...offers]),
+        Promise.all([
+          fetchOfficialUpdates(role, userId),
+          fetchVisibleShopOffers(role, userId),
+        ]).then(([official, offers]) => [...official, ...offers]),
         fetchViewedActivityIds(viewerKey),
       ]);
 

@@ -4,8 +4,7 @@ import { useSeo } from "@/lib/seo";
 export default function TermsAndConditions() {
   useSeo({
     title: "Terms & Conditions — NECTO",
-    description:
-      "NECTO Terms & Conditions. Please read carefully before using the platform.",
+    description: "NECTO Terms & Conditions. Please read carefully before using the platform.",
     canonical: "/terms-and-conditions",
   });
 
@@ -17,8 +16,10 @@ export default function TermsAndConditions() {
         <>
           <p>These terms are legally binding. Please read carefully before using Necto.</p>
           <p className="mt-2">
-            Effective Date: June 2026<br />
-            Platform: Necto — Discover Local, Buy Local<br />
+            Effective Date: June 2026
+            <br />
+            Platform: Necto — Discover Local, Buy Local
+            <br />
             Jurisdiction: Sundargarh, Odisha, India
           </p>
         </>
@@ -26,9 +27,8 @@ export default function TermsAndConditions() {
     >
       <LegalSection number={1} title="Acceptance of Terms">
         <p>
-          By accessing or registering on Necto, you agree to be bound by these Terms and
-          Conditions. These terms apply to all users including Customers, Workers, and Shop
-          Owners.
+          By accessing or registering on Necto, you agree to be bound by these Terms and Conditions.
+          These terms apply to all users including Customers, Workers, and Shop Owners.
         </p>
       </LegalSection>
 
@@ -61,9 +61,8 @@ export default function TermsAndConditions() {
 
       <LegalSection number={5} title="Necto's Role">
         <p>
-          Necto acts solely as an intermediary. We do not guarantee quality of any service, are
-          not party to any transaction, and are not responsible for any loss from user
-          interactions.
+          Necto acts solely as an intermediary. We do not guarantee quality of any service, are not
+          party to any transaction, and are not responsible for any loss from user interactions.
         </p>
       </LegalSection>
 
@@ -89,8 +88,8 @@ export default function TermsAndConditions() {
 
       <LegalSection number={8} title="Intellectual Property">
         <p>
-          All content, design, and branding of Necto is intellectual property of Necto and may
-          not be copied without permission.
+          All content, design, and branding of Necto is intellectual property of Necto and may not
+          be copied without permission.
         </p>
       </LegalSection>
 

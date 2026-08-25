@@ -32,9 +32,7 @@ export function ListingCard({ item, hrefPrefix }: { item: ListingCardData; hrefP
           <h3 className="font-semibold text-foreground truncate">{item.name}</h3>
           <span
             className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold ${
-              item.type === "worker"
-                ? "bg-primary/10 text-primary"
-                : "bg-accent/15 text-accent"
+              item.type === "worker" ? "bg-primary/10 text-primary" : "bg-accent/15 text-accent"
             }`}
           >
             {item.type === "worker" ? "Worker" : "Shop"}

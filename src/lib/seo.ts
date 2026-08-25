@@ -12,7 +12,11 @@ type SeoOptions = {
   type?: "website" | "article" | "profile";
 };
 
-function upsertMeta(selector: string, create: () => HTMLElement, setAttr: (el: HTMLElement) => void) {
+function upsertMeta(
+  selector: string,
+  create: () => HTMLElement,
+  setAttr: (el: HTMLElement) => void,
+) {
   let el = document.head.querySelector<HTMLElement>(selector);
   if (!el) {
     el = create();
@@ -50,7 +54,14 @@ function absoluteUrl(value: string) {
   return `${window.location.origin}${value.startsWith("/") ? value : `/${value}`}`;
 }
 
-export function useSeo({ title, description, canonical, noindex, image = DEFAULT_IMAGE, type = "website" }: SeoOptions) {
+export function useSeo({
+  title,
+  description,
+  canonical,
+  noindex,
+  image = DEFAULT_IMAGE,
+  type = "website",
+}: SeoOptions) {
   useEffect(() => {
     const canonicalHref = canonical ? absoluteUrl(canonical) : window.location.href.split("#")[0];
     const robots = noindex
@@ -60,13 +71,20 @@ export function useSeo({ title, description, canonical, noindex, image = DEFAULT
 
     if (title) document.title = title;
 
-    setNamedMeta("description", description ?? "NECTO helps people discover trusted local workers, shops, services, and products near them.");
+    setNamedMeta(
+      "description",
+      description ??
+        "NECTO helps people discover trusted local workers, shops, services, and products near them.",
+    );
     setNamedMeta("robots", robots);
     setNamedMeta("googlebot", robots);
     setNamedMeta("application-name", SITE_NAME);
     setNamedMeta("twitter:card", "summary_large_image");
     setNamedMeta("twitter:title", title);
-    setNamedMeta("twitter:description", description ?? "Discover trusted local workers and shops near you with NECTO.");
+    setNamedMeta(
+      "twitter:description",
+      description ?? "Discover trusted local workers and shops near you with NECTO.",
+    );
     setNamedMeta("twitter:image", resolvedImage);
     setNamedMeta("twitter:image:alt", "NECTO local marketplace app logo");
 
@@ -84,7 +102,10 @@ export function useSeo({ title, description, canonical, noindex, image = DEFAULT
     setPropertyMeta("og:site_name", SITE_NAME);
     setPropertyMeta("og:type", type);
     setPropertyMeta("og:title", title);
-    setPropertyMeta("og:description", description ?? "Discover trusted local workers and shops near you with NECTO.");
+    setPropertyMeta(
+      "og:description",
+      description ?? "Discover trusted local workers and shops near you with NECTO.",
+    );
     setPropertyMeta("og:url", canonicalHref);
     setPropertyMeta("og:image", resolvedImage);
     setPropertyMeta("og:image:secure_url", resolvedImage);

@@ -29,14 +29,14 @@ export function isStandalone(): boolean {
   return (
     window.matchMedia?.("(display-mode: standalone)").matches ||
     // iOS
-    (window.navigator as any).standalone === true
+    (window.navigator as unknown as { standalone?: boolean }).standalone === true
   );
 }
 
 export function isIOS(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
-  return /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+  return /iPad|iPhone|iPod/.test(ua) && !(window as unknown as { MSStream?: unknown }).MSStream;
 }
 
 export function isAndroid(): boolean {
@@ -69,7 +69,8 @@ export function markDismissed() {
 function readAnalytics(): Analytics {
   try {
     const raw = localStorage.getItem(ANALYTICS_KEY);
-    if (!raw) return { prompt_impressions: 0, install_button_clicks: 0, installs: 0, dismissals: 0 };
+    if (!raw)
+      return { prompt_impressions: 0, install_button_clicks: 0, installs: 0, dismissals: 0 };
     return JSON.parse(raw);
   } catch {
     return { prompt_impressions: 0, install_button_clicks: 0, installs: 0, dismissals: 0 };
@@ -82,8 +83,12 @@ export function bumpAnalytics(key: keyof Analytics) {
   localStorage.setItem(ANALYTICS_KEY, JSON.stringify(a));
   // hook for any external analytics
   try {
-    (window as any).dataLayer?.push?.({ event: `pwa_${key}` });
-  } catch {}
+    (window as unknown as { dataLayer?: { push?: (item: unknown) => void } }).dataLayer?.push?.({
+      event: `pwa_${key}`,
+    });
+  } catch {
+    // Ignore analytics push errors
+  }
 }
 
 export function getAnalytics(): Analytics {

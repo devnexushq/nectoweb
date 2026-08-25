@@ -33,8 +33,15 @@ export default function RegistrationNav() {
           <span>Back</span>
         </button>
 
-        <Link to="/" onClick={clearAccount} className="flex items-center gap-2 text-primary" aria-label="Necto home">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-sm font-bold text-white">N</span>
+        <Link
+          to="/"
+          onClick={clearAccount}
+          className="flex items-center gap-2 text-primary"
+          aria-label="Necto home"
+        >
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-sm font-bold text-white">
+            N
+          </span>
           <span className="text-base font-bold tracking-tight">Necto</span>
         </Link>
       </div>

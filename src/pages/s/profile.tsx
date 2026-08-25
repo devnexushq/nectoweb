@@ -11,6 +11,7 @@ import { LegalInfoSection } from "@/components/LegalInfoSection";
 
 export default function ShopProfilePage() {
   const ready = useRoleGuard("shop");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [me, setMe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
@@ -37,13 +38,26 @@ export default function ShopProfilePage() {
             <Row label="Phone" value={me.phone} />
             <Row label="WhatsApp" value={me.whatsapp} />
             <Row label="Area" value={me.area} />
-            <Row label="Visibility" value={me.visibility === "local" ? "Local Only" : "All India"} />
+            <Row
+              label="Visibility"
+              value={me.visibility === "local" ? "Local Only" : "All India"}
+            />
             <Row label="Description" value={me.description ?? "—"} />
           </div>
-          <ProfileActions role="shop" me={me} lockDaysLeft={lock} onUpdated={setMe} middleSlot={<LegalInfoSection />} />
+          <ProfileActions
+            role="shop"
+            me={me}
+            lockDaysLeft={lock}
+            onUpdated={setMe}
+            middleSlot={<LegalInfoSection />}
+          />
           <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
         </div>
-      ) : <p className="text-sm text-muted-foreground">{loading ? "Loading..." : "Profile not found."}</p>}
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {loading ? "Loading..." : "Profile not found."}
+        </p>
+      )}
     </AppShell>
   );
 }
