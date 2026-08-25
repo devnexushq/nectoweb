@@ -25,8 +25,10 @@ import { clearAccount, getUserId, type Role } from "@/lib/role";
 
 type Props = {
   role: Role;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   me: any;
   lockDaysLeft: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onUpdated: (updated: any) => void;
   middleSlot?: React.ReactNode;
 };
@@ -49,7 +51,8 @@ const DELETE_COPY: Record<Role, { title: string; summary: string; details: strin
   },
   worker: {
     title: "Delete worker profile?",
-    summary: "Use this only if you no longer want customers to discover your worker profile on Necto.",
+    summary:
+      "Use this only if you no longer want customers to discover your worker profile on Necto.",
     details: [
       "Your public worker profile will be removed from worker listings and search results.",
       "Customers will no longer be able to open your worker profile or contact you from it.",
@@ -71,6 +74,7 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
   const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
   const [delOpen, setDelOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [form, setForm] = useState<any>(me);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -142,7 +146,8 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-bold text-destructive">Delete profile</h3>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {deleteCopy.summary} This removes your current profile from Necto and cannot be undone.
+              {deleteCopy.summary} This removes your current profile from Necto and cannot be
+              undone.
             </p>
           </div>
         </div>
@@ -192,7 +197,9 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
                     <li key={detail}>{detail}</li>
                   ))}
                 </ul>
-                <p className="font-medium text-destructive">This action is permanent and cannot be undone.</p>
+                <p className="font-medium text-destructive">
+                  This action is permanent and cannot be undone.
+                </p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -212,15 +219,8 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
   );
 }
 
-function EditFields({
-  role,
-  form,
-  setForm,
-}: {
-  role: Role;
-  form: any;
-  setForm: (f: any) => void;
-}) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function EditFields({ role, form, setForm }: { role: Role; form: any; setForm: (f: any) => void }) {
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value });
 
@@ -245,10 +245,19 @@ function EditFields({
           onChange={(e) => setForm({ ...form, experience: Number(e.target.value) })}
         />
         <Field label="Phone" inputMode="tel" value={form?.phone ?? ""} onChange={set("phone")} />
-        <Field label="WhatsApp" inputMode="tel" value={form?.whatsapp ?? ""} onChange={set("whatsapp")} />
+        <Field
+          label="WhatsApp"
+          inputMode="tel"
+          value={form?.whatsapp ?? ""}
+          onChange={set("whatsapp")}
+        />
         <Field label="Area" value={form?.area ?? ""} onChange={set("area")} />
         <Field label="Photo URL" value={form?.photo_url ?? ""} onChange={set("photo_url")} />
-        <TextArea label="Description" value={form?.description ?? ""} onChange={set("description")} />
+        <TextArea
+          label="Description"
+          value={form?.description ?? ""}
+          onChange={set("description")}
+        />
       </>
     );
   }
@@ -258,7 +267,12 @@ function EditFields({
       <Field label="Owner Name" value={form?.owner_name ?? ""} onChange={set("owner_name")} />
       <Field label="Category" value={form?.category ?? ""} onChange={set("category")} />
       <Field label="Phone" inputMode="tel" value={form?.phone ?? ""} onChange={set("phone")} />
-      <Field label="WhatsApp" inputMode="tel" value={form?.whatsapp ?? ""} onChange={set("whatsapp")} />
+      <Field
+        label="WhatsApp"
+        inputMode="tel"
+        value={form?.whatsapp ?? ""}
+        onChange={set("whatsapp")}
+      />
       <Field label="Area" value={form?.area ?? ""} onChange={set("area")} />
       <Field label="Photo URL" value={form?.photo_url ?? ""} onChange={set("photo_url")} />
       <TextArea label="Description" value={form?.description ?? ""} onChange={set("description")} />

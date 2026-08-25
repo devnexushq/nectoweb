@@ -14,11 +14,12 @@ import {
 const ACCOUNT_CHECK_TIMEOUT_MS = 4500;
 
 export async function accountExists(role: Role, id: string): Promise<boolean | null> {
-  const query = role === "customer"
-    ? supabase.from("customers").select("id").eq("id", id).maybeSingle()
-    : role === "worker"
-      ? supabase.from("workers").select("id").eq("id", id).maybeSingle()
-      : supabase.from("shops").select("id").eq("id", id).maybeSingle();
+  const query =
+    role === "customer"
+      ? supabase.from("customers").select("id").eq("id", id).maybeSingle()
+      : role === "worker"
+        ? supabase.from("workers").select("id").eq("id", id).maybeSingle()
+        : supabase.from("shops").select("id").eq("id", id).maybeSingle();
 
   const result = await withTimeout(query, ACCOUNT_CHECK_TIMEOUT_MS);
   if (!result) return null;
@@ -68,7 +69,9 @@ export function useRoleGuard(requireRole: Role, requireRegistered = true) {
     };
 
     validate();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [pathname, navigate, requireRole, requireRegistered]);
 
   return ready;

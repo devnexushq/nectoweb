@@ -4,7 +4,14 @@ import { ArrowLeft } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ListingsView } from "@/components/ListingsView";
 import { ShopProfileView, WorkerProfileView } from "@/components/ProfileViews";
-import { clearAccount, getRole, getUserId, homePathFor, registerPathFor, type Role } from "@/lib/role";
+import {
+  clearAccount,
+  getRole,
+  getUserId,
+  homePathFor,
+  registerPathFor,
+  type Role,
+} from "@/lib/role";
 import { accountExists } from "@/hooks/useRoleGuard";
 
 const ROLE_PREFIX: Record<Role, string> = {
@@ -50,13 +57,23 @@ function useDiscoveryAccess(requiredRole?: Role) {
     };
 
     validate();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [navigate, requiredRole]);
 
   return role;
 }
 
-export function PublicWorkersPage({ role: requiredRole, hrefPrefix, title = "Workers" }: { role?: Role; hrefPrefix?: string; title?: string }) {
+export function PublicWorkersPage({
+  role: requiredRole,
+  hrefPrefix,
+  title = "Workers",
+}: {
+  role?: Role;
+  hrefPrefix?: string;
+  title?: string;
+}) {
   const role = useDiscoveryAccess(requiredRole);
   if (!role) return null;
 
@@ -71,7 +88,15 @@ export function PublicWorkersPage({ role: requiredRole, hrefPrefix, title = "Wor
   );
 }
 
-export function PublicShopsPage({ role: requiredRole, hrefPrefix, title = "Shops" }: { role?: Role; hrefPrefix?: string; title?: string }) {
+export function PublicShopsPage({
+  role: requiredRole,
+  hrefPrefix,
+  title = "Shops",
+}: {
+  role?: Role;
+  hrefPrefix?: string;
+  title?: string;
+}) {
   const role = useDiscoveryAccess(requiredRole);
   if (!role) return null;
 
@@ -86,13 +111,24 @@ export function PublicShopsPage({ role: requiredRole, hrefPrefix, title = "Shops
   );
 }
 
-export function PublicWorkerProfilePage({ role: requiredRole, backTo, backLabel = "Back to Workers" }: { role?: Role; backTo?: string; backLabel?: string }) {
+export function PublicWorkerProfilePage({
+  role: requiredRole,
+  backTo,
+  backLabel = "Back to Workers",
+}: {
+  role?: Role;
+  backTo?: string;
+  backLabel?: string;
+}) {
   const role = useDiscoveryAccess(requiredRole);
   if (!role) return null;
 
   return (
     <AppShell role={role}>
-      <Link to={backTo ?? `${ROLE_PREFIX[role]}/workers`} className="inline-flex items-center gap-1 text-sm text-muted-foreground mb-3">
+      <Link
+        to={backTo ?? `${ROLE_PREFIX[role]}/workers`}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground mb-3"
+      >
         <ArrowLeft className="h-4 w-4" /> {backLabel}
       </Link>
       <WorkerProfileView />
@@ -100,13 +136,24 @@ export function PublicWorkerProfilePage({ role: requiredRole, backTo, backLabel 
   );
 }
 
-export function PublicShopProfilePage({ role: requiredRole, backTo, backLabel = "Back to Shops" }: { role?: Role; backTo?: string; backLabel?: string }) {
+export function PublicShopProfilePage({
+  role: requiredRole,
+  backTo,
+  backLabel = "Back to Shops",
+}: {
+  role?: Role;
+  backTo?: string;
+  backLabel?: string;
+}) {
   const role = useDiscoveryAccess(requiredRole);
   if (!role) return null;
 
   return (
     <AppShell role={role}>
-      <Link to={backTo ?? `${ROLE_PREFIX[role]}/shops`} className="inline-flex items-center gap-1 text-sm text-muted-foreground mb-3">
+      <Link
+        to={backTo ?? `${ROLE_PREFIX[role]}/shops`}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground mb-3"
+      >
         <ArrowLeft className="h-4 w-4" /> {backLabel}
       </Link>
       <ShopProfileView />

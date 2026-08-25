@@ -8,8 +8,10 @@ import { withTimeout } from "@/lib/safeAsync";
 type Mode = "workers" | "shops" | "mixed";
 
 const VISIBILITY_ALL: ("local" | "all_india")[] = ["local", "all_india"];
-const PUBLIC_WORKER_COLUMNS = "id,name,job_type,description,area,rating,photo_url,visibility,registered_at";
-const PUBLIC_SHOP_COLUMNS = "id,shop_name,category,description,area,rating,photo_url,visibility,registered_at";
+const PUBLIC_WORKER_COLUMNS =
+  "id,name,job_type,description,area,rating,photo_url,visibility,registered_at";
+const PUBLIC_SHOP_COLUMNS =
+  "id,shop_name,category,description,area,rating,photo_url,visibility,registered_at";
 
 export function ListingsView({
   mode,
@@ -27,32 +29,63 @@ export function ListingsView({
   const [query, setQuery] = useState("");
   const [area, setArea] = useState("");
   const [visibility, setVisibility] = useState<"local" | "all_india">("local");
-  const [workers, setWorkers] = useState<any[]>([]);
-  const [shops, setShops] = useState<any[]>([]);
+  type WorkerRecord = {
+    id: string;
+    name: string;
+    job_type: string;
+    description: string;
+    area: string;
+    rating: number | null;
+    photo_url: string | null;
+    visibility: string;
+    registered_at: string;
+  };
+
+  type ShopRecord = {
+    id: string;
+    shop_name: string;
+    category: string;
+    description: string;
+    area: string;
+    rating: number | null;
+    photo_url: string | null;
+    visibility: string;
+    registered_at: string;
+  };
+
+  const [workers, setWorkers] = useState<WorkerRecord[]>([]);
+  const [shops, setShops] = useState<ShopRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const wPromise = mode !== "shops"
-        ? supabase.from("workers").select(PUBLIC_WORKER_COLUMNS).order("registered_at", { ascending: false })
-        : Promise.resolve({ data: [] as any[] });
-      const sPromise = mode !== "workers"
-        ? supabase.from("shops").select(PUBLIC_SHOP_COLUMNS).order("registered_at", { ascending: false })
-        : Promise.resolve({ data: [] as any[] });
+      const wPromise =
+        mode !== "shops"
+          ? supabase
+              .from("workers")
+              .select(PUBLIC_WORKER_COLUMNS)
+              .order("registered_at", { ascending: false })
+          : Promise.resolve({ data: [] as WorkerRecord[], error: null });
+      const sPromise =
+        mode !== "workers"
+          ? supabase
+              .from("shops")
+              .select(PUBLIC_SHOP_COLUMNS)
+              .order("registered_at", { ascending: false })
+          : Promise.resolve({ data: [] as ShopRecord[], error: null });
       const result = await withTimeout(Promise.all([wPromise, sPromise]));
       if (cancelled) return;
-      const [w, s] = result ?? [{ data: [] as any[] }, { data: [] as any[] }];
-      setWorkers((w as any).data ?? []);
-      setShops((s as any).data ?? []);
+      const [wRes, sRes] = result ?? [{ data: [] }, { data: [] }];
+      setWorkers(((wRes as { data: WorkerRecord[] | null }).data ?? []) as WorkerRecord[]);
+      setShops(((sRes as { data: ShopRecord[] | null }).data ?? []) as ShopRecord[]);
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
   }, [mode]);
-
 
   const items: ListingCardData[] = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -61,11 +94,12 @@ export function ListingsView({
 
     const w: ListingCardData[] = workers
       .filter((x) => visFilter(x.visibility))
-      .filter((x) =>
-        !q ||
-        x.name?.toLowerCase().includes(q) ||
-        x.job_type?.toLowerCase().includes(q) ||
-        x.description?.toLowerCase().includes(q),
+      .filter(
+        (x) =>
+          !q ||
+          x.name?.toLowerCase().includes(q) ||
+          x.job_type?.toLowerCase().includes(q) ||
+          x.description?.toLowerCase().includes(q),
       )
       .filter((x) => !a || x.area?.toLowerCase().includes(a))
       .map((x) => ({
@@ -80,11 +114,12 @@ export function ListingsView({
 
     const s: ListingCardData[] = shops
       .filter((x) => visFilter(x.visibility))
-      .filter((x) =>
-        !q ||
-        x.shop_name?.toLowerCase().includes(q) ||
-        x.category?.toLowerCase().includes(q) ||
-        x.description?.toLowerCase().includes(q),
+      .filter(
+        (x) =>
+          !q ||
+          x.shop_name?.toLowerCase().includes(q) ||
+          x.category?.toLowerCase().includes(q) ||
+          x.description?.toLowerCase().includes(q),
       )
       .filter((x) => !a || x.area?.toLowerCase().includes(a))
       .map((x) => ({
@@ -118,7 +153,9 @@ export function ListingsView({
             </button>
           ))}
         </div>
-        <span className="text-xs text-muted-foreground ml-auto">{loading ? "Loading..." : `${items.length} results`}</span>
+        <span className="text-xs text-muted-foreground ml-auto">
+          {loading ? "Loading..." : `${items.length} results`}
+        </span>
       </div>
 
       {query.trim() && <AreaFilterBar value={area} onChange={setArea} />}
@@ -131,12 +168,16 @@ export function ListingsView({
                 ? `No results found for "${query}"${area.trim() ? ` in ${area}` : ""}`
                 : "Nothing here yet"
             }
-            subtitle={query.trim() ? "Try a nearby skill, shop category, or area." : "Check back soon."}
+            subtitle={
+              query.trim() ? "Try a nearby skill, shop category, or area." : "Check back soon."
+            }
             ctaLabel={registerCtaLabel}
             ctaTo={registerCtaTo}
           />
         ) : (
-          items.map((it) => <ListingCard key={`${it.type}-${it.id}`} item={it} hrefPrefix={hrefPrefix} />)
+          items.map((it) => (
+            <ListingCard key={`${it.type}-${it.id}`} item={it} hrefPrefix={hrefPrefix} />
+          ))
         )}
       </div>
     </div>

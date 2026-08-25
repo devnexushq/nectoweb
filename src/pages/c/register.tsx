@@ -11,7 +11,12 @@ import { consentInsertFields } from "@/lib/legal";
 
 export default function CustomerRegister() {
   const navigate = useNavigate();
-  useSeo({ title: "Customer Sign Up | NECTO", description: "Join NECTO as a customer to find trusted local workers and shops.", canonical: "/c/register", noindex: true });
+  useSeo({
+    title: "Customer Sign Up | NECTO",
+    description: "Join NECTO as a customer to find trusted local workers and shops.",
+    canonical: "/c/register",
+    noindex: true,
+  });
   const [form, setForm] = useState({ name: "", area: "", phone: "" });
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,7 +28,12 @@ export default function CustomerRegister() {
     setLoading(true);
     const { data, error } = await supabase
       .from("customers")
-      .insert({ ...form, approval_status: "approved", approval_notes: null, ...consentInsertFields() })
+      .insert({
+        ...form,
+        approval_status: "approved",
+        approval_notes: null,
+        ...consentInsertFields(),
+      })
       .select("id")
       .maybeSingle();
     setLoading(false);
@@ -42,11 +52,27 @@ export default function CustomerRegister() {
         <p className="text-sm text-muted-foreground mt-1">Tell us a bit about yourself.</p>
         <ChooseDifferentAccountTypeLink />
         <form onSubmit={submit} className="mt-6 space-y-4">
-          <Field label="Full Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <Field label="Area / City" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} />
-          <Field label="Phone Number" inputMode="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <Field
+            label="Full Name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+          <Field
+            label="Area / City"
+            value={form.area}
+            onChange={(e) => setForm({ ...form, area: e.target.value })}
+          />
+          <Field
+            label="Phone Number"
+            inputMode="tel"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          />
           <ConsentRow agreed={agreed} setAgreed={setAgreed} />
-          <button disabled={loading || !agreed} className="w-full h-12 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60">
+          <button
+            disabled={loading || !agreed}
+            className="w-full h-12 rounded-xl bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60"
+          >
             {loading ? "Submitting..." : "Submit"}
           </button>
         </form>
@@ -58,7 +84,11 @@ export default function CustomerRegister() {
 function ConsentRow({ agreed, setAgreed }: { agreed: boolean; setAgreed: (v: boolean) => void }) {
   return (
     <label className="flex items-start gap-3 text-sm text-foreground cursor-pointer select-none pt-2">
-      <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
+      <Checkbox
+        checked={agreed}
+        onCheckedChange={(v) => setAgreed(v === true)}
+        className="mt-0.5"
+      />
       <span className="leading-snug">
         I have read and agree to the{" "}
         <Link to="/terms-and-conditions" className="text-primary underline">

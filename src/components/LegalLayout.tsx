@@ -28,9 +28,7 @@ export function LegalLayout({ title, lastUpdated, intro, children }: Props) {
         <p className="mt-2 text-sm text-muted-foreground">{lastUpdated}</p>
         {intro ? <div className="mt-3 text-sm text-muted-foreground">{intro}</div> : null}
 
-        <div className="mt-6 space-y-6 text-[15px] leading-relaxed text-foreground">
-          {children}
-        </div>
+        <div className="mt-6 space-y-6 text-[15px] leading-relaxed text-foreground">{children}</div>
       </div>
     </div>
   );

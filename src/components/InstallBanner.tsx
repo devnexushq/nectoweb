@@ -49,7 +49,9 @@ export function InstallBanner() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-sm truncate">Install Necto App</div>
-              <div className="text-xs text-white/80 truncate">Faster access. Works like a native app.</div>
+              <div className="text-xs text-white/80 truncate">
+                Faster access. Works like a native app.
+              </div>
             </div>
             <button
               onClick={onInstall}

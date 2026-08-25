@@ -60,8 +60,19 @@
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
-  html, body { font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
-  body { background-color: var(--color-background); color: var(--color-foreground); }
-  button { cursor: pointer; }
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+  button {
+    cursor: pointer;
+  }
 }

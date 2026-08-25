@@ -1,20 +1,27 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Store, User, Users } from "lucide-react";
-import { clearAccount, getRole, getUserId, homePathFor, registerPathFor, setRole, type Role } from "@/lib/role";
+import {
+  clearAccount,
+  getRole,
+  getUserId,
+  homePathFor,
+  registerPathFor,
+  setRole,
+  type Role,
+} from "@/lib/role";
 import { accountExists } from "@/hooks/useRoleGuard";
 import { useSeo } from "@/lib/seo";
 import { InstallButton } from "@/components/InstallButton";
 import { InstallBanner } from "@/components/InstallBanner";
-
-
 
 export default function Landing() {
   const navigate = useNavigate();
   const [checkingSavedAccount, setCheckingSavedAccount] = useState(() => Boolean(getRole()));
   useSeo({
     title: "NECTO | Discover Trusted Local Workers & Shops Near You",
-    description: "NECTO is a trusted hyperlocal marketplace for discovering nearby workers, local shops, services, products, phone contacts, and WhatsApp-ready businesses in India.",
+    description:
+      "NECTO is a trusted hyperlocal marketplace for discovering nearby workers, local shops, services, products, phone contacts, and WhatsApp-ready businesses in India.",
     canonical: "/",
   });
 
@@ -45,7 +52,9 @@ export default function Landing() {
     };
 
     redirectSavedAccount();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   function pick(role: Role) {
@@ -66,14 +75,30 @@ export default function Landing() {
             <h1 className="text-4xl font-extrabold text-primary tracking-tight">NECTO</h1>
             <p className="mt-2 text-base text-muted-foreground">Discover Local, Buy Local</p>
             <p className="mt-3 text-sm leading-6 text-muted-foreground">
-              Find trusted workers, nearby shops, useful services, products, call contacts, and WhatsApp-ready local businesses in one simple marketplace.
+              Find trusted workers, nearby shops, useful services, products, call contacts, and
+              WhatsApp-ready local businesses in one simple marketplace.
             </p>
           </div>
 
           <div className="w-full space-y-3">
-            <RoleButton icon={User} label="I'm a Customer" sub="Find workers & shops near you" onClick={() => pick("customer")} />
-            <RoleButton icon={Users} label="I'm a Worker" sub="Get discovered by local customers" onClick={() => pick("worker")} />
-            <RoleButton icon={Store} label="I have a Shop" sub="List your shop & products" onClick={() => pick("shop")} />
+            <RoleButton
+              icon={User}
+              label="I'm a Customer"
+              sub="Find workers & shops near you"
+              onClick={() => pick("customer")}
+            />
+            <RoleButton
+              icon={Users}
+              label="I'm a Worker"
+              sub="Get discovered by local customers"
+              onClick={() => pick("worker")}
+            />
+            <RoleButton
+              icon={Store}
+              label="I have a Shop"
+              sub="List your shop & products"
+              onClick={() => pick("shop")}
+            />
           </div>
 
           <div className="mt-6 w-full">
@@ -87,22 +112,39 @@ export default function Landing() {
 
         <section className="mx-auto mt-12 max-w-3xl space-y-5 text-left">
           <div className="rounded-2xl border border-border bg-muted/20 p-5">
-            <h2 className="text-xl font-bold text-primary">A local discovery app built for real neighborhoods</h2>
+            <h2 className="text-xl font-bold text-primary">
+              A local discovery app built for real neighborhoods
+            </h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              NECTO helps people discover reliable local workers and shops without confusion. Customers can browse public profiles, compare categories, and contact businesses directly by call or WhatsApp. Workers and shop owners can create a public presence and get discovered by people nearby.
+              NECTO helps people discover reliable local workers and shops without confusion.
+              Customers can browse public profiles, compare categories, and contact businesses
+              directly by call or WhatsApp. Workers and shop owners can create a public presence and
+              get discovered by people nearby.
             </p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <InfoCard title="For Customers" text="Find local workers, shops, services, and products from one clean app." />
-            <InfoCard title="For Workers" text="Create a public worker profile and get discovered by nearby customers." />
-            <InfoCard title="For Shops" text="List your shop and products so local buyers can contact you faster." />
+            <InfoCard
+              title="For Customers"
+              text="Find local workers, shops, services, and products from one clean app."
+            />
+            <InfoCard
+              title="For Workers"
+              text="Create a public worker profile and get discovered by nearby customers."
+            />
+            <InfoCard
+              title="For Shops"
+              text="List your shop and products so local buyers can contact you faster."
+            />
           </div>
 
           <div className="rounded-2xl border border-border bg-white p-5">
             <h2 className="text-lg font-bold text-primary">Popular local discovery on Necto</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              People use NECTO to search for electricians, plumbers, tutors, repair workers, service providers, general shops, product sellers, and other trusted local contacts. The platform is designed for simple onboarding, safe public profiles, and quick communication.
+              People use NECTO to search for electricians, plumbers, tutors, repair workers, service
+              providers, general shops, product sellers, and other trusted local contacts. The
+              platform is designed for simple onboarding, safe public profiles, and quick
+              communication.
             </p>
           </div>
         </section>

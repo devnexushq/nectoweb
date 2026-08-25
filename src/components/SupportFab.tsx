@@ -33,17 +33,44 @@ export function SupportFab() {
         <HelpCircle className="h-6 w-6" />
       </button>
       {open && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-4" onClick={() => setOpen(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-4"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-md p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-bold">Contact Necto</h2>
-              <button onClick={() => setOpen(false)} aria-label="Close"><X className="h-5 w-5" /></button>
+              <button onClick={() => setOpen(false)} aria-label="Close">
+                <X className="h-5 w-5" />
+              </button>
             </div>
             <form onSubmit={submit} className="space-y-3">
-              <input className="w-full h-11 px-3 rounded-lg border border-border focus:border-primary outline-none" placeholder="Your name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              <input className="w-full h-11 px-3 rounded-lg border border-border focus:border-primary outline-none" placeholder="Phone number" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-              <textarea rows={4} className="w-full px-3 py-2 rounded-lg border border-border focus:border-primary outline-none" placeholder="How can we help?" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
-              <button disabled={sending} className="w-full h-11 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60">
+              <input
+                className="w-full h-11 px-3 rounded-lg border border-border focus:border-primary outline-none"
+                placeholder="Your name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+              />
+              <input
+                className="w-full h-11 px-3 rounded-lg border border-border focus:border-primary outline-none"
+                placeholder="Phone number"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              />
+              <textarea
+                rows={4}
+                className="w-full px-3 py-2 rounded-lg border border-border focus:border-primary outline-none"
+                placeholder="How can we help?"
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
+              />
+              <button
+                disabled={sending}
+                className="w-full h-11 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60"
+              >
                 {sending ? "Sending..." : "Submit"}
               </button>
             </form>
