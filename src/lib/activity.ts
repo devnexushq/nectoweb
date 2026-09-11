@@ -44,7 +44,9 @@ type ProfileLocation = {
 const db = supabase as any;
 
 function normalize(value: unknown) {
-  return String(value ?? "").trim().toLowerCase();
+  return String(value ?? "")
+    .trim()
+    .toLowerCase();
 }
 
 function hasValue(value: unknown) {
@@ -153,10 +155,12 @@ export async function fetchViewedActivityIds(viewerKey: string) {
 }
 
 export async function markActivityViewed(activityId: string, viewerKey: string) {
-  const { error } = await db.from("activity_views").upsert(
-    { activity_id: activityId, user_id: viewerKey, viewed_at: new Date().toISOString() },
-    { onConflict: "activity_id,user_id" },
-  );
+  const { error } = await db
+    .from("activity_views")
+    .upsert(
+      { activity_id: activityId, user_id: viewerKey, viewed_at: new Date().toISOString() },
+      { onConflict: "activity_id,user_id" },
+    );
 
   if (error) {
     console.warn("[Activity] Could not mark update as viewed", error.message);

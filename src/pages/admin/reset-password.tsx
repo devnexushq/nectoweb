@@ -12,7 +12,12 @@ export default function AdminResetPassword() {
   const [ready, setReady] = useState(false);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  useSeo({ title: "Reset Admin Password | NECTO", description: "Secure NECTO admin password reset.", canonical: "/admin/reset-password", noindex: true });
+  useSeo({
+    title: "Reset Admin Password | NECTO",
+    description: "Secure NECTO admin password reset.",
+    canonical: "/admin/reset-password",
+    noindex: true,
+  });
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
@@ -68,7 +73,11 @@ export default function AdminResetPassword() {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full bg-slate-900 hover:bg-slate-800" disabled={busy}>
+            <Button
+              type="submit"
+              className="w-full bg-slate-900 hover:bg-slate-800"
+              disabled={busy}
+            >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Update password"}
             </Button>
           </form>

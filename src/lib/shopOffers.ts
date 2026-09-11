@@ -98,7 +98,8 @@ export function validateOffer(form: ShopOfferInput) {
   if (!form.area.trim()) return "Area is required.";
   const start = new Date(form.offer_start_at);
   const end = new Date(form.offer_end_at);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "Please enter valid dates.";
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()))
+    return "Please enter valid dates.";
   if (end < start) return "End date must be after the start date.";
   return null;
 }
@@ -157,7 +158,14 @@ export async function saveShopOffer(shopId: string, form: ShopOfferInput, offerI
   };
 
   const result = offerId
-    ? await db.from("activity_feed").update(payload).eq("id", offerId).eq("linked_shop_id", shopId).eq("type", "offer").select("*").maybeSingle()
+    ? await db
+        .from("activity_feed")
+        .update(payload)
+        .eq("id", offerId)
+        .eq("linked_shop_id", shopId)
+        .eq("type", "offer")
+        .select("*")
+        .maybeSingle()
     : await db.from("activity_feed").insert(payload).select("*").maybeSingle();
   if (result.error) throw new Error(result.error.message);
   return result.data as ShopOffer;

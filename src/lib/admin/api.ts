@@ -5,7 +5,8 @@ export type SupportStatus = "open" | "in_progress" | "resolved";
 async function invoke(body: Record<string, unknown>) {
   const { data, error } = await supabase.functions.invoke("admin-actions", { body });
   if (error) throw new Error(error.message);
-  if (data && (data as { error?: string }).error) throw new Error((data as { error: string }).error);
+  if (data && (data as { error?: string }).error)
+    throw new Error((data as { error: string }).error);
   return data;
 }
 

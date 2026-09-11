@@ -15,7 +15,12 @@ export default function StatusBadge({ status }: { status?: string | null }) {
   const s = (status ?? "approved").toLowerCase();
   const cls = STYLES[s] ?? "bg-slate-100 text-slate-700 border-slate-200";
   return (
-    <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border capitalize", cls)}>
+    <span
+      className={cn(
+        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border capitalize",
+        cls,
+      )}
+    >
       {s.replace("_", " ")}
     </span>
   );

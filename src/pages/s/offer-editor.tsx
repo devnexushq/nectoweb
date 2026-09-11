@@ -19,8 +19,10 @@ import {
   type ShopOfferInput,
 } from "@/lib/shopOffers";
 
-const CONTROL = "mt-1 w-full h-11 rounded-xl border border-border bg-white px-3 text-sm outline-none transition focus:border-primary";
-const TEXTAREA = "mt-1 w-full min-h-28 rounded-xl border border-border bg-white px-3 py-2 text-sm outline-none transition focus:border-primary";
+const CONTROL =
+  "mt-1 w-full h-11 rounded-xl border border-border bg-white px-3 text-sm outline-none transition focus:border-primary";
+const TEXTAREA =
+  "mt-1 w-full min-h-28 rounded-xl border border-border bg-white px-3 py-2 text-sm outline-none transition focus:border-primary";
 
 export default function ShopOfferEditor() {
   const ready = useRoleGuard("shop");
@@ -70,7 +72,10 @@ export default function ShopOfferEditor() {
     load();
   }, [ready, id, navigate]);
 
-  const publishLocked = useMemo(() => published && form.status === "published", [published, form.status]);
+  const publishLocked = useMemo(
+    () => published && form.status === "published",
+    [published, form.status],
+  );
 
   const update = <K extends keyof ShopOfferInput>(key: K, value: ShopOfferInput[K]) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -129,31 +134,108 @@ export default function ShopOfferEditor() {
     <AppShell role="shop" title={isEditing ? "Edit Offer" : "Create Offer"}>
       <div className="mb-4 rounded-2xl border border-primary/15 bg-primary/5 p-4">
         <div className="flex items-start gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary text-white"><Tag className="h-5 w-5" /></div>
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-primary text-white">
+            <Tag className="h-5 w-5" />
+          </div>
           <div>
             <h2 className="font-bold text-primary">Shop Offer Management</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Published offers appear in Activity Center for nearby customers and workers.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Published offers appear in Activity Center for nearby customers and workers.
+            </p>
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-border bg-white p-8 text-center text-sm text-muted-foreground">Loading offer...</div>
+        <div className="rounded-2xl border border-border bg-white p-8 text-center text-sm text-muted-foreground">
+          Loading offer...
+        </div>
       ) : (
-        <form onSubmit={submit} className="space-y-4 rounded-2xl border border-border bg-white p-4 shadow-sm">
-          <Field label="Offer Title"><input className={CONTROL} value={form.title} onChange={(e) => update("title", e.target.value)} /></Field>
-          <Field label="Offer Description"><textarea className={TEXTAREA} value={form.message} onChange={(e) => update("message", e.target.value)} /></Field>
+        <form
+          onSubmit={submit}
+          className="space-y-4 rounded-2xl border border-border bg-white p-4 shadow-sm"
+        >
+          <Field label="Offer Title">
+            <input
+              className={CONTROL}
+              value={form.title}
+              onChange={(e) => update("title", e.target.value)}
+            />
+          </Field>
+          <Field label="Offer Description">
+            <textarea
+              className={TEXTAREA}
+              value={form.message}
+              onChange={(e) => update("message", e.target.value)}
+            />
+          </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Offer Category"><input className={CONTROL} value={form.category} onChange={(e) => update("category", e.target.value)} placeholder="Grocery, hardware, festival..." /></Field>
-            <Field label="Optional Discount Text"><input className={CONTROL} value={form.discount_text} onChange={(e) => update("discount_text", e.target.value)} placeholder="10% off, Buy 1 Get 1..." /></Field>
-            <Field label="Start Date"><input type="date" className={CONTROL} value={form.offer_start_at} onChange={(e) => update("offer_start_at", e.target.value)} /></Field>
-            <Field label="End Date"><input type="date" className={CONTROL} value={form.offer_end_at} onChange={(e) => update("offer_end_at", e.target.value)} /></Field>
-            <Field label="City"><input className={CONTROL} value={form.city} onChange={(e) => update("city", e.target.value)} /></Field>
-            <Field label="Area"><input className={CONTROL} value={form.area} onChange={(e) => update("area", e.target.value)} /></Field>
-            <Field label="District"><input className={CONTROL} value={form.district} onChange={(e) => update("district", e.target.value)} /></Field>
-            <Field label="State"><input className={CONTROL} value={form.state} onChange={(e) => update("state", e.target.value)} /></Field>
+            <Field label="Offer Category">
+              <input
+                className={CONTROL}
+                value={form.category}
+                onChange={(e) => update("category", e.target.value)}
+                placeholder="Grocery, hardware, festival..."
+              />
+            </Field>
+            <Field label="Optional Discount Text">
+              <input
+                className={CONTROL}
+                value={form.discount_text}
+                onChange={(e) => update("discount_text", e.target.value)}
+                placeholder="10% off, Buy 1 Get 1..."
+              />
+            </Field>
+            <Field label="Start Date">
+              <input
+                type="date"
+                className={CONTROL}
+                value={form.offer_start_at}
+                onChange={(e) => update("offer_start_at", e.target.value)}
+              />
+            </Field>
+            <Field label="End Date">
+              <input
+                type="date"
+                className={CONTROL}
+                value={form.offer_end_at}
+                onChange={(e) => update("offer_end_at", e.target.value)}
+              />
+            </Field>
+            <Field label="City">
+              <input
+                className={CONTROL}
+                value={form.city}
+                onChange={(e) => update("city", e.target.value)}
+              />
+            </Field>
+            <Field label="Area">
+              <input
+                className={CONTROL}
+                value={form.area}
+                onChange={(e) => update("area", e.target.value)}
+              />
+            </Field>
+            <Field label="District">
+              <input
+                className={CONTROL}
+                value={form.district}
+                onChange={(e) => update("district", e.target.value)}
+              />
+            </Field>
+            <Field label="State">
+              <input
+                className={CONTROL}
+                value={form.state}
+                onChange={(e) => update("state", e.target.value)}
+              />
+            </Field>
             <Field label="Location Visibility">
-              <select className={CONTROL} value={form.visibility_scope} onChange={(e) => update("visibility_scope", e.target.value as OfferVisibilityScope)}>
+              <select
+                className={CONTROL}
+                value={form.visibility_scope}
+                onChange={(e) => update("visibility_scope", e.target.value as OfferVisibilityScope)}
+              >
                 <option value="local">Local</option>
                 <option value="district">District</option>
                 <option value="state">State</option>
@@ -161,7 +243,11 @@ export default function ShopOfferEditor() {
               </select>
             </Field>
             <Field label="Status">
-              <select className={CONTROL} value={form.status} onChange={(e) => update("status", e.target.value as OfferStatus)}>
+              <select
+                className={CONTROL}
+                value={form.status}
+                onChange={(e) => update("status", e.target.value as OfferStatus)}
+              >
                 <option value="draft">Draft</option>
                 <option value="published">Published</option>
                 <option value="hidden">Hidden</option>
@@ -170,19 +256,41 @@ export default function ShopOfferEditor() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">
-            <button disabled={saving} type="submit" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white font-bold text-foreground hover:bg-muted disabled:opacity-60">
+            <button
+              disabled={saving}
+              type="submit"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white font-bold text-foreground hover:bg-muted disabled:opacity-60"
+            >
               <Save className="h-4 w-4" /> {isEditing ? "Update Offer" : "Save Draft"}
             </button>
             {publishLocked ? (
-              <button disabled type="button" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 font-bold text-white opacity-90">
+              <button
+                disabled
+                type="button"
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-600 font-bold text-white opacity-90"
+              >
                 <CheckCircle2 className="h-4 w-4" /> Published
               </button>
             ) : (
-              <button disabled={saving} type="button" onClick={() => persist("published", isEditing && initialStatus !== "draft" ? "update" : "publish")} className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary font-bold text-white hover:bg-primary/90 disabled:opacity-60">
-                <Send className="h-4 w-4" /> {isEditing && initialStatus !== "draft" ? "Update Offer" : "Publish"}
+              <button
+                disabled={saving}
+                type="button"
+                onClick={() =>
+                  persist(
+                    "published",
+                    isEditing && initialStatus !== "draft" ? "update" : "publish",
+                  )
+                }
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary font-bold text-white hover:bg-primary/90 disabled:opacity-60"
+              >
+                <Send className="h-4 w-4" />{" "}
+                {isEditing && initialStatus !== "draft" ? "Update Offer" : "Publish"}
               </button>
             )}
-            <Link to="/s/offers" className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white font-bold text-foreground hover:bg-muted">
+            <Link
+              to="/s/offers"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white font-bold text-foreground hover:bg-muted"
+            >
               <Eye className="h-4 w-4" /> Manage Offers
             </Link>
           </div>
@@ -193,5 +301,10 @@ export default function ShopOfferEditor() {
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
-  return <label className="block text-sm font-semibold text-foreground">{label}{children}</label>;
+  return (
+    <label className="block text-sm font-semibold text-foreground">
+      {label}
+      {children}
+    </label>
+  );
 }

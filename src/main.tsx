@@ -24,7 +24,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
   const isInIframe = (() => {
-    try { return window.self !== window.top; } catch { return true; }
+    try {
+      return window.self !== window.top;
+    } catch {
+      return true;
+    }
   })();
   const host = window.location.hostname;
   const isPreviewHost =

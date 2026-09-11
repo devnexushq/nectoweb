@@ -39,10 +39,18 @@ function isActivePath(pathname: string, role: Role, item: Item) {
 
   const prefix = ROLE_PREFIX[role];
   if (item.label === "Workers") {
-    return pathname === "/workers" || pathname.startsWith("/worker/") || pathname.startsWith(`${prefix}/worker/`);
+    return (
+      pathname === "/workers" ||
+      pathname.startsWith("/worker/") ||
+      pathname.startsWith(`${prefix}/worker/`)
+    );
   }
   if (item.label === "Shops") {
-    return pathname === "/shops" || pathname.startsWith("/shop/") || pathname.startsWith(`${prefix}/shop/`);
+    return (
+      pathname === "/shops" ||
+      pathname.startsWith("/shop/") ||
+      pathname.startsWith(`${prefix}/shop/`)
+    );
   }
   return false;
 }
@@ -52,7 +60,10 @@ export function BottomNav({ role }: { role: Role }) {
   const items = ITEMS[role];
   return (
     <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-border shadow-[0_-2px_12px_rgba(0,0,0,0.04)]">
-      <ul className="mx-auto max-w-2xl grid" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+      <ul
+        className="mx-auto max-w-2xl grid"
+        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+      >
         {items.map((item) => {
           const { to, label, icon: Icon } = item;
           const active = isActivePath(pathname, role, item);

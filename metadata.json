@@ -1,0 +1,6 @@
+{
+  "name": "NECTO",
+  "description": "Hyperlocal marketplace for discovering nearby workers, local shops, services, products, and contact information.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

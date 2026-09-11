@@ -17,7 +17,8 @@ export default defineConfig({
       manifest: {
         name: "Necto",
         short_name: "Necto",
-        description: "NECTO — Discover Local, Buy Local. A hyperlocal marketplace for workers and shops near you.",
+        description:
+          "NECTO — Discover Local, Buy Local. A hyperlocal marketplace for workers and shops near you.",
         theme_color: "#1E3A8A",
         background_color: "#FFFFFF",
         display: "standalone",
@@ -41,12 +42,18 @@ export default defineConfig({
             options: { cacheName: "html", networkTimeoutSeconds: 3 },
           },
           {
-            urlPattern: ({ url }) => url.origin === "https://fonts.googleapis.com" || url.origin === "https://fonts.gstatic.com",
+            urlPattern: ({ url }) =>
+              url.origin === "https://fonts.googleapis.com" ||
+              url.origin === "https://fonts.gstatic.com",
             handler: "CacheFirst",
-            options: { cacheName: "google-fonts", expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+            options: {
+              cacheName: "google-fonts",
+              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
+            },
           },
           {
-            urlPattern: ({ request }) => ["style", "script", "worker", "image", "font"].includes(request.destination),
+            urlPattern: ({ request }) =>
+              ["style", "script", "worker", "image", "font"].includes(request.destination),
             handler: "StaleWhileRevalidate",
             options: { cacheName: "assets" },
           },
@@ -82,5 +89,5 @@ export default defineConfig({
       },
     },
   },
-  server: { host: "::", port: 8080 },
+  server: { host: "0.0.0.0", port: 3000 },
 });

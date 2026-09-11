@@ -39,13 +39,26 @@ export default function WorkerProfile() {
             <Row label="Phone" value={me.phone} />
             <Row label="WhatsApp" value={me.whatsapp} />
             <Row label="Area" value={me.area} />
-            <Row label="Visibility" value={me.visibility === "local" ? "Local Only" : "All India"} />
+            <Row
+              label="Visibility"
+              value={me.visibility === "local" ? "Local Only" : "All India"}
+            />
             <Row label="Description" value={me.description ?? "—"} />
           </div>
-          <ProfileActions role="worker" me={me} lockDaysLeft={lock} onUpdated={setMe} middleSlot={<LegalInfoSection />} />
+          <ProfileActions
+            role="worker"
+            me={me}
+            lockDaysLeft={lock}
+            onUpdated={setMe}
+            middleSlot={<LegalInfoSection />}
+          />
           <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
         </div>
-      ) : <p className="text-sm text-muted-foreground">{loading ? "Loading..." : "Profile not found."}</p>}
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          {loading ? "Loading..." : "Profile not found."}
+        </p>
+      )}
     </AppShell>
   );
 }

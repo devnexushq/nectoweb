@@ -2,8 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -79,7 +78,8 @@ Deno.serve(async (req) => {
     if (action === "set_product_visibility") {
       const id = body.id as string;
       const visibility = body.visibility as string;
-      if (!id || !["visible", "hidden"].includes(visibility)) return json({ error: "Invalid input" }, 400);
+      if (!id || !["visible", "hidden"].includes(visibility))
+        return json({ error: "Invalid input" }, 400);
       const { error } = await admin.from("products").update({ visibility }).eq("id", id);
       if (error) return json({ error: error.message }, 400);
       await admin.from("activity_logs").insert({
