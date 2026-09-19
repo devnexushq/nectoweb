@@ -20,8 +20,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Field, TextArea } from "@/components/FormBits";
+import { PinCodeField } from "@/components/PinCodeField";
 import { supabase } from "@/integrations/supabase/client";
-import { clearAccount, getUserId, type Role } from "@/lib/role";
+import { clearAccount, getUserId, setUserPincode, setUserArea, type Role } from "@/lib/role";
 
 type Props = {
   role: Role;
@@ -89,17 +90,27 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
     if (!id) return;
     setSaving(true);
     const { id: _omit, registered_at, created_at, rating, ...patch } = form ?? {};
-    const { data, error } = await supabase
-      .from(TABLE[role])
-      .update(patch)
-      .eq("id", id)
-      .select("*")
-      .maybeSingle();
+    let res = await supabase.from(TABLE[role]).update(patch).eq("id", id).select("*").maybeSingle();
+
+    if (res.error && res.error.code === "42703") {
+      const { pincode: _p, ...fallbackPatch } = patch;
+      res = await supabase
+        .from(TABLE[role])
+        .update(fallbackPatch)
+        .eq("id", id)
+        .select("*")
+        .maybeSingle();
+    }
+
     setSaving(false);
-    if (error) return toast.error("Could not save changes");
+    if (res.error) return toast.error("Could not save changes");
     toast.success("Profile updated");
     setEditOpen(false);
-    if (data) onUpdated(data);
+    if (res.data) {
+      if (res.data.pincode) setUserPincode(res.data.pincode);
+      if (res.data.area) setUserArea(res.data.area);
+      onUpdated(res.data);
+    }
   }
 
   async function doDelete() {
@@ -250,6 +261,13 @@ function EditFields({ role, form, setForm }: { role: Role; form: any; setForm: (
     return (
       <>
         <Field label="Full Name" value={form?.name ?? ""} onChange={set("name")} />
+        <PinCodeField
+          pincode={form?.pincode ?? ""}
+          onPincodeChange={(val) => setForm((prev: any) => ({ ...prev, pincode: val }))}
+          onAreaResolved={(resolvedArea) =>
+            setForm((prev: any) => ({ ...prev, area: resolvedArea }))
+          }
+        />
         <Field label="Area / City" value={form?.area ?? ""} onChange={set("area")} />
         <Field label="Phone" inputMode="tel" value={form?.phone ?? ""} onChange={set("phone")} />
       </>
@@ -273,6 +291,13 @@ function EditFields({ role, form, setForm }: { role: Role; form: any; setForm: (
           value={form?.whatsapp ?? ""}
           onChange={set("whatsapp")}
         />
+        <PinCodeField
+          pincode={form?.pincode ?? ""}
+          onPincodeChange={(val) => setForm((prev: any) => ({ ...prev, pincode: val }))}
+          onAreaResolved={(resolvedArea) =>
+            setForm((prev: any) => ({ ...prev, area: resolvedArea }))
+          }
+        />
         <Field label="Area" value={form?.area ?? ""} onChange={set("area")} />
         <Field label="Photo URL" value={form?.photo_url ?? ""} onChange={set("photo_url")} />
         <TextArea
@@ -294,6 +319,11 @@ function EditFields({ role, form, setForm }: { role: Role; form: any; setForm: (
         inputMode="tel"
         value={form?.whatsapp ?? ""}
         onChange={set("whatsapp")}
+      />
+      <PinCodeField
+        pincode={form?.pincode ?? ""}
+        onPincodeChange={(val) => setForm((prev: any) => ({ ...prev, pincode: val }))}
+        onAreaResolved={(resolvedArea) => setForm((prev: any) => ({ ...prev, area: resolvedArea }))}
       />
       <Field label="Area" value={form?.area ?? ""} onChange={set("area")} />
       <Field label="Photo URL" value={form?.photo_url ?? ""} onChange={set("photo_url")} />
