@@ -3,9 +3,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { CountryCode } from "libphonenumber-js";
 import { supabase } from "@/integrations/supabase/client";
-import { setRole, setUserId, setUserPhone } from "@/lib/role";
+import { setRole, setUserId, setUserPhone, setUserPincode, setUserArea } from "@/lib/role";
 import { useSeo } from "@/lib/seo";
 import { Field } from "@/components/FormBits";
+import { PinCodeField } from "@/components/PinCodeField";
 import { PhoneInputField } from "@/components/PhoneInputField";
 import { DuplicateNumberDialog } from "@/components/DuplicateNumberDialog";
 import { validatePhoneNumber, cleanPhoneNumber } from "@/lib/phone";
@@ -21,7 +22,7 @@ export default function CustomerRegister() {
     canonical: "/c/register",
     noindex: true,
   });
-  const [form, setForm] = useState({ name: "", area: "", phone: "" });
+  const [form, setForm] = useState({ name: "", area: "", phone: "", pincode: "" });
   const [countryCode, setCountryCode] = useState<CountryCode>("IN");
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [duplicateOpen, setDuplicateOpen] = useState(false);
@@ -88,6 +89,7 @@ export default function CustomerRegister() {
         body: {
           name: form.name.trim(),
           area: form.area.trim(),
+          pincode: form.pincode.trim() || null,
           phone: form.phone,
           countryCode,
           ...consentInsertFields(),
@@ -118,6 +120,8 @@ export default function CustomerRegister() {
         setRole("customer");
         setUserId(fnData.data.id);
         setUserPhone(e164Phone);
+        if (form.pincode.trim()) setUserPincode(form.pincode.trim());
+        if (form.area.trim()) setUserArea(form.area.trim());
         toast.success("Welcome to Necto!");
         navigate("/c/home", { replace: true });
         return;
@@ -127,19 +131,30 @@ export default function CustomerRegister() {
     }
 
     // 3. Fallback direct insert into customers table with E.164 phone
-    const { data, error } = await supabase
+    const basePayload = {
+      name: form.name.trim(),
+      area: form.area.trim(),
+      phone: e164Phone,
+      approval_status: "approved",
+      approval_notes: null,
+      ...consentInsertFields(),
+    };
+
+    let insertRes = await supabase
       .from("customers")
       .insert({
-        name: form.name.trim(),
-        area: form.area.trim(),
-        phone: e164Phone,
-        approval_status: "approved",
-        approval_notes: null,
-        ...consentInsertFields(),
+        ...basePayload,
+        pincode: form.pincode.trim() || null,
       })
       .select("id")
       .maybeSingle();
 
+    // If pincode column doesn't exist yet on remote schema, retry without it
+    if (insertRes.error && insertRes.error.code === "42703") {
+      insertRes = await supabase.from("customers").insert(basePayload).select("id").maybeSingle();
+    }
+
+    const { data, error } = insertRes;
     setLoading(false);
 
     if (error) {
@@ -162,6 +177,8 @@ export default function CustomerRegister() {
     setRole("customer");
     setUserId(data.id);
     setUserPhone(e164Phone);
+    if (form.pincode.trim()) setUserPincode(form.pincode.trim());
+    if (form.area.trim()) setUserArea(form.area.trim());
     toast.success("Welcome to Necto!");
     navigate("/c/home", { replace: true });
   }
@@ -178,6 +195,11 @@ export default function CustomerRegister() {
             label="Full Name"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+          <PinCodeField
+            pincode={form.pincode}
+            onPincodeChange={(val) => setForm((prev) => ({ ...prev, pincode: val }))}
+            onAreaResolved={(resolvedArea) => setForm((prev) => ({ ...prev, area: resolvedArea }))}
           />
           <Field
             label="Area / City"

@@ -57,6 +57,7 @@ Deno.serve(async (req) => {
       whatsapp,
       description,
       area,
+      pincode,
       visibility = "local",
       business_hours,
       countryCode = "IN",
@@ -115,26 +116,41 @@ Deno.serve(async (req) => {
     }
 
     // Insert shop record with E.164 phone
-    const { data, error } = await supabase
+    const baseRecord = {
+      owner_name: String(owner_name).trim(),
+      shop_name: String(shop_name).trim(),
+      category: String(category).trim(),
+      phone: e164Phone,
+      whatsapp: e164Whatsapp,
+      description: description ? String(description).trim() : null,
+      area: String(area).trim(),
+      visibility: visibility === "all_india" ? "all_india" : "local",
+      business_hours: business_hours || null,
+      approval_status: "approved",
+      approval_notes: null,
+      terms_accepted: terms_accepted !== false,
+      terms_accepted_at: new Date().toISOString(),
+      terms_version: "2026-06-07",
+    };
+
+    let insertRes = await supabase
       .from("shops")
       .insert({
-        owner_name: String(owner_name).trim(),
-        shop_name: String(shop_name).trim(),
-        category: String(category).trim(),
-        phone: e164Phone,
-        whatsapp: e164Whatsapp,
-        description: description ? String(description).trim() : null,
-        area: String(area).trim(),
-        visibility: visibility === "all_india" ? "all_india" : "local",
-        business_hours: business_hours || null,
-        approval_status: "approved",
-        approval_notes: null,
-        terms_accepted: terms_accepted !== false,
-        terms_accepted_at: new Date().toISOString(),
-        terms_version: "2026-06-07",
+        ...baseRecord,
+        pincode: pincode ? String(pincode).trim() : null,
       })
       .select("id, shop_name, owner_name, phone, area, registered_at")
       .maybeSingle();
+
+    if (insertRes.error && insertRes.error.code === "42703") {
+      insertRes = await supabase
+        .from("shops")
+        .insert(baseRecord)
+        .select("id, shop_name, owner_name, phone, area, registered_at")
+        .maybeSingle();
+    }
+
+    const { data, error } = insertRes;
 
     if (error || !data) {
       return json({ error: error?.message || "Could not register shop" }, 500);

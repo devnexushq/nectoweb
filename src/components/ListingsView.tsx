@@ -4,6 +4,7 @@ import { SearchBar, AreaFilterBar } from "@/components/SearchBar";
 import { ListingCard, type ListingCardData } from "@/components/ListingCard";
 import { EmptyState } from "@/components/EmptyState";
 import { withTimeout } from "@/lib/safeAsync";
+import { getUserPincode, getUserArea } from "@/lib/role";
 
 type Mode = "workers" | "shops" | "mixed";
 
@@ -66,10 +67,49 @@ export function ListingsView({
   const items: ListingCardData[] = useMemo(() => {
     const q = query.trim().toLowerCase();
     const a = area.trim().toLowerCase();
-    const visFilter = (v: string) => (visibility === "all_india" ? true : v === "local");
+    const viewerPincode = getUserPincode()?.trim() || "";
+    const viewerArea = (a || getUserArea()?.trim() || "").toLowerCase();
+
+    const matchesProximity = (item: {
+      pincode?: string | null;
+      area?: string | null;
+      visibility?: string;
+    }) => {
+      if (visibility === "all_india") return true;
+      if (item.visibility && item.visibility !== "local") return false;
+
+      // If user specifically entered an area in the search bar, filter by that area
+      if (a) {
+        return (item.area || "").toLowerCase().includes(a);
+      }
+
+      const itemPin = item.pincode?.trim();
+      const itemArea = (item.area || "").trim().toLowerCase();
+
+      // Match by pincode when both viewer and listing have one:
+      // exact match, or same first 3 digits for a broader 'nearby' zone
+      if (viewerPincode && itemPin) {
+        if (viewerPincode === itemPin) return true;
+        if (
+          viewerPincode.length >= 3 &&
+          itemPin.length >= 3 &&
+          viewerPincode.slice(0, 3) === itemPin.slice(0, 3)
+        ) {
+          return true;
+        }
+        return false;
+      }
+
+      // Fall back to text-matching on area for records that don't have a pincode
+      if (viewerArea && itemArea) {
+        return itemArea.includes(viewerArea) || viewerArea.includes(itemArea);
+      }
+
+      return true;
+    };
 
     const w: ListingCardData[] = workers
-      .filter((x) => visFilter(x.visibility))
+      .filter((x) => matchesProximity(x))
       .filter(
         (x) =>
           !q ||
@@ -77,7 +117,6 @@ export function ListingsView({
           x.job_type?.toLowerCase().includes(q) ||
           x.description?.toLowerCase().includes(q),
       )
-      .filter((x) => !a || x.area?.toLowerCase().includes(a))
       .map((x) => ({
         id: x.id,
         type: "worker",
@@ -89,7 +128,7 @@ export function ListingsView({
       }));
 
     const s: ListingCardData[] = shops
-      .filter((x) => visFilter(x.visibility))
+      .filter((x) => matchesProximity(x))
       .filter(
         (x) =>
           !q ||
@@ -97,7 +136,6 @@ export function ListingsView({
           x.category?.toLowerCase().includes(q) ||
           x.description?.toLowerCase().includes(q),
       )
-      .filter((x) => !a || x.area?.toLowerCase().includes(a))
       .map((x) => ({
         id: x.id,
         type: "shop",

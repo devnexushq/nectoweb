@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => null);
     if (!body) return json({ error: "Invalid request payload" }, 400);
 
-    const { name, area, phone, countryCode = "IN", terms_accepted } = body;
+    const { name, area, phone, pincode, countryCode = "IN", terms_accepted } = body;
 
     if (!name || !area || !phone) {
       return json({ error: "Missing required fields: name, area, phone" }, 400);
@@ -90,20 +90,35 @@ Deno.serve(async (req) => {
     }
 
     // Insert customer record with E.164 phone
-    const { data, error } = await supabase
+    const baseRecord = {
+      name: String(name).trim(),
+      area: String(area).trim(),
+      phone: e164Phone,
+      approval_status: "approved",
+      approval_notes: null,
+      terms_accepted: terms_accepted !== false,
+      terms_accepted_at: new Date().toISOString(),
+      terms_version: "2026-06-07",
+    };
+
+    let insertRes = await supabase
       .from("customers")
       .insert({
-        name: String(name).trim(),
-        area: String(area).trim(),
-        phone: e164Phone,
-        approval_status: "approved",
-        approval_notes: null,
-        terms_accepted: terms_accepted !== false,
-        terms_accepted_at: new Date().toISOString(),
-        terms_version: "2026-06-07",
+        ...baseRecord,
+        pincode: pincode ? String(pincode).trim() : null,
       })
       .select("id, name, area, phone, created_at")
       .maybeSingle();
+
+    if (insertRes.error && insertRes.error.code === "42703") {
+      insertRes = await supabase
+        .from("customers")
+        .insert(baseRecord)
+        .select("id, name, area, phone, created_at")
+        .maybeSingle();
+    }
+
+    const { data, error } = insertRes;
 
     if (error || !data) {
       return json({ error: error?.message || "Could not register customer" }, 500);

@@ -3,9 +3,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { CountryCode } from "libphonenumber-js";
 import { supabase } from "@/integrations/supabase/client";
-import { setRole, setUserId, setUserPhone } from "@/lib/role";
+import { setRole, setUserId, setUserPhone, setUserPincode, setUserArea } from "@/lib/role";
 import { useSeo } from "@/lib/seo";
 import { Field, HoursAndVisibility, TextArea } from "@/components/FormBits";
+import { PinCodeField } from "@/components/PinCodeField";
 import { PhoneInputField } from "@/components/PhoneInputField";
 import { DuplicateNumberDialog } from "@/components/DuplicateNumberDialog";
 import { validatePhoneNumber } from "@/lib/phone";
@@ -29,6 +30,7 @@ export default function ShopRegister() {
     whatsapp: "",
     description: "",
     area: "",
+    pincode: "",
   });
   const [countryCode, setCountryCode] = useState<CountryCode>("IN");
   const [phoneError, setPhoneError] = useState<string | null>(null);
@@ -124,6 +126,7 @@ export default function ShopRegister() {
           whatsapp: e164Whatsapp,
           description: form.description.trim(),
           area: form.area.trim(),
+          pincode: form.pincode.trim() || null,
           countryCode,
           visibility,
           business_hours: hours,
@@ -155,6 +158,8 @@ export default function ShopRegister() {
         setRole("shop");
         setUserId(fnData.data.id);
         setUserPhone(e164Phone);
+        if (form.pincode.trim()) setUserPincode(form.pincode.trim());
+        if (form.area.trim()) setUserArea(form.area.trim());
         toast.success("Successfully Registered! Welcome to Necto.");
         navigate("/s/dashboard", { replace: true });
         return;
@@ -164,25 +169,35 @@ export default function ShopRegister() {
     }
 
     // 3. Fallback direct insert into shops table with E.164 phone
-    const { data, error } = await supabase
+    const basePayload = {
+      owner_name: form.owner_name.trim(),
+      shop_name: form.shop_name.trim(),
+      category: form.category.trim(),
+      phone: e164Phone,
+      whatsapp: e164Whatsapp,
+      description: form.description.trim() || null,
+      area: form.area.trim(),
+      visibility,
+      business_hours: hours,
+      approval_status: "approved",
+      approval_notes: null,
+      ...consentInsertFields(),
+    };
+
+    let insertRes = await supabase
       .from("shops")
       .insert({
-        owner_name: form.owner_name.trim(),
-        shop_name: form.shop_name.trim(),
-        category: form.category.trim(),
-        phone: e164Phone,
-        whatsapp: e164Whatsapp,
-        description: form.description.trim() || null,
-        area: form.area.trim(),
-        visibility,
-        business_hours: hours,
-        approval_status: "approved",
-        approval_notes: null,
-        ...consentInsertFields(),
+        ...basePayload,
+        pincode: form.pincode.trim() || null,
       })
       .select("id")
       .maybeSingle();
 
+    if (insertRes.error && insertRes.error.code === "42703") {
+      insertRes = await supabase.from("shops").insert(basePayload).select("id").maybeSingle();
+    }
+
+    const { data, error } = insertRes;
     setLoading(false);
 
     if (error) {
@@ -204,6 +219,8 @@ export default function ShopRegister() {
     setRole("shop");
     setUserId(data.id);
     setUserPhone(e164Phone);
+    if (form.pincode.trim()) setUserPincode(form.pincode.trim());
+    if (form.area.trim()) setUserArea(form.area.trim());
     toast.success("Successfully Registered! Welcome to Necto.");
     navigate("/s/dashboard", { replace: true });
   }
@@ -251,6 +268,11 @@ export default function ShopRegister() {
             label="Shop Description"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
+          />
+          <PinCodeField
+            pincode={form.pincode}
+            onPincodeChange={(val) => setForm((prev) => ({ ...prev, pincode: val }))}
+            onAreaResolved={(resolvedArea) => setForm((prev) => ({ ...prev, area: resolvedArea }))}
           />
           <Field
             label="Area / City"
