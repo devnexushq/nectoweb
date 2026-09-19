@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { CountryCode } from "libphonenumber-js";
 import { supabase } from "@/integrations/supabase/client";
-import { setRole, setUserId } from "@/lib/role";
+import { setRole, setUserId, setUserPhone } from "@/lib/role";
 import { useSeo } from "@/lib/seo";
 import { Field } from "@/components/FormBits";
 import { PhoneInputField } from "@/components/PhoneInputField";
@@ -117,6 +117,7 @@ export default function CustomerRegister() {
         setLoading(false);
         setRole("customer");
         setUserId(fnData.data.id);
+        setUserPhone(e164Phone);
         toast.success("Welcome to Necto!");
         navigate("/c/home", { replace: true });
         return;
@@ -160,6 +161,7 @@ export default function CustomerRegister() {
 
     setRole("customer");
     setUserId(data.id);
+    setUserPhone(e164Phone);
     toast.success("Welcome to Necto!");
     navigate("/c/home", { replace: true });
   }

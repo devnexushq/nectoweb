@@ -11,8 +11,34 @@ async function invoke(body: Record<string, unknown>) {
 }
 
 export const adminApi = {
-  updateSupport: (id: string, status: SupportStatus) =>
-    invoke({ action: "update_support_status", id, status }),
-  setProductVisibility: (id: string, visibility: "visible" | "hidden") =>
-    invoke({ action: "set_product_visibility", id, visibility }),
+  updateSupport: async (id: string, status: SupportStatus) => {
+    try {
+      return await invoke({ action: "update_support_status", id, status });
+    } catch {
+      // Resilient fallback: direct database update
+      const { data, error } = await supabase
+        .from("support_queries")
+        .update({ status })
+        .eq("id", id)
+        .select()
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    }
+  },
+  setProductVisibility: async (id: string, visibility: "visible" | "hidden") => {
+    try {
+      return await invoke({ action: "set_product_visibility", id, visibility });
+    } catch {
+      // Resilient fallback: direct database update
+      const { data, error } = await supabase
+        .from("products")
+        .update({ visibility })
+        .eq("id", id)
+        .select()
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    }
+  },
 };

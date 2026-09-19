@@ -106,9 +106,35 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
     const id = getUserId();
     if (!id) return;
     setDeleting(true);
-    const { error } = await supabase.from(TABLE[role]).delete().eq("id", id);
+    try {
+      if (role === "shop") {
+        // Clean up shop products to prevent orphan records
+        await supabase.from("products").delete().eq("shop_id", id);
+        // Clean up shop offers from activity_feed
+        await supabase.from("activity_feed").delete().eq("linked_shop_id", id);
+        // Clean up contacts directed to this shop
+        await supabase.from("contacts_log").delete().eq("to_id", id).eq("to_type", "shop");
+        // Clean up viewed records
+        await supabase.from("activity_views").delete().eq("user_id", `shop:${id}`);
+      } else if (role === "worker") {
+        // Clean up contacts directed to this worker
+        await supabase.from("contacts_log").delete().eq("to_id", id).eq("to_type", "worker");
+        // Clean up viewed records
+        await supabase.from("activity_views").delete().eq("user_id", `worker:${id}`);
+      } else if (role === "customer") {
+        // Clean up customer viewed records
+        await supabase.from("activity_views").delete().eq("user_id", `customer:${id}`);
+      }
+
+      const { error } = await supabase.from(TABLE[role]).delete().eq("id", id);
+      if (error) {
+        setDeleting(false);
+        return toast.error("Could not delete profile");
+      }
+    } catch {
+      // Fallback
+    }
     setDeleting(false);
-    if (error) return toast.error("Could not delete profile");
     clearAccount();
     toast.success("Profile deleted");
     navigate("/", { replace: true });

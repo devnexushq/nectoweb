@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { HelpCircle, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { validatePhoneNumber } from "@/lib/phone";
 import { toast } from "sonner";
 
 export function SupportFab() {
@@ -10,12 +11,24 @@ export function SupportFab() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.name || !form.phone || !form.message) {
+    if (!form.name.trim() || !form.phone.trim() || !form.message.trim()) {
       toast.error("Please fill all fields");
       return;
     }
+
+    const phoneRes = validatePhoneNumber(form.phone, "IN");
+    if (!phoneRes.isValid || !phoneRes.e164) {
+      toast.error("Invalid phone number");
+      return;
+    }
+
     setSending(true);
-    const { error } = await supabase.from("support_queries").insert(form);
+    const { error } = await supabase.from("support_queries").insert({
+      name: form.name.trim(),
+      phone: phoneRes.e164,
+      message: form.message.trim(),
+      status: "open",
+    });
     setSending(false);
     if (error) return toast.error("Could not send. Please try again.");
     toast.success("We'll get back to you within 24 hours!");
