@@ -4,11 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { ContactButtons } from "@/components/ContactButtons";
 import { MapPin, Clock, Briefcase, Star, User } from "lucide-react";
 import { withTimeout } from "@/lib/safeAsync";
+import { isUpdateFresh, formatShortRelativeTime } from "@/lib/freshness";
 
 const PUBLIC_WORKER_DETAIL_COLUMNS =
+  "id,name,job_type,experience,phone,whatsapp,description,area,business_hours,rating,photo_url,latest_update,latest_update_at";
+const PUBLIC_WORKER_DETAIL_COLUMNS_FALLBACK =
   "id,name,job_type,experience,phone,whatsapp,description,area,business_hours,rating,photo_url";
+
 const PUBLIC_SHOP_DETAIL_COLUMNS =
+  "id,shop_name,owner_name,category,phone,whatsapp,description,area,business_hours,rating,photo_url,latest_update,latest_update_at";
+const PUBLIC_SHOP_DETAIL_COLUMNS_FALLBACK =
   "id,shop_name,owner_name,category,phone,whatsapp,description,area,business_hours,rating,photo_url";
+
 const PUBLIC_PRODUCT_COLUMNS = "id,name,price,photo_url,visibility,created_at";
 
 export function WorkerProfileView() {
@@ -17,16 +24,33 @@ export function WorkerProfileView() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    withTimeout(
-      supabase.from("workers").select(PUBLIC_WORKER_DETAIL_COLUMNS).eq("id", id).maybeSingle(),
-    ).then((result) => {
+    (async () => {
+      const fetchWorker = async () => {
+        let res = await supabase
+          .from("workers")
+          .select(PUBLIC_WORKER_DETAIL_COLUMNS)
+          .eq("id", id)
+          .maybeSingle();
+        if (res.error && res.error.code === "42703") {
+          res = await supabase
+            .from("workers")
+            .select(PUBLIC_WORKER_DETAIL_COLUMNS_FALLBACK)
+            .eq("id", id)
+            .maybeSingle();
+        }
+        return res;
+      };
+
+      const result = await withTimeout(fetchWorker());
       setW(result?.data ?? null);
       setLoading(false);
-    });
+    })();
   }, [id]);
 
   if (loading) return <div className="py-10 text-center text-muted-foreground">Loading...</div>;
   if (!w) return <div className="py-10 text-center text-muted-foreground">Worker not found.</div>;
+
+  const isFresh = isUpdateFresh(w.latest_update, w.latest_update_at);
 
   return (
     <div className="space-y-4">
@@ -63,6 +87,19 @@ export function WorkerProfileView() {
           {w.description && (
             <p className="mt-3 text-sm text-foreground leading-relaxed">{w.description}</p>
           )}
+
+          {/* Today's Update highlight banner: after description, before WhatsApp/Call buttons */}
+          {isFresh && (
+            <div className="mt-3.5 rounded-xl border border-amber-200 bg-amber-50/90 p-3 text-xs text-amber-950 flex items-start gap-2 shadow-sm">
+              <span className="text-xs shrink-0 mt-0.5">🔴</span>
+              <div className="min-w-0 flex-1">
+                <span className="font-semibold text-amber-950">{w.latest_update}</span>
+                <span className="text-amber-700 font-normal ml-1.5">
+                  · {formatShortRelativeTime(w.latest_update_at)}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -86,9 +123,25 @@ export function ShopProfileView() {
 
   useEffect(() => {
     (async () => {
+      const fetchShop = async () => {
+        let res = await supabase
+          .from("shops")
+          .select(PUBLIC_SHOP_DETAIL_COLUMNS)
+          .eq("id", id)
+          .maybeSingle();
+        if (res.error && res.error.code === "42703") {
+          res = await supabase
+            .from("shops")
+            .select(PUBLIC_SHOP_DETAIL_COLUMNS_FALLBACK)
+            .eq("id", id)
+            .maybeSingle();
+        }
+        return res;
+      };
+
       const result = await withTimeout(
         Promise.all([
-          supabase.from("shops").select(PUBLIC_SHOP_DETAIL_COLUMNS).eq("id", id).maybeSingle(),
+          fetchShop(),
           supabase
             .from("products")
             .select(PUBLIC_PRODUCT_COLUMNS)
@@ -106,6 +159,8 @@ export function ShopProfileView() {
 
   if (loading) return <div className="py-10 text-center text-muted-foreground">Loading...</div>;
   if (!s) return <div className="py-10 text-center text-muted-foreground">Shop not found.</div>;
+
+  const isFresh = isUpdateFresh(s.latest_update, s.latest_update_at);
 
   return (
     <div className="space-y-4">
@@ -138,6 +193,19 @@ export function ShopProfileView() {
           )}
           {s.description && (
             <p className="mt-3 text-sm text-foreground leading-relaxed">{s.description}</p>
+          )}
+
+          {/* Today's Update highlight banner: after description, before WhatsApp/Call buttons */}
+          {isFresh && (
+            <div className="mt-3.5 rounded-xl border border-amber-200 bg-amber-50/90 p-3 text-xs text-amber-950 flex items-start gap-2 shadow-sm">
+              <span className="text-xs shrink-0 mt-0.5">🔴</span>
+              <div className="min-w-0 flex-1">
+                <span className="font-semibold text-amber-950">{s.latest_update}</span>
+                <span className="text-amber-700 font-normal ml-1.5">
+                  · {formatShortRelativeTime(s.latest_update_at)}
+                </span>
+              </div>
+            </div>
           )}
         </div>
       </div>

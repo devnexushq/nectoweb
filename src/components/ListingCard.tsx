@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { MapPin, Star, Store, User } from "lucide-react";
+import { isUpdateFresh, formatShortRelativeTime } from "@/lib/freshness";
 
 export type ListingCardData = {
   id: string;
@@ -9,10 +10,14 @@ export type ListingCardData = {
   area: string;
   rating: number;
   photo_url?: string | null;
+  latest_update?: string | null;
+  latest_update_at?: string | null;
 };
 
 export function ListingCard({ item, hrefPrefix }: { item: ListingCardData; hrefPrefix: string }) {
   const href = `${hrefPrefix}/${item.type === "worker" ? "worker" : "shop"}/${item.id}`;
+  const isFresh = isUpdateFresh(item.latest_update, item.latest_update_at);
+
   return (
     <Link
       to={href}
@@ -49,6 +54,15 @@ export function ListingCard({ item, hrefPrefix }: { item: ListingCardData; hrefP
             {item.rating?.toFixed(1) ?? "0.0"}
           </span>
         </div>
+        {isFresh && (
+          <p className="text-xs text-amber-900 font-medium truncate mt-1.5 flex items-center gap-1">
+            <span className="text-[10px] shrink-0">🔴</span>
+            <span className="truncate">{item.latest_update}</span>
+            <span className="shrink-0 text-muted-foreground font-normal">
+              · {formatShortRelativeTime(item.latest_update_at!)}
+            </span>
+          </p>
+        )}
       </div>
     </Link>
   );

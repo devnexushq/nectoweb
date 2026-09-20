@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
+import { TodaysUpdateCard } from "@/components/TodaysUpdateCard";
 
 export default function ShopDashboard() {
   const ready = useRoleGuard("shop");
@@ -65,6 +66,16 @@ export default function ShopDashboard() {
           </Link>
         </div>
       </section>
+
+      <TodaysUpdateCard
+        table="shops"
+        id={me?.id}
+        initialUpdate={me?.latest_update}
+        initialUpdateAt={me?.latest_update_at}
+        onUpdateChanged={(latest_update, latest_update_at) => {
+          setMe((prev: any) => ({ ...prev, latest_update, latest_update_at }));
+        }}
+      />
 
       <div className="mt-6 grid grid-cols-2 gap-3">
         <QuickAction to="/s/products" label="Manage Products" />

@@ -19,14 +19,14 @@ const VISIBILITY_ALL: ("local" | "all_india")[] = ["local", "all_india"];
 
 // Select pincode for internal proximity matching computation only (never passed to ListingCard)
 const PUBLIC_WORKER_COLUMNS =
-  "id,name,job_type,description,area,rating,photo_url,visibility,registered_at,pincode";
+  "id,name,job_type,description,area,rating,photo_url,visibility,registered_at,pincode,latest_update,latest_update_at";
 const PUBLIC_WORKER_COLUMNS_FALLBACK =
-  "id,name,job_type,description,area,rating,photo_url,visibility,registered_at";
+  "id,name,job_type,description,area,rating,photo_url,visibility,registered_at,pincode";
 
 const PUBLIC_SHOP_COLUMNS =
-  "id,shop_name,category,description,area,rating,photo_url,visibility,registered_at,pincode";
+  "id,shop_name,category,description,area,rating,photo_url,visibility,registered_at,pincode,latest_update,latest_update_at";
 const PUBLIC_SHOP_COLUMNS_FALLBACK =
-  "id,shop_name,category,description,area,rating,photo_url,visibility,registered_at";
+  "id,shop_name,category,description,area,rating,photo_url,visibility,registered_at,pincode";
 
 export function ListingsView({
   mode,
@@ -234,6 +234,8 @@ export function ListingsView({
         area: x.area,
         rating: Number(x.rating ?? 0),
         photo_url: x.photo_url,
+        latest_update: x.latest_update,
+        latest_update_at: x.latest_update_at,
       }));
 
     const s: ListingCardData[] = shops
@@ -254,6 +256,8 @@ export function ListingsView({
         area: x.area,
         rating: Number(x.rating ?? 0),
         photo_url: x.photo_url,
+        latest_update: x.latest_update,
+        latest_update_at: x.latest_update_at,
       }));
 
     return [...w, ...s];

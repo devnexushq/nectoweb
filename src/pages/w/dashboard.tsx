@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Phone, MessageCircle, Users, User } from "lucide-react";
+import { Phone, MessageCircle, Users } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
+import { TodaysUpdateCard } from "@/components/TodaysUpdateCard";
 
 export default function WorkerDashboard() {
   const ready = useRoleGuard("worker");
@@ -43,6 +44,16 @@ export default function WorkerDashboard() {
         <Stat icon={MessageCircle} label="WhatsApp" value={stats.wa} accent />
         <Stat icon={Phone} label="Calls" value={stats.call} />
       </div>
+
+      <TodaysUpdateCard
+        table="workers"
+        id={me?.id}
+        initialUpdate={me?.latest_update}
+        initialUpdateAt={me?.latest_update_at}
+        onUpdateChanged={(latest_update, latest_update_at) => {
+          setMe((prev: any) => ({ ...prev, latest_update, latest_update_at }));
+        }}
+      />
 
       <div className="mt-6 grid grid-cols-2 gap-3">
         <QuickAction to="/w/contacts" label="View Contacts" />

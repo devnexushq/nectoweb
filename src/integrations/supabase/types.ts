@@ -204,9 +204,12 @@ export type Database = {
           description: string | null;
           id: string;
           last_updated_at: string;
+          latest_update?: string | null;
+          latest_update_at?: string | null;
           owner_name: string;
           phone: string;
           photo_url: string | null;
+          pincode?: string | null;
           rating: number;
           registered_at: string;
           shop_name: string;
@@ -226,9 +229,12 @@ export type Database = {
           description?: string | null;
           id?: string;
           last_updated_at?: string;
+          latest_update?: string | null;
+          latest_update_at?: string | null;
           owner_name: string;
           phone: string;
           photo_url?: string | null;
+          pincode?: string | null;
           rating?: number;
           registered_at?: string;
           shop_name: string;
@@ -236,7 +242,7 @@ export type Database = {
           terms_accepted_at?: string | null;
           terms_version?: string | null;
           visibility?: string;
-          whatsapp: string;
+          whatsapp?: string;
         };
         Update: {
           account_created_at?: string;
@@ -248,9 +254,12 @@ export type Database = {
           description?: string | null;
           id?: string;
           last_updated_at?: string;
+          latest_update?: string | null;
+          latest_update_at?: string | null;
           owner_name?: string;
           phone?: string;
           photo_url?: string | null;
+          pincode?: string | null;
           rating?: number;
           registered_at?: string;
           shop_name?: string;
@@ -322,9 +331,12 @@ export type Database = {
           id: string;
           job_type: string;
           last_updated_at: string;
+          latest_update?: string | null;
+          latest_update_at?: string | null;
           name: string;
           phone: string;
           photo_url: string | null;
+          pincode?: string | null;
           rating: number;
           registered_at: string;
           terms_accepted: boolean;
@@ -344,9 +356,12 @@ export type Database = {
           id?: string;
           job_type: string;
           last_updated_at?: string;
+          latest_update?: string | null;
+          latest_update_at?: string | null;
           name: string;
           phone: string;
           photo_url?: string | null;
+          pincode?: string | null;
           rating?: number;
           registered_at?: string;
           terms_accepted?: boolean;
@@ -366,9 +381,12 @@ export type Database = {
           id?: string;
           job_type?: string;
           last_updated_at?: string;
+          latest_update?: string | null;
+          latest_update_at?: string | null;
           name?: string;
           phone?: string;
           photo_url?: string | null;
+          pincode?: string | null;
           rating?: number;
           registered_at?: string;
           terms_accepted?: boolean;
