@@ -68,6 +68,7 @@ export function TodaysUpdateCard({
       .from(table)
       .update({
         latest_update: null,
+        latest_update_at: null,
       })
       .eq("id", id);
 
@@ -92,7 +93,7 @@ export function TodaysUpdateCard({
         <div className="min-w-0 flex-1">
           <h3 className="text-base font-black text-primary">Today's Update</h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            Post a quick daily status visible to nearby customers for 48 hours.
+            Post a quick daily status visible to nearby customers for 24 hours.
           </p>
         </div>
       </div>

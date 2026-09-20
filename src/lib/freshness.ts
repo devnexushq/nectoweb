@@ -1,9 +1,9 @@
-const EXPIRY_HOURS = 48;
+const EXPIRY_HOURS = 24;
 const EXPIRY_MS = EXPIRY_HOURS * 60 * 60 * 1000;
 
 /**
- * 48-Hour Expiry Rule:
- * isFresh = latest_update_at is not null AND (now - latest_update_at) <= 48 hours
+ * 24-Hour Expiry Rule:
+ * isFresh = latest_update_at is not null AND (now - latest_update_at) <= 24 hours
  */
 export function isUpdateFresh(
   latest_update?: string | null,

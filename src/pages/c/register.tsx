@@ -70,10 +70,22 @@ export default function CustomerRegister() {
     setLoading(true);
 
     // 1. Direct Duplicate Check on customers table before registration
+    const rawDigits = form.phone.replace(/\D/g, "");
+    const candidatePhones = Array.from(
+      new Set([
+        e164Phone,
+        rawDigits,
+        form.phone.trim(),
+        rawDigits.length === 10 ? `+91${rawDigits}` : "",
+        rawDigits.length === 10 ? `91${rawDigits}` : "",
+      ]),
+    ).filter(Boolean);
+
     const { data: existingCustomer } = await supabase
       .from("customers")
       .select("id, phone")
-      .eq("phone", e164Phone)
+      .in("phone", candidatePhones)
+      .limit(1)
       .maybeSingle();
 
     if (existingCustomer) {
