@@ -193,6 +193,54 @@ export type Database = {
           },
         ];
       };
+      reviews: {
+        Row: {
+          comment: string | null;
+          created_at: string;
+          id: string;
+          rating: number;
+          reviewer_phone: string;
+          shop_id: string | null;
+          updated_at: string;
+          worker_id: string | null;
+        };
+        Insert: {
+          comment?: string | null;
+          created_at?: string;
+          id?: string;
+          rating: number;
+          reviewer_phone: string;
+          shop_id?: string | null;
+          updated_at?: string;
+          worker_id?: string | null;
+        };
+        Update: {
+          comment?: string | null;
+          created_at?: string;
+          id?: string;
+          rating?: number;
+          reviewer_phone?: string;
+          shop_id?: string | null;
+          updated_at?: string;
+          worker_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reviews_worker_id_fkey";
+            columns: ["worker_id"];
+            isOneToOne: false;
+            referencedRelation: "workers";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reviews_shop_id_fkey";
+            columns: ["shop_id"];
+            isOneToOne: false;
+            referencedRelation: "shops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       shops: {
         Row: {
           account_created_at: string;

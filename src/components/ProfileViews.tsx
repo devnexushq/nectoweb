@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ContactButtons } from "@/components/ContactButtons";
+import { ReviewsSection } from "@/components/ReviewsSection";
 import { MapPin, Clock, Briefcase, Star, User } from "lucide-react";
 import { withTimeout } from "@/lib/safeAsync";
 import { isUpdateFresh, formatShortRelativeTime } from "@/lib/freshness";
@@ -22,6 +23,7 @@ export function WorkerProfileView() {
   const { id } = useParams() as { id: string };
   const [w, setW] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [contactTrigger, setContactTrigger] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -103,14 +105,24 @@ export function WorkerProfileView() {
         </div>
       </div>
 
-      <ContactButtons whatsapp={w.whatsapp} phone={w.phone} toId={w.id} toType="worker" />
+      <ContactButtons
+        whatsapp={w.whatsapp}
+        phone={w.phone}
+        toId={w.id}
+        toType="worker"
+        onContactLogged={() => setContactTrigger((c) => c + 1)}
+      />
 
-      <section className="rounded-2xl p-4 bg-white border border-border">
-        <h3 className="font-semibold mb-2">Reviews & Rating</h3>
-        <p className="text-sm text-muted-foreground">
-          Average rating {Number(w.rating ?? 0).toFixed(1)} / 5. Reviews coming soon.
-        </p>
-      </section>
+      <ReviewsSection
+        targetId={w.id}
+        targetType="worker"
+        targetName={w.name}
+        initialRating={w.rating}
+        contactTrigger={contactTrigger}
+        onRatingUpdated={(newRating) => {
+          setW((prev: any) => (prev ? { ...prev, rating: newRating } : prev));
+        }}
+      />
     </div>
   );
 }
@@ -120,6 +132,7 @@ export function ShopProfileView() {
   const [s, setS] = useState<any | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [contactTrigger, setContactTrigger] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -210,7 +223,13 @@ export function ShopProfileView() {
         </div>
       </div>
 
-      <ContactButtons whatsapp={s.whatsapp} phone={s.phone} toId={s.id} toType="shop" />
+      <ContactButtons
+        whatsapp={s.whatsapp}
+        phone={s.phone}
+        toId={s.id}
+        toType="shop"
+        onContactLogged={() => setContactTrigger((c) => c + 1)}
+      />
 
       <section className="rounded-2xl p-4 bg-white border border-border">
         <h3 className="font-semibold mb-3">Products</h3>
@@ -239,12 +258,16 @@ export function ShopProfileView() {
         )}
       </section>
 
-      <section className="rounded-2xl p-4 bg-white border border-border">
-        <h3 className="font-semibold mb-2">Reviews & Rating</h3>
-        <p className="text-sm text-muted-foreground">
-          Average rating {Number(s.rating ?? 0).toFixed(1)} / 5. Reviews coming soon.
-        </p>
-      </section>
+      <ReviewsSection
+        targetId={s.id}
+        targetType="shop"
+        targetName={s.shop_name}
+        initialRating={s.rating}
+        contactTrigger={contactTrigger}
+        onRatingUpdated={(newRating) => {
+          setS((prev: any) => (prev ? { ...prev, rating: newRating } : prev));
+        }}
+      />
     </div>
   );
 }

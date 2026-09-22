@@ -27,11 +27,13 @@ export function ContactButtons({
   phone,
   toId,
   toType,
+  onContactLogged,
 }: {
   whatsapp: string;
   phone: string;
   toId: string;
   toType: "worker" | "shop";
+  onContactLogged?: () => void;
 }) {
   const targetWa = whatsapp || phone || "";
   const targetPhone = phone || whatsapp || "";
@@ -45,6 +47,7 @@ export function ContactButtons({
         to_type: toType,
         contact_type: kind,
       });
+      onContactLogged?.();
     } catch {
       // Silently continue so contact action is never blocked
     }
