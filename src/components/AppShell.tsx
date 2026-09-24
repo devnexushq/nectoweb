@@ -7,6 +7,7 @@ import { PhoneSupportFab } from "./PhoneSupportFab";
 import { WhatsAppSupportFab } from "./WhatsAppSupportFab";
 import { InstallBanner } from "./InstallBanner";
 import { ActivityBell } from "./ActivityBell";
+import { useCustomerSessionBackfill } from "@/hooks/useCustomerSessionBackfill";
 
 export function AppShell({
   role,
@@ -21,6 +22,8 @@ export function AppShell({
   backLabel?: string;
   children: React.ReactNode;
 }) {
+  useCustomerSessionBackfill();
+
   return (
     <div className="min-h-screen bg-background pb-20">
       {title && (

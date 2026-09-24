@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getRole, getUserPhone } from "@/lib/role";
+import { getRole, getUserPhone, getUserId, setUserPhone } from "@/lib/role";
 import { formatShortRelativeTime } from "@/lib/freshness";
 import { Star, MessageSquarePlus, Edit3, ShieldAlert, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -80,7 +80,7 @@ export function ReviewsSection({
 }: ReviewsSectionProps) {
   const role = getRole();
   const isCustomer = role === "customer";
-  const customerPhone = getUserPhone();
+  const [customerPhone, setCustomerPhone] = useState<string | null>(() => getUserPhone());
 
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -97,6 +97,26 @@ export function ReviewsSection({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const targetColumn = targetType === "worker" ? "worker_id" : "shop_id";
+
+  // Listen for session backfill updates (e.g. from useCustomerSessionBackfill)
+  useEffect(() => {
+    const handlePhoneUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail) {
+        setCustomerPhone(customEvent.detail);
+      } else {
+        setCustomerPhone(getUserPhone());
+      }
+    };
+    window.addEventListener("necto_phone_updated", handlePhoneUpdate);
+    const current = getUserPhone();
+    if (current && current !== customerPhone) {
+      setCustomerPhone(current);
+    }
+    return () => {
+      window.removeEventListener("necto_phone_updated", handlePhoneUpdate);
+    };
+  }, [customerPhone]);
 
   // Fetch reviews & my existing review
   const loadReviews = useCallback(async () => {
@@ -136,13 +156,39 @@ export function ReviewsSection({
 
   // Check if current customer has contacted this target worker/shop
   const checkCustomerContactAndReview = useCallback(async () => {
-    if (!isCustomer || !customerPhone) {
+    if (!isCustomer) {
+      setHasContacted(false);
+      return;
+    }
+
+    let activePhone = customerPhone || getUserPhone();
+    if (!activePhone) {
+      const uid = getUserId();
+      if (uid) {
+        try {
+          const { data } = await supabase
+            .from("customers")
+            .select("phone")
+            .eq("id", uid)
+            .maybeSingle();
+          if (data?.phone) {
+            activePhone = data.phone;
+            setUserPhone(data.phone);
+            setCustomerPhone(data.phone);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    if (!activePhone) {
       setHasContacted(false);
       return;
     }
 
     setCheckingContact(true);
-    const candidatePhones = getCandidatePhones(customerPhone);
+    const candidatePhones = getCandidatePhones(activePhone);
 
     try {
       // 1. Check contacts_log
@@ -201,7 +247,8 @@ export function ReviewsSection({
   };
 
   const handleSubmitReview = async () => {
-    if (!isCustomer || !customerPhone) {
+    const activePhone = customerPhone || getUserPhone();
+    if (!isCustomer || !activePhone) {
       toast.error("Only registered customers can leave reviews.");
       return;
     }
@@ -246,7 +293,7 @@ export function ReviewsSection({
         toast.success("Review updated successfully!");
       } else {
         // Upsert/Insert new review
-        const candidatePhones = getCandidatePhones(customerPhone);
+        const candidatePhones = getCandidatePhones(activePhone);
         const { data: existingCheck } = await supabase
           .from("reviews")
           .select("id")
@@ -272,7 +319,7 @@ export function ReviewsSection({
         } else {
           const newPayload = {
             [targetColumn]: targetId,
-            reviewer_phone: customerPhone,
+            reviewer_phone: activePhone,
             rating: selectedRating,
             comment: trimmedComment,
           };

@@ -52,6 +52,7 @@ import {
   PublicWorkerProfilePage,
   PublicWorkersPage,
 } from "./components/PublicDiscoveryPages";
+import { useCustomerSessionBackfill } from "./hooks/useCustomerSessionBackfill";
 
 function NotFound() {
   return (
@@ -68,6 +69,8 @@ function NotFound() {
 }
 
 export default function App() {
+  useCustomerSessionBackfill();
+
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
