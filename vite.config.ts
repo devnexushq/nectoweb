@@ -32,6 +32,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        cleanupOutdatedCaches: true,
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
@@ -53,7 +54,15 @@ export default defineConfig({
           },
           {
             urlPattern: ({ request }) =>
-              ["style", "script", "worker", "image", "font"].includes(request.destination),
+              ["style", "script", "worker"].includes(request.destination),
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "scripts-and-styles",
+              networkTimeoutSeconds: 3,
+            },
+          },
+          {
+            urlPattern: ({ request }) => ["image", "font"].includes(request.destination),
             handler: "StaleWhileRevalidate",
             options: { cacheName: "assets" },
           },
