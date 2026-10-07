@@ -3,7 +3,7 @@ import { Phone, X } from "lucide-react";
 
 const NUMBERS = [
   { display: "+91 96684 74374", tel: "+919668474374" },
-  { display: "+91 91131 37533", tel: "+919113137533" },
+  { display: "+91 62077 14514", tel: "+916207714514" },
 ];
 
 export function PhoneSupportFab() {

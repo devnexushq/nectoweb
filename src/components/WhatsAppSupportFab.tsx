@@ -3,7 +3,7 @@ import { MessageCircle, X } from "lucide-react";
 
 const NUMBERS = [
   { display: "+91 96684 74374", wa: "919668474374" },
-  { display: "+91 91131 37533", wa: "919113137533" },
+  { display: "+91 62077 14514", wa: "916207714514" },
 ];
 
 const PREFILL = encodeURIComponent("Hello Necto Support, I need assistance.");
