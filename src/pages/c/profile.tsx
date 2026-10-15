@@ -33,6 +33,7 @@ export default function CustomerProfile() {
           <div className="rounded-2xl p-5 bg-white border border-border space-y-2">
             <Row label="Name" value={me.name} />
             <Row label="Area" value={me.area} />
+            {me.pincode && <Row label="PIN Code" value={me.pincode} />}
             <Row label="Phone" value={me.phone} />
           </div>
           <ProfileActions

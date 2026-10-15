@@ -7,6 +7,42 @@ const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 type Visibility = "local" | "all_india";
 
+export function VisibilitySelector({
+  visibility,
+  setVisibility,
+  disabled,
+}: {
+  visibility: Visibility;
+  setVisibility: (v: Visibility) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div>
+      <label className="text-sm font-medium block">Discovery Visibility</label>
+      <div className="mt-1 inline-flex rounded-lg bg-muted p-1 text-sm font-semibold">
+        {(["local", "all_india"] as Visibility[]).map((v) => (
+          <button
+            type="button"
+            key={v}
+            disabled={disabled}
+            onClick={() => setVisibility(v)}
+            className={`px-4 py-2 rounded-md transition ${
+              visibility === v ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
+            }`}
+          >
+            {v === "local" ? "Local Only (PIN Match)" : "All India"}
+          </button>
+        ))}
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {visibility === "local"
+          ? "Appears only to viewers whose saved PIN code matches yours."
+          : "Appears in the All India section regardless of viewer PIN code."}
+      </p>
+    </div>
+  );
+}
+
 export function HoursAndVisibility({
   hours,
   setHours,
@@ -26,23 +62,8 @@ export function HoursAndVisibility({
   }
   return (
     <>
-      <div>
-        <label className="text-sm font-medium">Visibility</label>
-        <div className="mt-1 inline-flex rounded-lg bg-muted p-1 text-sm font-semibold">
-          {(["local", "all_india"] as Visibility[]).map((v) => (
-            <button
-              type="button"
-              key={v}
-              onClick={() => setVisibility(v)}
-              className={`px-4 py-2 rounded-md transition ${
-                visibility === v ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
-              }`}
-            >
-              {v === "local" ? "Local Only" : "All India"}
-            </button>
-          ))}
-        </div>
-      </div>
+      <VisibilitySelector visibility={visibility} setVisibility={setVisibility} />
+
       <div>
         <label className="text-sm font-medium">Business Hours</label>
         <div className="mt-1 grid grid-cols-2 gap-2">

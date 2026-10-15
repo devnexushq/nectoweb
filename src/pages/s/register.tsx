@@ -76,6 +76,14 @@ export default function ShopRegister() {
       return toast.error("Please fill required fields");
     }
 
+    // When Local is selected, PIN code is strictly required and must be 6 digits
+    if (visibility === "local") {
+      const cleanPin = form.pincode.trim();
+      if (!cleanPin || !/^\d{6}$/.test(cleanPin)) {
+        return toast.error("PIN code (6 digits) is required for Local visibility");
+      }
+    }
+
     // Phone validation using libphonenumber-js according to selected country format
     const phoneValidation = validatePhoneNumber(form.phone, countryCode);
     if (!phoneValidation.isValid || !phoneValidation.e164) {

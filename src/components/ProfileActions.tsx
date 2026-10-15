@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Field, TextArea } from "@/components/FormBits";
+import { Field, TextArea, VisibilitySelector } from "@/components/FormBits";
 import { PinCodeField } from "@/components/PinCodeField";
 import { supabase } from "@/integrations/supabase/client";
 import { clearAccount, getUserId, setUserPincode, setUserArea, type Role } from "@/lib/role";
@@ -90,6 +90,23 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
     if (!id) return;
     setSaving(true);
     const { id: _omit, registered_at, created_at, rating, ...patch } = form ?? {};
+
+    // Validate role-specific discovery visibility & PIN requirements
+    if (role === "worker" || role === "shop") {
+      const vis = form?.visibility === "all_india" ? "all_india" : "local";
+      patch.visibility = vis;
+      if (vis === "local") {
+        const pin = String(form?.pincode || "").trim();
+        if (!pin || !/^\d{6}$/.test(pin)) {
+          setSaving(false);
+          return toast.error("PIN code (6 digits) is required for Local visibility");
+        }
+      }
+    } else {
+      // Customers do not have discovery visibility settings
+      delete patch.visibility;
+    }
+
     let res = await supabase.from(TABLE[role]).update(patch).eq("id", id).select("*").maybeSingle();
 
     if (res.error && res.error.code === "42703") {
@@ -107,7 +124,12 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
     toast.success("Profile updated");
     setEditOpen(false);
     if (res.data) {
-      if (res.data.pincode) setUserPincode(res.data.pincode);
+      if (res.data.pincode) {
+        setUserPincode(res.data.pincode);
+        window.dispatchEvent(
+          new CustomEvent("necto_pincode_updated", { detail: res.data.pincode }),
+        );
+      }
       if (res.data.area) setUserArea(res.data.area);
       onUpdated(res.data);
     }
@@ -291,6 +313,10 @@ function EditFields({ role, form, setForm }: { role: Role; form: any; setForm: (
           value={form?.whatsapp ?? ""}
           onChange={set("whatsapp")}
         />
+        <VisibilitySelector
+          visibility={form?.visibility === "all_india" ? "all_india" : "local"}
+          setVisibility={(v) => setForm((prev: any) => ({ ...prev, visibility: v }))}
+        />
         <PinCodeField
           pincode={form?.pincode ?? ""}
           onPincodeChange={(val) => setForm((prev: any) => ({ ...prev, pincode: val }))}
@@ -319,6 +345,10 @@ function EditFields({ role, form, setForm }: { role: Role; form: any; setForm: (
         inputMode="tel"
         value={form?.whatsapp ?? ""}
         onChange={set("whatsapp")}
+      />
+      <VisibilitySelector
+        visibility={form?.visibility === "all_india" ? "all_india" : "local"}
+        setVisibility={(v) => setForm((prev: any) => ({ ...prev, visibility: v }))}
       />
       <PinCodeField
         pincode={form?.pincode ?? ""}

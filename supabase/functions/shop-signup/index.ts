@@ -72,6 +72,13 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (visibility === "local") {
+      const cleanPin = pincode ? String(pincode).trim() : "";
+      if (!cleanPin || !/^\d{6}$/.test(cleanPin)) {
+        return json({ error: "PIN code (6 digits) is required for Local visibility" }, 400);
+      }
+    }
+
     const country = (countryCode || "IN") as CountryCode;
     const phoneResult = validateAndFormat(phone, country);
 

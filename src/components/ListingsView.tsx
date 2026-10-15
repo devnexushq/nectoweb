@@ -145,6 +145,23 @@ export function ListingsView({
     };
   }, [mode]);
 
+  // Listen for realtime session updates to user PIN code (e.g. from profile edits or registration)
+  useEffect(() => {
+    const onPinUpdate = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (detail) {
+        setViewerPincode(detail.trim());
+      } else {
+        const p = getUserPincode();
+        if (p) setViewerPincode(p.trim());
+      }
+    };
+    window.addEventListener("necto_pincode_updated", onPinUpdate);
+    return () => {
+      window.removeEventListener("necto_pincode_updated", onPinUpdate);
+    };
+  }, []);
+
   const role = getRole();
   const profilePath =
     role === "customer"
@@ -156,64 +173,51 @@ export function ListingsView({
           : null;
 
   const vPin = viewerPincode.trim();
-  const vArea = viewerArea.trim().toLowerCase();
-  const hasViewerLocation = Boolean(vPin || vArea);
 
   const items: ListingCardData[] = useMemo(() => {
     const q = query.trim().toLowerCase();
     const a = area.trim().toLowerCase();
 
-    // Local tab proximity matching logic
-    const matchesLocal = (item: {
+    // Strict Role-Based Visibility & Discovery Rules:
+    // 1. All India section:
+    //    - Shows ONLY workers/shops whose saved visibility explicitly equals "all_india".
+    //    - Appears regardless of viewer's PIN code.
+    //    - Missing or invalid visibility must NEVER default to All India.
+    // 2. Local section:
+    //    - Shows ONLY workers/shops whose saved visibility explicitly equals "local".
+    //    - Requires the viewer to have a saved PIN code.
+    //    - Requires the worker/shop to have a saved PIN code.
+    //    - Listing appears ONLY when the worker/shop saved PIN code matches viewer's saved PIN code.
+    //    - Never uses device location or inferred location as a substitute for saved PIN code.
+    const visFilter = (item: {
       pincode?: string | null;
       area?: string | null;
       visibility?: string | null;
     }) => {
-      // Only show workers/shops where visibility === "local"
-      if (item.visibility && item.visibility !== "local") {
+      const itemVis = String(item.visibility ?? "")
+        .trim()
+        .toLowerCase();
+
+      if (visibility === "all_india") {
+        return itemVis === "all_india";
+      }
+
+      // Local discovery
+      if (itemVis !== "local") {
         return false;
       }
 
-      // If viewer has no pincode and no area, local tab cannot match
-      if (!hasViewerLocation) {
+      if (!vPin) {
         return false;
       }
 
       const itemPin = item.pincode ? String(item.pincode).trim() : "";
-      const itemArea = item.area ? String(item.area).trim().toLowerCase() : "";
-
-      // Match by pincode when both viewer and listing have one:
-      // exact match, OR same first 3 digits (broader nearby-zone match)
-      if (vPin && itemPin) {
-        if (vPin === itemPin) return true;
-        if (vPin.length >= 3 && itemPin.length >= 3 && vPin.slice(0, 3) === itemPin.slice(0, 3)) {
-          return true;
-        }
+      if (!itemPin) {
         return false;
       }
 
-      // For older records that don't have a pincode stored yet:
-      // fall back to matching on the area text field (case-insensitive substring match) against viewer's own area
-      if (!itemPin && vArea && itemArea) {
-        return itemArea.includes(vArea) || vArea.includes(itemArea);
-      }
-
-      // If viewer doesn't have a pincode but has an area:
-      if (!vPin && vArea && itemArea) {
-        return itemArea.includes(vArea) || vArea.includes(itemArea);
-      }
-
-      return false;
-    };
-
-    // All India tab: unchanged — show everyone regardless of visibility, pincode, or area.
-    const visFilter = (x: {
-      pincode?: string | null;
-      area?: string | null;
-      visibility?: string | null;
-    }) => {
-      if (visibility === "all_india") return true;
-      return matchesLocal(x);
+      // Exact match on saved PIN code
+      return vPin === itemPin;
     };
 
     const w: ListingCardData[] = workers
@@ -261,7 +265,7 @@ export function ListingsView({
       }));
 
     return [...w, ...s];
-  }, [workers, shops, query, area, visibility, vPin, vArea, hasViewerLocation]);
+  }, [workers, shops, query, area, visibility, vPin]);
 
   return (
     <div className="space-y-3">
@@ -289,10 +293,10 @@ export function ListingsView({
       {query.trim() && <AreaFilterBar value={area} onChange={setArea} />}
 
       <div className="space-y-2 pt-1">
-        {!loading && !loadingViewer && visibility === "local" && !hasViewerLocation ? (
+        {!loading && !loadingViewer && visibility === "local" && !vPin ? (
           <EmptyState
-            title="Set your area in your profile to see local results"
-            subtitle="Add your PIN code or city in your profile so we can show you verified services near you."
+            title="Set your PIN code in your profile to see local results"
+            subtitle="Add your 6-digit PIN code in your profile so we can show you verified local services and shops in your area."
             ctaLabel={profilePath ? "Edit Profile" : registerCtaLabel || "Register"}
             ctaTo={profilePath || registerCtaTo || "/"}
           />
@@ -302,15 +306,15 @@ export function ListingsView({
               query.trim()
                 ? `No results found for "${query}"${area.trim() ? ` in ${area}` : ""}`
                 : visibility === "local"
-                  ? `No local listings found near ${viewerArea || viewerPincode || "your area"}`
-                  : "Nothing here yet"
+                  ? `No local listings found for PIN code ${vPin}`
+                  : "No All India listings found"
             }
             subtitle={
               query.trim()
                 ? "Try a nearby skill, shop category, or area."
                 : visibility === "local"
                   ? "Try switching to the 'All India' tab or check back soon."
-                  : "Check back soon."
+                  : "Check back soon as more businesses join Necto."
             }
             ctaLabel={registerCtaLabel}
             ctaTo={registerCtaTo}

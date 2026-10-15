@@ -37,9 +37,16 @@ export default function ShopProfilePage() {
             <Row label="Phone" value={me.phone} />
             <Row label="WhatsApp" value={me.whatsapp} />
             <Row label="Area" value={me.area} />
+            {me.pincode && <Row label="PIN Code" value={me.pincode} />}
             <Row
               label="Visibility"
-              value={me.visibility === "local" ? "Local Only" : "All India"}
+              value={
+                me.visibility === "local"
+                  ? "Local Only"
+                  : me.visibility === "all_india"
+                    ? "All India"
+                    : "Not Set"
+              }
             />
             <Row label="Description" value={me.description ?? "—"} />
           </div>
