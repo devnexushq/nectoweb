@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getRole, getUserPhone, getUserId, setUserPhone } from "@/lib/role";
 import { formatShortRelativeTime } from "@/lib/freshness";
@@ -83,6 +83,8 @@ export function ReviewsSection({
   const [customerPhone, setCustomerPhone] = useState<string | null>(() => getUserPhone());
 
   const [reviews, setReviews] = useState<ReviewItem[]>([]);
+  const [totalReviewCount, setTotalReviewCount] = useState(0);
+  const [liveAverageRating, setLiveAverageRating] = useState<number>(Number(initialRating ?? 0));
   const [loading, setLoading] = useState(true);
   const [hasContacted, setHasContacted] = useState(false);
   const [checkingContact, setCheckingContact] = useState(false);
@@ -97,6 +99,16 @@ export function ReviewsSection({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const targetColumn = targetType === "worker" ? "worker_id" : "shop_id";
+  const onRatingUpdatedRef = useRef(onRatingUpdated);
+  onRatingUpdatedRef.current = onRatingUpdated;
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // Listen for session backfill updates (e.g. from useCustomerSessionBackfill)
   useEffect(() => {
@@ -118,41 +130,55 @@ export function ReviewsSection({
     };
   }, [customerPhone]);
 
-  // Fetch reviews & my existing review
+  // Fetch recent 10 reviews + exact full rating summary without callback-induced loops
   const loadReviews = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from("reviews")
-        .select("*")
-        .eq(targetColumn, targetId)
-        .order("created_at", { ascending: false })
-        .limit(10);
+      const [recentRes, statsRes] = await Promise.all([
+        supabase
+          .from("reviews")
+          .select("*")
+          .eq(targetColumn, targetId)
+          .order("created_at", { ascending: false })
+          .limit(10),
+        supabase.from("reviews").select("rating", { count: "exact" }).eq(targetColumn, targetId),
+      ]);
 
-      if (error) {
-        // If table doesn't exist yet in remote schema, fail gracefully
-        if (error.code === "42P01") {
+      if (!mountedRef.current) return;
+
+      if (recentRes.error) {
+        if (recentRes.error.code === "42P01") {
           setReviews([]);
+          setTotalReviewCount(0);
           return;
         }
-        console.warn("Error fetching reviews:", error.message);
+        console.warn("Error fetching reviews:", recentRes.error.message);
         return;
       }
 
-      const list = (data as ReviewItem[]) || [];
+      const list = (recentRes.data as ReviewItem[]) || [];
       setReviews(list);
 
-      // Calculate live average
-      if (list.length > 0) {
+      const allRatings = (statsRes.data as { rating: number }[] | null) ?? [];
+      const count = statsRes.count ?? allRatings.length ?? list.length;
+      setTotalReviewCount(count);
+
+      if (allRatings.length > 0) {
+        const sum = allRatings.reduce((acc, cur) => acc + cur.rating, 0);
+        const liveAvg = Number((sum / allRatings.length).toFixed(1));
+        setLiveAverageRating(liveAvg);
+        onRatingUpdatedRef.current?.(liveAvg);
+      } else if (list.length > 0) {
         const sum = list.reduce((acc, cur) => acc + cur.rating, 0);
         const liveAvg = Number((sum / list.length).toFixed(1));
-        onRatingUpdated?.(liveAvg);
+        setLiveAverageRating(liveAvg);
+        onRatingUpdatedRef.current?.(liveAvg);
       }
     } catch {
       // Graceful fallback
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
-  }, [targetColumn, targetId, onRatingUpdated]);
+  }, [targetColumn, targetId]);
 
   // Check if current customer has contacted this target worker/shop
   const checkCustomerContactAndReview = useCallback(async () => {
@@ -273,7 +299,6 @@ export function ReviewsSection({
 
     try {
       const trimmedComment = comment.trim() || null;
-      let reviewResultId = myExistingReview?.id;
 
       if (myExistingReview) {
         // Edit existing review
@@ -332,7 +357,6 @@ export function ReviewsSection({
 
           if (error) throw error;
           if (data) {
-            reviewResultId = (data as ReviewItem).id;
             setMyExistingReview(data as ReviewItem);
           }
           toast.success("Review submitted! Thank you.");
@@ -349,12 +373,9 @@ export function ReviewsSection({
     }
   };
 
-  // Compute displayed summary
-  const totalCount = reviews.length;
-  const averageRating =
-    totalCount > 0
-      ? Number((reviews.reduce((acc, cur) => acc + cur.rating, 0) / totalCount).toFixed(1))
-      : Number(initialRating ?? 0);
+  // Compute displayed summary from full count & live average
+  const totalCount = totalReviewCount;
+  const averageRating = totalCount > 0 ? liveAverageRating : Number(initialRating ?? 0);
 
   return (
     <section className="rounded-2xl p-5 bg-white border border-border shadow-sm space-y-5">

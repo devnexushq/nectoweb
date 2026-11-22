@@ -18,12 +18,17 @@ export default function CustomerProfile() {
       setLoading(false);
       return;
     }
+    let cancelled = false;
     withTimeout(supabase.from("customers").select("*").eq("id", id).maybeSingle()).then(
       (result) => {
+        if (cancelled) return;
         setMe(result?.data ?? null);
         setLoading(false);
       },
     );
+    return () => {
+      cancelled = true;
+    };
   }, []);
   if (!ready) return null;
   return (
@@ -56,9 +61,9 @@ export default function CustomerProfile() {
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between text-sm">
+    <div className="flex justify-between gap-3 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold">{value}</span>
+      <span className="font-semibold text-right max-w-[60%] break-words">{value}</span>
     </div>
   );
 }

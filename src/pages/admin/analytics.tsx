@@ -26,9 +26,12 @@ export default function AdminAnalytics() {
   const [growth, setGrowth] = useState<DayRow[]>([]);
   const [accountHealth, setAccountHealth] = useState<AccountHealthRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const load = async () => {
+      setLoadError(null);
       const head = { count: "exact" as const, head: true };
       const since = new Date();
       since.setDate(since.getDate() - 29);
@@ -78,6 +81,11 @@ export default function AdminAnalytics() {
         supabase.from("shops").select("*", head).eq("approval_status", "rejected"),
         supabase.from("shops").select("*", head).eq("approval_status", "suspended"),
       ]);
+      if (cancelled) return;
+      const firstErr = c.error || w.error || s.error || p.error || sq.error;
+      if (firstErr) {
+        setLoadError(firstErr.message || "Could not load analytics data.");
+      }
 
       setCounts({
         c: c.count ?? 0,
@@ -124,11 +132,19 @@ export default function AdminAnalytics() {
       setLoading(false);
     };
     load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
     <RequireAdmin>
       <AdminLayout title="Analytics">
+        {loadError && (
+          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {loadError}
+          </div>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
           <StatCard
             label="Customers"

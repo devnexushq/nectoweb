@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSeo } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
@@ -58,8 +58,14 @@ export default function AdminResetPassword() {
           </div>
         </div>
         {!ready ? (
-          <div className="text-sm text-slate-600">
-            Open the reset link from your email on this device to continue.
+          <div className="space-y-3 text-sm text-slate-600">
+            <p>Open the reset link from your email on this device to continue.</p>
+            <Link
+              to="/admin/login"
+              className="inline-flex text-xs font-semibold text-slate-900 underline underline-offset-4"
+            >
+              Back to Admin Sign In
+            </Link>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-3">

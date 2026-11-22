@@ -134,8 +134,8 @@ export async function fetchShopOffer(shopId: string, offerId: string) {
 }
 
 export async function saveShopOffer(shopId: string, form: ShopOfferInput, offerId?: string) {
-  const start = new Date(form.offer_start_at).toISOString();
-  const end = new Date(form.offer_end_at).toISOString();
+  const start = new Date(`${form.offer_start_at}T00:00:00.000Z`).toISOString();
+  const end = new Date(`${form.offer_end_at}T23:59:59.999Z`).toISOString();
   const payload = {
     type: "offer",
     title: form.title.trim(),

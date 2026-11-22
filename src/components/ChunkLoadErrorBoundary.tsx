@@ -1,5 +1,5 @@
 import React, { Component, type ErrorInfo, type ReactNode } from "react";
-import { RefreshCw, AlertCircle } from "lucide-react";
+import { RefreshCw, AlertCircle, WifiOff } from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -9,6 +9,7 @@ interface State {
   hasError: boolean;
   error: Error | null;
   isChunkLoadError: boolean;
+  isOffline: boolean;
 }
 
 const CHUNK_RELOAD_KEY = "necto_chunk_reload_attempted";
@@ -39,20 +40,24 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
     hasError: false,
     error: null,
     isChunkLoadError: false,
+    isOffline: false,
   };
 
   public static getDerivedStateFromError(error: Error): State {
+    const offline = typeof navigator !== "undefined" && navigator.onLine === false;
     return {
       hasError: true,
       error,
       isChunkLoadError: isDynamicImportError(error),
+      isOffline: offline,
     };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("ChunkLoadErrorBoundary caught error:", error, errorInfo);
 
-    if (isDynamicImportError(error)) {
+    const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+    if (isDynamicImportError(error) && !offline) {
       const lastAttempt = sessionStorage.getItem(CHUNK_RELOAD_KEY);
       const now = Date.now();
 
@@ -65,12 +70,40 @@ export class ChunkLoadErrorBoundary extends Component<Props, State> {
   }
 
   private handleManualReload = () => {
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      this.setState({ isOffline: true });
+      return;
+    }
     sessionStorage.removeItem(CHUNK_RELOAD_KEY);
     window.location.reload();
   };
 
   public render() {
     if (this.state.hasError) {
+      if (this.state.isOffline) {
+        return (
+          <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">
+            <div className="max-w-md w-full bg-white rounded-2xl border border-border p-6 shadow-sm space-y-4">
+              <div className="mx-auto w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+                <WifiOff className="w-6 h-6" />
+              </div>
+              <h2 className="text-lg font-bold text-foreground">You are offline</h2>
+              <p className="text-sm text-muted-foreground">
+                This screen needs an internet connection to load. Reconnect and tap Retry.
+              </p>
+              <button
+                type="button"
+                onClick={this.handleManualReload}
+                className="w-full h-11 rounded-xl bg-primary text-white font-bold text-sm shadow hover:bg-primary/90 transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Retry
+              </button>
+            </div>
+          </div>
+        );
+      }
+
       if (this.state.isChunkLoadError) {
         return (
           <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center">

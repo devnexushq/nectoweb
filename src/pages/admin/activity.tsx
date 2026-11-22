@@ -18,18 +18,28 @@ type Row = {
 export default function AdminActivity() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const load = async () => {
-      const { data } = await supabase
+      setLoadError(null);
+      const { data, error } = await supabase
         .from("activity_logs")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(1000);
+      if (cancelled) return;
+      if (error) {
+        setLoadError(error.message || "Could not load activity log.");
+      }
       setRows((data as Row[]) ?? []);
       setLoading(false);
     };
     load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const columns: Column<Row>[] = [
@@ -58,6 +68,11 @@ export default function AdminActivity() {
   return (
     <RequireAdmin>
       <AdminLayout title="Activity log">
+        {loadError && (
+          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {loadError}
+          </div>
+        )}
         <DataTable
           rows={rows}
           columns={columns}

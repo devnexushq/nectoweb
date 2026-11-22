@@ -39,11 +39,13 @@ export default function ShopOfferEditor() {
     if (!ready) return;
     const shopId = getUserId();
     if (!shopId) return;
+    let cancelled = false;
 
     async function load() {
       try {
         if (id) {
           const offer = await fetchShopOffer(shopId, id);
+          if (cancelled) return;
           if (!offer) {
             toast.error("Offer not found.");
             navigate("/s/offers", { replace: true });
@@ -54,6 +56,7 @@ export default function ShopOfferEditor() {
           setPublished(offer.status === "published");
         } else {
           const shop = await fetchShopProfile(shopId);
+          if (cancelled) return;
           setForm({
             ...EMPTY_OFFER_FORM,
             category: shop?.category ?? "",
@@ -63,13 +66,18 @@ export default function ShopOfferEditor() {
           });
         }
       } catch (error) {
-        toast.error((error as Error).message || "Could not load offer.");
+        if (!cancelled) {
+          toast.error((error as Error).message || "Could not load offer.");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
     load();
+    return () => {
+      cancelled = true;
+    };
   }, [ready, id, navigate]);
 
   const publishLocked = useMemo(
@@ -92,20 +100,21 @@ export default function ShopOfferEditor() {
       return;
     }
 
-    if (mode === "publish" && !id) {
-      const existing = await fetchShopOffers(shopId);
-      const activeCount = existing.filter((offer) => {
-        const end = offer.offer_end_at ?? offer.expires_at;
-        return offer.status === "published" && (!end || new Date(end).getTime() >= Date.now());
-      }).length;
-      if (activeCount >= 3) {
-        toast.error("You can keep up to 3 active published offers at a time.");
-        return;
-      }
-    }
-
     setSaving(true);
     try {
+      if (status === "published") {
+        const existing = await fetchShopOffers(shopId);
+        const activeCount = existing.filter((offer) => {
+          if (id && offer.id === id) return false;
+          const end = offer.offer_end_at ?? offer.expires_at;
+          return offer.status === "published" && (!end || new Date(end).getTime() >= Date.now());
+        }).length;
+        if (activeCount >= 3) {
+          toast.error("You can keep up to 3 active published offers at a time.");
+          return;
+        }
+      }
+
       const saved = await saveShopOffer(shopId, nextForm, id);
       setInitialStatus(saved.status);
       setForm(offerToForm(saved));

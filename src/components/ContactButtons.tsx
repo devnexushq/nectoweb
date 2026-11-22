@@ -58,26 +58,46 @@ export function ContactButtons({
 
   return (
     <div className="grid grid-cols-2 gap-3">
-      <button
-        onClick={() => {
-          log("whatsapp");
-          if (waUrl) window.open(waUrl, "_blank");
-        }}
-        className="flex items-center justify-center gap-2 h-14 rounded-xl bg-[#25d366] text-white font-semibold text-base shadow-sm hover:bg-[#1fb955] transition"
-      >
-        <MessageCircle className="h-5 w-5" />
-        WhatsApp
-      </button>
-      <button
-        onClick={() => {
-          log("call");
-          if (telUrl) window.location.href = telUrl;
-        }}
-        className="flex items-center justify-center gap-2 h-14 rounded-xl bg-primary text-white font-semibold text-base shadow-sm hover:bg-primary/90 transition"
-      >
-        <Phone className="h-5 w-5" />
-        Call
-      </button>
+      {waUrl ? (
+        <a
+          href={waUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => log("whatsapp")}
+          className="flex items-center justify-center gap-2 h-14 rounded-xl bg-[#25d366] text-white font-semibold text-base shadow-sm hover:bg-[#1fb955] transition"
+        >
+          <MessageCircle className="h-5 w-5" />
+          WhatsApp
+        </a>
+      ) : (
+        <button
+          type="button"
+          disabled
+          className="flex items-center justify-center gap-2 h-14 rounded-xl bg-[#25d366]/60 text-white font-semibold text-base opacity-60"
+        >
+          <MessageCircle className="h-5 w-5" />
+          WhatsApp
+        </button>
+      )}
+      {telUrl ? (
+        <a
+          href={telUrl}
+          onClick={() => log("call")}
+          className="flex items-center justify-center gap-2 h-14 rounded-xl bg-primary text-white font-semibold text-base shadow-sm hover:bg-primary/90 transition"
+        >
+          <Phone className="h-5 w-5" />
+          Call
+        </a>
+      ) : (
+        <button
+          type="button"
+          disabled
+          className="flex items-center justify-center gap-2 h-14 rounded-xl bg-primary/60 text-white font-semibold text-base opacity-60"
+        >
+          <Phone className="h-5 w-5" />
+          Call
+        </button>
+      )}
     </div>
   );
 }

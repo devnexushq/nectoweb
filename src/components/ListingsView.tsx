@@ -17,16 +17,17 @@ type Mode = "workers" | "shops" | "mixed";
 
 const VISIBILITY_ALL: ("local" | "all_india")[] = ["local", "all_india"];
 
-// Select pincode for internal proximity matching computation only (never passed to ListingCard)
 const PUBLIC_WORKER_COLUMNS =
-  "id,name,job_type,description,area,rating,photo_url,visibility,registered_at,pincode,latest_update,latest_update_at";
+  "id,name,job_type,description,area,rating,photo_url,visibility,registered_at,latest_update,latest_update_at";
 const PUBLIC_WORKER_COLUMNS_FALLBACK =
-  "id,name,job_type,description,area,rating,photo_url,visibility,registered_at,pincode";
+  "id,name,job_type,description,area,rating,photo_url,visibility,registered_at";
 
 const PUBLIC_SHOP_COLUMNS =
-  "id,shop_name,category,description,area,rating,photo_url,visibility,registered_at,pincode,latest_update,latest_update_at";
+  "id,shop_name,category,description,area,rating,photo_url,visibility,registered_at,latest_update,latest_update_at";
 const PUBLIC_SHOP_COLUMNS_FALLBACK =
-  "id,shop_name,category,description,area,rating,photo_url,visibility,registered_at,pincode";
+  "id,shop_name,category,description,area,rating,photo_url,visibility,registered_at";
+
+const PAGE_SIZE = 25;
 
 export function ListingsView({
   mode,
@@ -47,10 +48,12 @@ export function ListingsView({
   const [workers, setWorkers] = useState<any[]>([]);
   const [shops, setShops] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // Viewer's own pincode and area
+  // Viewer's own pincode
   const [viewerPincode, setViewerPincode] = useState<string>(() => getUserPincode()?.trim() || "");
-  const [viewerArea, setViewerArea] = useState<string>(() => getUserArea()?.trim() || "");
   const [loadingViewer, setLoadingViewer] = useState<boolean>(true);
 
   // 1. Fetch current viewer's own pincode and area from their own record in database
@@ -80,7 +83,6 @@ export function ListingsView({
             setUserPincode(pin);
           }
           if (ar) {
-            setViewerArea(ar);
             setUserArea(ar);
           }
         }
@@ -97,63 +99,14 @@ export function ListingsView({
     };
   }, []);
 
-  // Fetch workers and shops listings
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-
-      const fetchWorkers = async () => {
-        if (mode === "shops") return [];
-        let res = await supabase
-          .from("workers")
-          .select(PUBLIC_WORKER_COLUMNS)
-          .order("registered_at", { ascending: false });
-        if (res.error && res.error.code === "42703") {
-          res = await supabase
-            .from("workers")
-            .select(PUBLIC_WORKER_COLUMNS_FALLBACK)
-            .order("registered_at", { ascending: false });
-        }
-        return res.data ?? [];
-      };
-
-      const fetchShops = async () => {
-        if (mode === "workers") return [];
-        let res = await supabase
-          .from("shops")
-          .select(PUBLIC_SHOP_COLUMNS)
-          .order("registered_at", { ascending: false });
-        if (res.error && res.error.code === "42703") {
-          res = await supabase
-            .from("shops")
-            .select(PUBLIC_SHOP_COLUMNS_FALLBACK)
-            .order("registered_at", { ascending: false });
-        }
-        return res.data ?? [];
-      };
-
-      const result = await withTimeout(Promise.all([fetchWorkers(), fetchShops()]));
-      if (cancelled) return;
-      const [w, s] = result ?? [[], []];
-      setWorkers(w);
-      setShops(s);
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [mode]);
-
   // Listen for realtime session updates to user PIN code (e.g. from profile edits or registration)
   useEffect(() => {
     const onPinUpdate = (e: Event) => {
       const detail = (e as CustomEvent<string>).detail;
-      if (detail) {
+      if (typeof detail === "string") {
         setViewerPincode(detail.trim());
       } else {
-        const p = getUserPincode();
-        if (p) setViewerPincode(p.trim());
+        setViewerPincode(getUserPincode()?.trim() || "");
       }
     };
     window.addEventListener("necto_pincode_updated", onPinUpdate);
@@ -161,6 +114,97 @@ export function ListingsView({
       window.removeEventListener("necto_pincode_updated", onPinUpdate);
     };
   }, []);
+
+  const vPin = viewerPincode.trim();
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [query, area, visibility, vPin, mode]);
+
+  // 2. Fetch workers and shops listings scoped at the database query level
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (visibility === "local" && loadingViewer && !vPin) {
+        setLoading(true);
+        return;
+      }
+
+      if (visibility === "local" && !vPin) {
+        setWorkers([]);
+        setShops([]);
+        setFetchError(null);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setFetchError(null);
+
+      const fetchWorkers = async (): Promise<{ rows: any[]; error: string | null }> => {
+        if (mode === "shops") return { rows: [], error: null };
+        const buildQuery = (columns: string) => {
+          let q = supabase
+            .from("workers")
+            .select(columns)
+            .eq("approval_status", "approved")
+            .eq("visibility", visibility);
+          if (visibility === "local") {
+            q = q.eq("pincode", vPin);
+          }
+          return q.order("registered_at", { ascending: false }).limit(200);
+        };
+
+        let res = await buildQuery(PUBLIC_WORKER_COLUMNS);
+        if (res.error && res.error.code === "42703") {
+          res = await buildQuery(PUBLIC_WORKER_COLUMNS_FALLBACK);
+        }
+        return { rows: res.data ?? [], error: res.error?.message ?? null };
+      };
+
+      const fetchShops = async (): Promise<{ rows: any[]; error: string | null }> => {
+        if (mode === "workers") return { rows: [], error: null };
+        const buildQuery = (columns: string) => {
+          let q = supabase
+            .from("shops")
+            .select(columns)
+            .eq("approval_status", "approved")
+            .eq("visibility", visibility);
+          if (visibility === "local") {
+            q = q.eq("pincode", vPin);
+          }
+          return q.order("registered_at", { ascending: false }).limit(200);
+        };
+
+        let res = await buildQuery(PUBLIC_SHOP_COLUMNS);
+        if (res.error && res.error.code === "42703") {
+          res = await buildQuery(PUBLIC_SHOP_COLUMNS_FALLBACK);
+        }
+        return { rows: res.data ?? [], error: res.error?.message ?? null };
+      };
+
+      const result = await withTimeout(Promise.all([fetchWorkers(), fetchShops()]));
+      if (cancelled) return;
+      if (!result) {
+        setFetchError("Request timed out while loading listings. Please try again.");
+        setWorkers([]);
+        setShops([]);
+        setLoading(false);
+        return;
+      }
+      const [wRes, sRes] = result;
+      if (wRes.error || sRes.error) {
+        setFetchError("Could not load listings right now. Please try again.");
+      }
+      setWorkers(wRes.rows);
+      setShops(sRes.rows);
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, visibility, vPin, loadingViewer, reloadTick]);
 
   const role = getRole();
   const profilePath =
@@ -172,52 +216,19 @@ export function ListingsView({
           ? "/s/profile"
           : null;
 
-  const vPin = viewerPincode.trim();
-
   const items: ListingCardData[] = useMemo(() => {
     const q = query.trim().toLowerCase();
     const a = area.trim().toLowerCase();
 
-    // Strict Role-Based Visibility & Discovery Rules:
-    // 1. All India section:
-    //    - Shows ONLY workers/shops whose saved visibility explicitly equals "all_india".
-    //    - Appears regardless of viewer's PIN code.
-    //    - Missing or invalid visibility must NEVER default to All India.
-    // 2. Local section:
-    //    - Shows ONLY workers/shops whose saved visibility explicitly equals "local".
-    //    - Requires the viewer to have a saved PIN code.
-    //    - Requires the worker/shop to have a saved PIN code.
-    //    - Listing appears ONLY when the worker/shop saved PIN code matches viewer's saved PIN code.
-    //    - Never uses device location or inferred location as a substitute for saved PIN code.
-    const visFilter = (item: {
-      pincode?: string | null;
-      area?: string | null;
-      visibility?: string | null;
-    }) => {
+    // Defense-in-depth strict Role-Based Visibility check
+    const visFilter = (item: { visibility?: string | null }) => {
       const itemVis = String(item.visibility ?? "")
         .trim()
         .toLowerCase();
-
       if (visibility === "all_india") {
         return itemVis === "all_india";
       }
-
-      // Local discovery
-      if (itemVis !== "local") {
-        return false;
-      }
-
-      if (!vPin) {
-        return false;
-      }
-
-      const itemPin = item.pincode ? String(item.pincode).trim() : "";
-      if (!itemPin) {
-        return false;
-      }
-
-      // Exact match on saved PIN code
-      return vPin === itemPin;
+      return itemVis === "local" && Boolean(vPin);
     };
 
     const w: ListingCardData[] = workers
@@ -228,7 +239,8 @@ export function ListingsView({
           !q ||
           x.name?.toLowerCase().includes(q) ||
           x.job_type?.toLowerCase().includes(q) ||
-          x.description?.toLowerCase().includes(q),
+          x.description?.toLowerCase().includes(q) ||
+          x.area?.toLowerCase().includes(q),
       )
       .map((x) => ({
         id: x.id,
@@ -250,7 +262,8 @@ export function ListingsView({
           !q ||
           x.shop_name?.toLowerCase().includes(q) ||
           x.category?.toLowerCase().includes(q) ||
-          x.description?.toLowerCase().includes(q),
+          x.description?.toLowerCase().includes(q) ||
+          x.area?.toLowerCase().includes(q),
       )
       .map((x) => ({
         id: x.id,
@@ -264,20 +277,36 @@ export function ListingsView({
         latest_update_at: x.latest_update_at,
       }));
 
-    return [...w, ...s];
+    // Deduplicate by composite role-entity id
+    const seen = new Set<string>();
+    return [...w, ...s].filter((item) => {
+      const key = `${item.type}:${item.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [workers, shops, query, area, visibility, vPin]);
+
+  const visibleItems = items.slice(0, visibleCount);
+  const hasMore = items.length > visibleItems.length;
 
   return (
     <div className="space-y-3">
       <SearchBar value={query} onChange={setQuery} placeholder={placeholder} />
 
       <div className="flex items-center gap-2">
-        <div className="inline-flex rounded-lg bg-muted p-1 text-xs font-semibold">
+        <div
+          className="inline-flex rounded-lg bg-muted p-1 text-xs font-semibold"
+          role="group"
+          aria-label="Discovery scope"
+        >
           {VISIBILITY_ALL.map((v) => (
             <button
+              type="button"
               key={v}
+              aria-pressed={visibility === v}
               onClick={() => setVisibility(v)}
-              className={`px-3 py-1.5 rounded-md transition ${
+              className={`px-3 py-2 rounded-md transition ${
                 visibility === v ? "bg-white text-primary shadow-sm" : "text-muted-foreground"
               }`}
             >
@@ -293,6 +322,18 @@ export function ListingsView({
       {query.trim() && <AreaFilterBar value={area} onChange={setArea} />}
 
       <div className="space-y-2 pt-1">
+        {fetchError && !loading && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive flex items-center justify-between gap-2">
+            <span>{fetchError}</span>
+            <button
+              type="button"
+              onClick={() => setReloadTick((t) => t + 1)}
+              className="shrink-0 rounded-lg bg-white px-2.5 py-1 font-semibold text-foreground border border-border hover:bg-muted"
+            >
+              Retry
+            </button>
+          </div>
+        )}
         {!loading && !loadingViewer && visibility === "local" && !vPin ? (
           <EmptyState
             title="Set your PIN code in your profile to see local results"
@@ -300,7 +341,7 @@ export function ListingsView({
             ctaLabel={profilePath ? "Edit Profile" : registerCtaLabel || "Register"}
             ctaTo={profilePath || registerCtaTo || "/"}
           />
-        ) : !loading && items.length === 0 ? (
+        ) : !loading && !fetchError && items.length === 0 ? (
           <EmptyState
             title={
               query.trim()
@@ -320,9 +361,20 @@ export function ListingsView({
             ctaTo={registerCtaTo}
           />
         ) : (
-          items.map((it) => (
-            <ListingCard key={`${it.type}-${it.id}`} item={it} hrefPrefix={hrefPrefix} />
-          ))
+          <>
+            {visibleItems.map((it) => (
+              <ListingCard key={`${it.type}-${it.id}`} item={it} hrefPrefix={hrefPrefix} />
+            ))}
+            {hasMore && (
+              <button
+                type="button"
+                onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                className="w-full h-10 rounded-xl border border-border bg-white text-xs font-semibold text-primary hover:bg-muted transition"
+              >
+                Show more ({items.length - visibleItems.length} remaining)
+              </button>
+            )}
+          </>
         )}
       </div>
     </div>

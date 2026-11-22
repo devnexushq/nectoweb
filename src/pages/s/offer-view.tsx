@@ -18,8 +18,10 @@ export default function ShopOfferView() {
     if (!ready || !id) return;
     const shopId = getUserId();
     if (!shopId) return;
+    let cancelled = false;
     fetchShopOffer(shopId, id)
       .then((row) => {
+        if (cancelled) return;
         if (!row) {
           toast.error("Offer not found.");
           navigate("/s/offers", { replace: true });
@@ -27,8 +29,15 @@ export default function ShopOfferView() {
           setOffer(row);
         }
       })
-      .catch((error) => toast.error((error as Error).message || "Could not load offer."))
-      .finally(() => setLoading(false));
+      .catch((error) => {
+        if (!cancelled) toast.error((error as Error).message || "Could not load offer.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [ready, id, navigate]);
 
   if (!ready) return null;

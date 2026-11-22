@@ -9,6 +9,5 @@ export function consentInsertFields() {
   return {
     terms_accepted: true,
     terms_version: TERMS_VERSION,
-    approval_status: "pending" as const,
   };
 }

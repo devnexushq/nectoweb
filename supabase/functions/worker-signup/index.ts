@@ -63,10 +63,15 @@ Deno.serve(async (req) => {
       countryCode = "IN",
       whatsappCountryCode,
       terms_accepted,
+      terms_version,
     } = body;
 
     if (!name || !job_type || !phone || !area) {
       return json({ error: "Missing required fields: name, job_type, phone, area" }, 400);
+    }
+
+    if (terms_accepted === false) {
+      return json({ error: "Terms and conditions must be accepted" }, 400);
     }
 
     if (visibility === "local") {
@@ -85,16 +90,15 @@ Deno.serve(async (req) => {
 
     const e164Phone = phoneResult.e164;
 
-    // Optional WhatsApp normalization
-    let e164Whatsapp = cleanPhone(whatsapp);
-    if (whatsapp) {
+    // Optional WhatsApp normalization — reject invalid explicit input
+    let e164Whatsapp = e164Phone;
+    if (whatsapp && String(whatsapp).trim()) {
       const waCountry = (whatsappCountryCode || country) as CountryCode;
       const waResult = validateAndFormat(whatsapp, waCountry);
-      if (waResult.valid && waResult.e164) {
-        e164Whatsapp = waResult.e164;
+      if (!waResult.valid || !waResult.e164) {
+        return json({ error: "Invalid WhatsApp number" }, 400);
       }
-    } else {
-      e164Whatsapp = e164Phone;
+      e164Whatsapp = waResult.e164;
     }
 
     // Backend Duplicate Check in workers table
@@ -123,7 +127,7 @@ Deno.serve(async (req) => {
     const baseRecord = {
       name: String(name).trim(),
       job_type: String(job_type).trim(),
-      experience: Number(experience) || 0,
+      experience: Math.max(0, Number(experience) || 0),
       phone: e164Phone,
       whatsapp: e164Whatsapp,
       description: description ? String(description).trim() : null,
@@ -132,9 +136,12 @@ Deno.serve(async (req) => {
       business_hours: business_hours || null,
       approval_status: "approved",
       approval_notes: null,
-      terms_accepted: terms_accepted !== false,
+      terms_accepted: true,
       terms_accepted_at: new Date().toISOString(),
-      terms_version: "2026-06-07",
+      terms_version:
+        typeof terms_version === "string" && terms_version.trim()
+          ? terms_version.trim()
+          : "June 2026 v1.0",
     };
 
     let insertRes = await supabase

@@ -14,23 +14,28 @@ const STATUSES: SupportStatus[] = ["open", "in_progress", "resolved"];
 export default function AdminSupport() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("all");
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     let q = supabase
       .from("support_queries")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(1000);
     if (filter !== "all") q = q.eq("status", filter);
-    const { data } = await q;
+    const { data, error } = await q;
+    if (error) {
+      setLoadError(error.message || "Could not load support requests.");
+    }
     setRows((data as Row[]) ?? []);
     setLoading(false);
   }, [filter]);
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const update = async (id: string, status: SupportStatus) => {
@@ -83,6 +88,11 @@ export default function AdminSupport() {
   return (
     <RequireAdmin>
       <AdminLayout title="Support requests">
+        {loadError && (
+          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {loadError}
+          </div>
+        )}
         <DataTable
           rows={rows}
           columns={columns}

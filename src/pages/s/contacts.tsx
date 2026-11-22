@@ -17,6 +17,7 @@ export default function ShopContacts() {
       setLoading(false);
       return;
     }
+    let cancelled = false;
     withTimeout(
       supabase
         .from("contacts_log")
@@ -25,9 +26,13 @@ export default function ShopContacts() {
         .eq("to_type", "shop")
         .order("timestamp", { ascending: false }),
     ).then((result) => {
+      if (cancelled) return;
       setLogs(result?.data ?? []);
       setLoading(false);
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
   if (!ready) return null;
   return (

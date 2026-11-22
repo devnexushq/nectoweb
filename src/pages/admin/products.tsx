@@ -22,15 +22,20 @@ type Row = {
 export default function AdminProducts() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    setLoadError(null);
+    const { data, error } = await supabase
       .from("products")
       .select("id, name, price, created_at, visibility, shop_id, shops(shop_name)")
       .order("created_at", { ascending: false })
       .limit(1000);
+    if (error) {
+      setLoadError(error.message || "Could not load products.");
+    }
     const mapped: Row[] = (data ?? []).map((p) => ({
       id: p.id,
       name: p.name,
@@ -44,7 +49,7 @@ export default function AdminProducts() {
     setLoading(false);
   }, []);
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const toggle = async (id: string, visibility: string) => {
@@ -102,6 +107,11 @@ export default function AdminProducts() {
   return (
     <RequireAdmin>
       <AdminLayout title="Products">
+        {loadError && (
+          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {loadError}
+          </div>
+        )}
         <DataTable
           rows={rows}
           columns={columns}

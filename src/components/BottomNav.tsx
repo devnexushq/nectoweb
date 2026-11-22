@@ -59,7 +59,10 @@ export function BottomNav({ role }: { role: Role }) {
   const pathname = useLocation().pathname;
   const items = ITEMS[role];
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-border shadow-[0_-2px_12px_rgba(0,0,0,0.04)]">
+    <nav
+      aria-label="Primary navigation"
+      className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-border shadow-[0_-2px_12px_rgba(0,0,0,0.04)]"
+    >
       <ul
         className="mx-auto max-w-2xl grid"
         style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
@@ -71,6 +74,7 @@ export function BottomNav({ role }: { role: Role }) {
             <li key={to}>
               <Link
                 to={to}
+                aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 py-2 text-[11px] font-medium transition-colors",
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground",

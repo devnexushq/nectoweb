@@ -108,23 +108,36 @@ export default function CustomerRegister() {
         },
       });
 
-      if (
-        fnError?.message?.includes("already registered") ||
-        (fnData as { code?: string })?.code === "DUPLICATE_PHONE"
-      ) {
+      let fnErrPayload: { error?: string; code?: string } | null = null;
+      if (fnError && typeof fnError === "object" && "context" in fnError) {
+        const ctx = (fnError as { context?: Response }).context;
+        if (ctx && typeof ctx.clone === "function") {
+          fnErrPayload = (await ctx
+            .clone()
+            .json()
+            .catch(() => null)) as { error?: string; code?: string } | null;
+        }
+      }
+      const errCode = (fnData as { code?: string })?.code ?? fnErrPayload?.code;
+      const errMsg =
+        (fnData as { error?: string })?.error ?? fnErrPayload?.error ?? fnError?.message;
+
+      if (errMsg?.includes("already registered") || errCode === "DUPLICATE_PHONE") {
         setLoading(false);
         setDuplicatePhone(e164Phone);
         setDuplicateOpen(true);
         return toast.error("This number is already registered");
       }
 
-      if (
-        fnError?.message?.includes("Invalid number") ||
-        (fnData as { error?: string })?.error === "Invalid number"
-      ) {
+      if (errMsg?.includes("Invalid number")) {
         setLoading(false);
         setPhoneError("Invalid number");
         return toast.error("Invalid number");
+      }
+
+      if (errMsg && fnErrPayload?.error) {
+        setLoading(false);
+        return toast.error(errMsg);
       }
 
       if (fnData?.ok && fnData.data?.id) {

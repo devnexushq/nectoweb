@@ -8,6 +8,112 @@ export type Database = {
   };
   public: {
     Tables: {
+      activity_feed: {
+        Row: {
+          area: string | null;
+          category: string | null;
+          city: string | null;
+          created_at: string;
+          created_by: string | null;
+          discount_text: string | null;
+          district: string | null;
+          expires_at: string | null;
+          id: string;
+          linked_shop_id: string | null;
+          message: string;
+          offer_end_at: string | null;
+          offer_start_at: string | null;
+          state: string | null;
+          status: string;
+          target_role: string;
+          title: string;
+          type: string;
+          updated_at: string;
+          visibility_scope: string;
+        };
+        Insert: {
+          area?: string | null;
+          category?: string | null;
+          city?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          discount_text?: string | null;
+          district?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          linked_shop_id?: string | null;
+          message: string;
+          offer_end_at?: string | null;
+          offer_start_at?: string | null;
+          state?: string | null;
+          status?: string;
+          target_role?: string;
+          title: string;
+          type: string;
+          updated_at?: string;
+          visibility_scope?: string;
+        };
+        Update: {
+          area?: string | null;
+          category?: string | null;
+          city?: string | null;
+          created_at?: string;
+          created_by?: string | null;
+          discount_text?: string | null;
+          district?: string | null;
+          expires_at?: string | null;
+          id?: string;
+          linked_shop_id?: string | null;
+          message?: string;
+          offer_end_at?: string | null;
+          offer_start_at?: string | null;
+          state?: string | null;
+          status?: string;
+          target_role?: string;
+          title?: string;
+          type?: string;
+          updated_at?: string;
+          visibility_scope?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activity_feed_linked_shop_id_fkey";
+            columns: ["linked_shop_id"];
+            isOneToOne: false;
+            referencedRelation: "shops";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      activity_views: {
+        Row: {
+          activity_id: string;
+          id: string;
+          user_id: string;
+          viewed_at: string;
+        };
+        Insert: {
+          activity_id: string;
+          id?: string;
+          user_id: string;
+          viewed_at?: string;
+        };
+        Update: {
+          activity_id?: string;
+          id?: string;
+          user_id?: string;
+          viewed_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activity_views_activity_id_fkey";
+            columns: ["activity_id"];
+            isOneToOne: false;
+            referencedRelation: "activity_feed";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       activity_logs: {
         Row: {
           action: string;
@@ -115,6 +221,7 @@ export type Database = {
           last_updated_at: string;
           name: string;
           phone: string;
+          pincode: string | null;
           role: string;
           terms_accepted: boolean;
           terms_accepted_at: string | null;
@@ -130,6 +237,7 @@ export type Database = {
           last_updated_at?: string;
           name: string;
           phone: string;
+          pincode?: string | null;
           role?: string;
           terms_accepted?: boolean;
           terms_accepted_at?: string | null;
@@ -145,6 +253,7 @@ export type Database = {
           last_updated_at?: string;
           name?: string;
           phone?: string;
+          pincode?: string | null;
           role?: string;
           terms_accepted?: boolean;
           terms_accepted_at?: string | null;

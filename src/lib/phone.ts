@@ -125,3 +125,32 @@ export function formatToE164(input: string, countryCode: CountryCode = "IN"): st
   const result = validatePhoneNumber(input, countryCode);
   return result.isValid && result.e164 ? result.e164 : null;
 }
+
+/**
+ * Validates either an E.164 number (+...) for any country or a local number using fallbackCountry.
+ */
+export function validateFlexiblePhone(
+  input: string,
+  fallbackCountry: CountryCode = "IN",
+): {
+  isValid: boolean;
+  e164?: string;
+  error?: string;
+} {
+  const cleaned = cleanPhoneNumber(input);
+  if (!cleaned) {
+    return { isValid: false, error: "Invalid number" };
+  }
+  if (cleaned.startsWith("+")) {
+    try {
+      const parsed = parsePhoneNumberFromString(cleaned);
+      if (parsed && parsed.isValid()) {
+        return { isValid: true, e164: parsed.format("E.164") };
+      }
+      return { isValid: false, error: "Invalid number" };
+    } catch {
+      return { isValid: false, error: "Invalid number" };
+    }
+  }
+  return validatePhoneNumber(cleaned, fallbackCountry);
+}

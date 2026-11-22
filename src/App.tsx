@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Link } from "react-router-dom";
 import { useCustomerSessionBackfill } from "./hooks/useCustomerSessionBackfill";
 import { ChunkLoadErrorBoundary } from "./components/ChunkLoadErrorBoundary";
+import { useSeo } from "./lib/seo";
 
 // Lazy-loaded route pages
 const Landing = lazy(() => import("./pages/index"));
@@ -95,6 +96,12 @@ function PageLoadingFallback() {
 }
 
 function NotFound() {
+  useSeo({
+    title: "Page Not Found | NECTO",
+    description: "The requested page could not be found on NECTO.",
+    noindex: true,
+  });
+
   return (
     <div className="min-h-screen grid place-items-center px-4 text-center">
       <div>

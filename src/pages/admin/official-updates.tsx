@@ -3,6 +3,16 @@ import { Edit3, EyeOff, Megaphone, Plus, Save, Send, Trash2 } from "lucide-react
 import AdminLayout from "@/components/admin/AdminLayout";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 import StatusBadge from "@/components/admin/StatusBadge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAdminAuth } from "@/lib/admin/auth";
 import { supabase } from "@/integrations/supabase/client";
 import type {
@@ -16,7 +26,7 @@ const db = supabase as any;
 const CONTROL_CLASS =
   "mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200";
 const ACTION_CLASS =
-  "inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50";
+  "inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50";
 
 type FormState = {
   id?: string;
@@ -74,7 +84,9 @@ export default function OfficialUpdatesManager() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ActivityFeedItem | null>(null);
   const editing = Boolean(form.id);
 
   const stats = useMemo(
@@ -86,7 +98,7 @@ export default function OfficialUpdatesManager() {
     [rows],
   );
 
-  const load = async () => {
+  const load = async (cancelledCheck?: () => boolean) => {
     setLoading(true);
     const { data, error } = await db
       .from("activity_feed")
@@ -94,6 +106,7 @@ export default function OfficialUpdatesManager() {
       .eq("type", "official_update")
       .order("created_at", { ascending: false });
 
+    if (cancelledCheck?.()) return;
     if (error) {
       setMessage(`Could not load official updates: ${error.message}`);
       setRows([]);
@@ -104,7 +117,11 @@ export default function OfficialUpdatesManager() {
   };
 
   useEffect(() => {
-    load();
+    let cancelled = false;
+    void load(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const updateField = <K extends keyof FormState>(key: K, value: FormState[K]) => {
@@ -117,6 +134,7 @@ export default function OfficialUpdatesManager() {
   };
 
   const save = async (statusOverride: ActivityStatus) => {
+    if (saving) return;
     if (!form.title.trim() || !form.message.trim()) {
       setMessage("Title and message are required.");
       return;
@@ -162,17 +180,22 @@ export default function OfficialUpdatesManager() {
   };
 
   const changeStatus = async (row: ActivityFeedItem, status: ActivityStatus) => {
+    if (busyId) return;
+    setBusyId(row.id);
     const { error } = await db.from("activity_feed").update({ status }).eq("id", row.id);
     if (error) setMessage(`Status update failed: ${error.message}`);
     else {
       setMessage(`Update moved to ${status}.`);
       await load();
     }
+    setBusyId(null);
   };
 
-  const deleteRow = async (row: ActivityFeedItem) => {
-    const ok = window.confirm(`Delete official update: ${row.title}?`);
-    if (!ok) return;
+  const confirmDeleteRow = async () => {
+    if (!deleteTarget || busyId) return;
+    const row = deleteTarget;
+    setDeleteTarget(null);
+    setBusyId(row.id);
     const { error } = await db.from("activity_feed").delete().eq("id", row.id);
     if (error) setMessage(`Delete failed: ${error.message}`);
     else {
@@ -180,6 +203,7 @@ export default function OfficialUpdatesManager() {
       if (form.id === row.id) resetForm();
       await load();
     }
+    setBusyId(null);
   };
 
   return (
@@ -392,6 +416,7 @@ export default function OfficialUpdatesManager() {
                     <div className="mt-3 flex flex-wrap gap-2">
                       <button
                         type="button"
+                        disabled={busyId === row.id}
                         onClick={() => setForm(toForm(row))}
                         className={ACTION_CLASS}
                       >
@@ -400,6 +425,7 @@ export default function OfficialUpdatesManager() {
                       </button>
                       <button
                         type="button"
+                        disabled={busyId === row.id}
                         onClick={() => changeStatus(row, "published")}
                         className={ACTION_CLASS}
                       >
@@ -408,6 +434,7 @@ export default function OfficialUpdatesManager() {
                       </button>
                       <button
                         type="button"
+                        disabled={busyId === row.id}
                         onClick={() => changeStatus(row, "draft")}
                         className={ACTION_CLASS}
                       >
@@ -416,6 +443,7 @@ export default function OfficialUpdatesManager() {
                       </button>
                       <button
                         type="button"
+                        disabled={busyId === row.id}
                         onClick={() => changeStatus(row, "hidden")}
                         className={ACTION_CLASS}
                       >
@@ -424,7 +452,8 @@ export default function OfficialUpdatesManager() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => deleteRow(row)}
+                        disabled={busyId === row.id}
+                        onClick={() => setDeleteTarget(row)}
                         className={`${ACTION_CLASS} text-rose-600 hover:border-rose-200 hover:bg-rose-50`}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -437,6 +466,30 @@ export default function OfficialUpdatesManager() {
             </div>
           </section>
         </div>
+        <AlertDialog
+          open={Boolean(deleteTarget)}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setDeleteTarget(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete official update?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently remove "{deleteTarget?.title}".
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDeleteRow}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </AdminLayout>
     </RequireAdmin>
   );

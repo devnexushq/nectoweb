@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Phone, X } from "lucide-react";
 
 const NUMBERS = [
@@ -8,9 +8,20 @@ const NUMBERS = [
 
 export function PhoneSupportFab() {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   return (
     <>
       <button
+        type="button"
         onClick={() => setOpen(true)}
         aria-label="Phone Support"
         className="fixed bottom-20 right-20 z-30 h-12 w-12 rounded-full bg-primary text-white shadow-lg flex items-center justify-center hover:bg-primary/90 transition"
@@ -20,6 +31,9 @@ export function PhoneSupportFab() {
       {open && (
         <div
           className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="phone-support-title"
           onClick={() => setOpen(false)}
         >
           <div
@@ -27,8 +41,15 @@ export function PhoneSupportFab() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">Phone Support</h2>
-              <button onClick={() => setOpen(false)} aria-label="Close">
+              <h2 id="phone-support-title" className="text-lg font-bold">
+                Phone Support
+              </h2>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Close"
+                className="grid h-9 w-9 place-items-center rounded-full hover:bg-muted"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -36,7 +57,7 @@ export function PhoneSupportFab() {
               {NUMBERS.map((n) => (
                 <div
                   key={n.tel}
-                  className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border"
+                  className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl border border-border"
                 >
                   <span className="font-medium text-sm sm:text-base">{n.display}</span>
                   <a

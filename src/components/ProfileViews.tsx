@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ContactButtons } from "@/components/ContactButtons";
@@ -25,13 +25,20 @@ export function WorkerProfileView() {
   const [loading, setLoading] = useState(true);
   const [contactTrigger, setContactTrigger] = useState(0);
 
+  const handleRatingUpdated = useCallback((newRating: number) => {
+    setW((prev: any) => (prev ? { ...prev, rating: newRating } : prev));
+  }, []);
+
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     (async () => {
       const fetchWorker = async () => {
         let res = await supabase
           .from("workers")
           .select(PUBLIC_WORKER_DETAIL_COLUMNS)
           .eq("id", id)
+          .eq("approval_status", "approved")
           .maybeSingle();
         if (res.error && res.error.code === "42703") {
           res = await supabase
@@ -44,9 +51,13 @@ export function WorkerProfileView() {
       };
 
       const result = await withTimeout(fetchWorker());
+      if (cancelled) return;
       setW(result?.data ?? null);
       setLoading(false);
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (loading) return <div className="py-10 text-center text-muted-foreground">Loading...</div>;
@@ -59,7 +70,12 @@ export function WorkerProfileView() {
       <div className="rounded-2xl overflow-hidden bg-white border border-border">
         <div className="h-40 bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center">
           {w.photo_url ? (
-            <img src={w.photo_url} alt={w.name} className="h-full w-full object-cover" />
+            <img
+              src={w.photo_url}
+              alt={w.name}
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
           ) : (
             <User className="h-16 w-16 text-primary/40" />
           )}
@@ -119,9 +135,7 @@ export function WorkerProfileView() {
         targetName={w.name}
         initialRating={w.rating}
         contactTrigger={contactTrigger}
-        onRatingUpdated={(newRating) => {
-          setW((prev: any) => (prev ? { ...prev, rating: newRating } : prev));
-        }}
+        onRatingUpdated={handleRatingUpdated}
       />
     </div>
   );
@@ -134,13 +148,20 @@ export function ShopProfileView() {
   const [loading, setLoading] = useState(true);
   const [contactTrigger, setContactTrigger] = useState(0);
 
+  const handleRatingUpdated = useCallback((newRating: number) => {
+    setS((prev: any) => (prev ? { ...prev, rating: newRating } : prev));
+  }, []);
+
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     (async () => {
       const fetchShop = async () => {
         let res = await supabase
           .from("shops")
           .select(PUBLIC_SHOP_DETAIL_COLUMNS)
           .eq("id", id)
+          .eq("approval_status", "approved")
           .maybeSingle();
         if (res.error && res.error.code === "42703") {
           res = await supabase
@@ -163,11 +184,15 @@ export function ShopProfileView() {
             .order("created_at", { ascending: false }),
         ]),
       );
+      if (cancelled) return;
       const [{ data }, { data: prods }] = result ?? [{ data: null }, { data: [] as any[] }];
       setS(data);
       setProducts(prods ?? []);
       setLoading(false);
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (loading) return <div className="py-10 text-center text-muted-foreground">Loading...</div>;
@@ -180,7 +205,12 @@ export function ShopProfileView() {
       <div className="rounded-2xl overflow-hidden bg-white border border-border">
         <div className="h-40 bg-gradient-to-br from-accent/20 to-primary/15 flex items-center justify-center">
           {s.photo_url ? (
-            <img src={s.photo_url} alt={s.shop_name} className="h-full w-full object-cover" />
+            <img
+              src={s.photo_url}
+              alt={s.shop_name}
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
           ) : (
             <span className="text-3xl font-bold text-primary/40">{s.shop_name?.[0]}</span>
           )}
@@ -241,7 +271,13 @@ export function ShopProfileView() {
               <div key={p.id} className="rounded-lg border border-border overflow-hidden">
                 <div className="h-24 bg-muted flex items-center justify-center">
                   {p.photo_url ? (
-                    <img src={p.photo_url} alt={p.name} className="h-full w-full object-cover" />
+                    <img
+                      src={p.photo_url}
+                      alt={p.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover"
+                    />
                   ) : (
                     <span className="text-xs text-muted-foreground">No image</span>
                   )}
@@ -264,9 +300,7 @@ export function ShopProfileView() {
         targetName={s.shop_name}
         initialRating={s.rating}
         contactTrigger={contactTrigger}
-        onRatingUpdated={(newRating) => {
-          setS((prev: any) => (prev ? { ...prev, rating: newRating } : prev));
-        }}
+        onRatingUpdated={handleRatingUpdated}
       />
     </div>
   );

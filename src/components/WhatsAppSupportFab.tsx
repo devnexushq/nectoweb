@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 
 const NUMBERS = [
@@ -10,9 +10,20 @@ const PREFILL = encodeURIComponent("Hello Necto Support, I need assistance.");
 
 export function WhatsAppSupportFab() {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
   return (
     <>
       <button
+        type="button"
         onClick={() => setOpen(true)}
         aria-label="WhatsApp Support"
         className="fixed bottom-20 right-36 z-30 h-12 w-12 rounded-full bg-[#25d366] text-white shadow-lg flex items-center justify-center hover:bg-[#1fb955] transition"
@@ -22,6 +33,9 @@ export function WhatsAppSupportFab() {
       {open && (
         <div
           className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="wa-support-title"
           onClick={() => setOpen(false)}
         >
           <div
@@ -29,8 +43,15 @@ export function WhatsAppSupportFab() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">WhatsApp Support</h2>
-              <button onClick={() => setOpen(false)} aria-label="Close">
+              <h2 id="wa-support-title" className="text-lg font-bold">
+                WhatsApp Support
+              </h2>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Close"
+                className="grid h-9 w-9 place-items-center rounded-full hover:bg-muted"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -38,7 +59,7 @@ export function WhatsAppSupportFab() {
               {NUMBERS.map((n) => (
                 <div
                   key={n.wa}
-                  className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border"
+                  className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl border border-border"
                 >
                   <span className="font-medium text-sm sm:text-base">{n.display}</span>
                   <a

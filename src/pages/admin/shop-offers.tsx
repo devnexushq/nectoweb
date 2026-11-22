@@ -3,6 +3,16 @@ import { EyeOff, Send, Trash2 } from "lucide-react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import RequireAdmin from "@/components/admin/RequireAdmin";
 import StatusBadge from "@/components/admin/StatusBadge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import type { ShopOffer } from "@/lib/shopOffers";
 
@@ -15,25 +25,34 @@ type AdminOffer = ShopOffer & {
 export default function AdminShopOffers() {
   const [rows, setRows] = useState<AdminOffer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminOffer | null>(null);
 
-  async function load() {
+  async function load(cancelledCheck?: () => boolean) {
     setLoading(true);
     const { data, error } = await db
       .from("activity_feed")
       .select("*, shops!activity_feed_linked_shop_id_fkey(shop_name, area, category)")
       .eq("type", "offer")
       .order("created_at", { ascending: false });
+    if (cancelledCheck?.()) return;
     if (error) setMessage(error.message);
     else setRows((data ?? []) as AdminOffer[]);
     setLoading(false);
   }
 
   useEffect(() => {
-    load();
+    let cancelled = false;
+    void load(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function setStatus(row: AdminOffer, status: "published" | "hidden") {
+    if (busyId) return;
+    setBusyId(row.id);
     const { error } = await db
       .from("activity_feed")
       .update({ status, updated_at: new Date().toISOString() })
@@ -43,16 +62,21 @@ export default function AdminShopOffers() {
       setMessage(`Offer moved to ${status}.`);
       await load();
     }
+    setBusyId(null);
   }
 
-  async function deleteOffer(row: AdminOffer) {
-    if (!window.confirm(`Delete shop offer: ${row.title}?`)) return;
+  async function confirmDeleteOffer() {
+    if (!deleteTarget || busyId) return;
+    const row = deleteTarget;
+    setDeleteTarget(null);
+    setBusyId(row.id);
     const { error } = await db.from("activity_feed").delete().eq("id", row.id);
     if (error) setMessage(error.message);
     else {
       setMessage("Offer deleted.");
       await load();
     }
+    setBusyId(null);
   }
 
   return (
@@ -120,22 +144,25 @@ export default function AdminShopOffers() {
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
                           <button
+                            disabled={busyId === row.id}
                             onClick={() => setStatus(row, "published")}
-                            className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 font-semibold hover:bg-slate-50"
+                            className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 font-semibold hover:bg-slate-50 disabled:opacity-50"
                           >
                             <Send className="h-4 w-4" />
                             Publish
                           </button>
                           <button
+                            disabled={busyId === row.id}
                             onClick={() => setStatus(row, "hidden")}
-                            className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 font-semibold hover:bg-slate-50"
+                            className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 px-3 font-semibold hover:bg-slate-50 disabled:opacity-50"
                           >
                             <EyeOff className="h-4 w-4" />
                             Hide
                           </button>
                           <button
-                            onClick={() => deleteOffer(row)}
-                            className="inline-flex h-9 items-center gap-2 rounded-lg border border-rose-200 px-3 font-semibold text-rose-600 hover:bg-rose-50"
+                            disabled={busyId === row.id}
+                            onClick={() => setDeleteTarget(row)}
+                            className="inline-flex h-9 items-center gap-2 rounded-lg border border-rose-200 px-3 font-semibold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
                           >
                             <Trash2 className="h-4 w-4" />
                             Delete
@@ -149,6 +176,30 @@ export default function AdminShopOffers() {
             </table>
           </div>
         </section>
+        <AlertDialog
+          open={Boolean(deleteTarget)}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setDeleteTarget(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete shop offer?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently remove "{deleteTarget?.title}".
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDeleteOffer}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </AdminLayout>
     </RequireAdmin>
   );

@@ -40,9 +40,11 @@ export function ActivityBell({ role }: { role: Role }) {
 
     load();
     window.addEventListener("necto-activity-viewed", load);
+    window.addEventListener("focus", load);
     return () => {
       cancelled = true;
       window.removeEventListener("necto-activity-viewed", load);
+      window.removeEventListener("focus", load);
     };
   }, [role]);
 

@@ -19,10 +19,15 @@ export default function ShopProfilePage() {
       setLoading(false);
       return;
     }
+    let cancelled = false;
     withTimeout(supabase.from("shops").select("*").eq("id", id).maybeSingle()).then((result) => {
+      if (cancelled) return;
       setMe(result?.data ?? null);
       setLoading(false);
     });
+    return () => {
+      cancelled = true;
+    };
   }, []);
   const lock = useMemo(() => editLockDaysLeft(me?.registered_at), [me]);
   if (!ready) return null;

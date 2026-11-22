@@ -358,6 +358,8 @@ function OfferCard({
             <img
               src={item.shops.photo_url}
               alt={item.shops.shop_name ?? "Shop"}
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
           ) : (
@@ -421,13 +423,26 @@ function OfferCard({
 function ActivityDetailModal({ item, onClose }: { item: ActivityFeedItem; onClose: () => void }) {
   const isOffer = item.type === "offer";
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-end bg-slate-950/50 p-0 backdrop-blur-sm sm:place-items-center sm:p-4"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="activity-modal-title"
+      onClick={onClose}
     >
-      <div className="max-h-[86vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-lg sm:rounded-3xl">
+      <div
+        className="max-h-[86vh] w-full overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl sm:max-w-lg sm:rounded-3xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-start gap-3">
           <div
             className={`grid h-10 w-10 shrink-0 place-items-center rounded-2xl ${isOffer ? "bg-emerald-50 text-emerald-700" : "bg-primary/10 text-primary"}`}
@@ -440,7 +455,9 @@ function ActivityDetailModal({ item, onClose }: { item: ActivityFeedItem; onClos
             >
               {isOffer ? "Shop Offer" : "Official"}
             </span>
-            <h2 className="mt-3 text-xl font-black text-foreground">{item.title}</h2>
+            <h2 id="activity-modal-title" className="mt-3 text-xl font-black text-foreground">
+              {item.title}
+            </h2>
             <p className="mt-1 text-xs text-muted-foreground">
               {isOffer
                 ? `Ends ${new Date(item.offer_end_at ?? item.expires_at ?? item.created_at).toLocaleDateString()}`

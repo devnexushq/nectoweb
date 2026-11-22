@@ -25,7 +25,13 @@ export function ListingCard({ item, hrefPrefix }: { item: ListingCardData; hrefP
     >
       <div className="h-20 w-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
         {item.photo_url ? (
-          <img src={item.photo_url} alt={item.name} className="h-full w-full object-cover" />
+          <img
+            src={item.photo_url}
+            alt={item.name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
         ) : item.type === "worker" ? (
           <User className="h-8 w-8 text-muted-foreground" />
         ) : (

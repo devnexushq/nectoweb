@@ -41,4 +41,23 @@ export const adminApi = {
       return data;
     }
   },
+  updateApprovalStatus: async (
+    table: "workers" | "shops" | "customers",
+    id: string,
+    status: "approved" | "rejected" | "suspended" | "pending",
+  ) => {
+    try {
+      return await invoke({ action: "update_approval_status", table, id, status });
+    } catch {
+      // Direct database update fallback (trigger logs approval_history & activity_logs automatically)
+      const { data, error } = await supabase
+        .from(table)
+        .update({ approval_status: status })
+        .eq("id", id)
+        .select()
+        .maybeSingle();
+      if (error) throw new Error(error.message);
+      return data;
+    }
+  },
 };

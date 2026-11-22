@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { signOutAdmin, useAdminAuth } from "@/lib/admin/auth";
 import { isFounderUser, maskEmail } from "@/lib/admin/founder";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -52,8 +53,35 @@ export default function AdminLayout({ children, title }: { children: ReactNode; 
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [headerQuery, setHeaderQuery] = useState("");
+  const [openSupportCount, setOpenSupportCount] = useState<number>(0);
   const founder = isFounderUser(user);
   const navItems = useMemo(() => (founder ? [...NAV, FOUNDER_NAV] : NAV), [founder]);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("support_queries")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "open")
+      .then(({ count }) => {
+        if (!cancelled && typeof count === "number") {
+          setOpenSupportCount(count);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const searchMatches = useMemo(() => {
+    const q = headerQuery.trim().toLowerCase();
+    if (!q) return [];
+    return navItems
+      .filter((item) => item.label.toLowerCase().includes(q) || item.to.toLowerCase().includes(q))
+      .slice(0, 6);
+  }, [headerQuery, navItems]);
   const quickActions = useMemo(
     () => [
       {
@@ -216,19 +244,106 @@ export default function AdminLayout({ children, title }: { children: ReactNode; 
               </div>
               <h1 className="truncate text-base font-semibold md:text-xl">{title}</h1>
             </div>
-            <div className="ml-auto hidden w-80 items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 shadow-sm lg:flex">
-              <Search className="h-4 w-4 text-slate-400" />
-              <input
-                className="w-full bg-transparent text-sm outline-none"
-                placeholder="Search users, tickets, products..."
-              />
+            <div className="relative ml-auto hidden w-80 lg:block">
+              <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-3 py-2 shadow-sm">
+                <Search className="h-4 w-4 text-slate-400" />
+                <input
+                  value={headerQuery}
+                  onChange={(e) => setHeaderQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && searchMatches[0]) {
+                      navigate(searchMatches[0].to);
+                      setHeaderQuery("");
+                    } else if (e.key === "Escape") {
+                      setHeaderQuery("");
+                    }
+                  }}
+                  className="w-full bg-transparent text-sm outline-none"
+                  placeholder="Jump to admin section..."
+                />
+              </div>
+              {searchMatches.length > 0 && (
+                <div className="absolute right-0 z-30 mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+                  {searchMatches.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.to}
+                        type="button"
+                        onClick={() => {
+                          navigate(item.to);
+                          setHeaderQuery("");
+                        }}
+                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                      >
+                        <Icon className="h-4 w-4 text-slate-400" />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-            <button
-              className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white/80 text-slate-600 shadow-sm transition hover:-translate-y-0.5"
-              aria-label="Notifications"
-            >
-              <Bell className="h-4 w-4" />
-            </button>
+            <div className="relative ml-auto lg:ml-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickActionsOpen(false);
+                  setNotifOpen((v) => !v);
+                }}
+                className="relative grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white/80 text-slate-600 shadow-sm transition hover:-translate-y-0.5"
+                aria-label="Notifications"
+                aria-expanded={notifOpen}
+              >
+                <Bell className="h-4 w-4" />
+                {openSupportCount > 0 && (
+                  <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-rose-600 px-1 text-[10px] font-bold text-white">
+                    {openSupportCount > 99 ? "99+" : openSupportCount}
+                  </span>
+                )}
+              </button>
+              {notifOpen && (
+                <>
+                  <button
+                    className="fixed inset-0 z-10 cursor-default"
+                    aria-label="Close notifications"
+                    onClick={() => setNotifOpen(false)}
+                  />
+                  <div className="absolute right-0 z-20 mt-3 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/15">
+                    <div className="border-b border-slate-100 px-4 py-3">
+                      <div className="text-sm font-semibold text-slate-950">Admin Alerts</div>
+                      <div className="text-xs text-slate-500">Live platform status summary</div>
+                    </div>
+                    <div className="p-2 space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotifOpen(false);
+                          navigate("/admin/support");
+                        }}
+                        className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm hover:bg-slate-50"
+                      >
+                        <span className="font-medium text-slate-800">Open support tickets</span>
+                        <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-700">
+                          {openSupportCount}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotifOpen(false);
+                          navigate("/admin/activity");
+                        }}
+                        className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm hover:bg-slate-50"
+                      >
+                        <span className="font-medium text-slate-800">View audit logs</span>
+                        <ArrowRight className="h-4 w-4 text-slate-400" />
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             <div className="relative">
               <button
                 type="button"

@@ -8,38 +8,44 @@ import { Tables } from "@/integrations/supabase/types";
 
 type Customer = Tables<"customers">;
 
-const STATUSES = ["all", "approved", "rejected", "suspended"];
+const STATUSES = ["all", "pending", "approved", "suspended", "rejected"];
 
 export default function AdminCustomers() {
   const [rows, setRows] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [filter, setFilter] = useState("all");
 
   const load = useCallback(async () => {
     setLoading(true);
-    await supabase
-      .from("customers")
-      .update({ approval_status: "approved" })
-      .eq("approval_status", "pending");
+    setLoadError(null);
     let q = supabase
       .from("customers")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(1000);
     if (filter !== "all") q = q.eq("approval_status", filter);
-    const { data } = await q;
+    const { data, error } = await q;
+    if (error) {
+      setLoadError(error.message || "Could not load customers.");
+    }
     setRows((data as Customer[]) ?? []);
     setLoading(false);
   }, [filter]);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
 
   const columns: Column<Customer>[] = [
     { key: "name", header: "Name", render: (r) => <span className="font-medium">{r.name}</span> },
     { key: "phone", header: "Phone", render: (r) => r.phone },
     { key: "area", header: "Area", render: (r) => r.area },
+    {
+      key: "pin",
+      header: "PIN",
+      render: (r) => <span className="text-xs font-mono">{r.pincode ?? "—"}</span>,
+    },
     {
       key: "created",
       header: "Registered",
@@ -69,12 +75,17 @@ export default function AdminCustomers() {
   return (
     <RequireAdmin>
       <AdminLayout title="Customers">
+        {loadError && (
+          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {loadError}
+          </div>
+        )}
         <DataTable
           rows={rows}
           columns={columns}
           loading={loading}
-          searchPlaceholder="Search by name, phone, area..."
-          searchFields={(r) => `${r.name} ${r.phone} ${r.area}`}
+          searchPlaceholder="Search by name, phone, area, PIN..."
+          searchFields={(r) => `${r.name} ${r.phone} ${r.area} ${r.pincode ?? ""}`}
           filters={
             <div className="flex gap-1.5 flex-wrap">
               {STATUSES.map((s) => (

@@ -15,6 +15,7 @@ export default defineConfig({
       devOptions: { enabled: false },
       includeAssets: ["icon-192.png", "icon-512.png", "apple-touch-icon.png"],
       manifest: {
+        id: "/",
         name: "Necto",
         short_name: "Necto",
         description:
@@ -36,7 +37,12 @@ export default defineConfig({
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globIgnores: ["**/charts-*.js"],
         runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            handler: "NetworkOnly",
+          },
           {
             urlPattern: ({ request }) => request.mode === "navigate",
             handler: "NetworkFirst",
@@ -59,12 +65,18 @@ export default defineConfig({
             options: {
               cacheName: "scripts-and-styles",
               networkTimeoutSeconds: 3,
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 7 },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
           {
             urlPattern: ({ request }) => ["image", "font"].includes(request.destination),
             handler: "StaleWhileRevalidate",
-            options: { cacheName: "assets" },
+            options: {
+              cacheName: "assets",
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
           },
         ],
       },
@@ -76,24 +88,28 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          react: ["react", "react-dom", "react-router-dom"],
-          supabase: ["@supabase/supabase-js"],
-          charts: ["recharts", "date-fns"],
-          ui: [
-            "@radix-ui/react-alert-dialog",
-            "@radix-ui/react-avatar",
-            "@radix-ui/react-checkbox",
-            "@radix-ui/react-dialog",
-            "@radix-ui/react-dropdown-menu",
-            "@radix-ui/react-label",
-            "@radix-ui/react-popover",
-            "@radix-ui/react-select",
-            "@radix-ui/react-slot",
-            "@radix-ui/react-tabs",
-            "@radix-ui/react-tooltip",
-            "lucide-react",
-          ],
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (
+            id.includes("/react/") ||
+            id.includes("/react-dom/") ||
+            id.includes("/react-router-dom/") ||
+            id.includes("/scheduler/")
+          ) {
+            return "react";
+          }
+          if (id.includes("/@supabase/")) {
+            return "supabase";
+          }
+          if (id.includes("/recharts/") || id.includes("/d3-") || id.includes("/date-fns/")) {
+            return "charts";
+          }
+          if (id.includes("/@radix-ui/") || id.includes("/lucide-react/")) {
+            return "ui";
+          }
+          if (id.includes("/libphonenumber-js/")) {
+            return "phone";
+          }
         },
       },
     },

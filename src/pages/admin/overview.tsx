@@ -79,9 +79,12 @@ export default function AdminOverview() {
   const [recent, setRecent] = useState<ActivityRow[]>([]);
   const [latestRegistrations, setLatestRegistrations] = useState<RecentRegistration[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const load = async () => {
+      setLoadError(null);
       const head = { count: "exact" as const, head: true };
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -146,6 +149,21 @@ export default function AdminOverview() {
           .order("registered_at", { ascending: false })
           .limit(6),
       ]);
+      if (cancelled) return;
+      const firstErr =
+        c.error ||
+        w.error ||
+        s.error ||
+        p.error ||
+        sq.error ||
+        logs.error ||
+        act.error ||
+        latestC.error ||
+        latestW.error ||
+        latestS.error;
+      if (firstErr) {
+        setLoadError(firstErr.message || "Could not load overview metrics.");
+      }
       const contactRows = logs.data ?? [];
       const registrationRows: RecentRegistration[] = [
         ...((latestC.data as CustomerRow[] | null) ?? []).map((row) => ({
@@ -196,6 +214,9 @@ export default function AdminOverview() {
       setLoading(false);
     };
     load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const totalUsers = counts ? counts.customers + counts.workers + counts.shops : 0;
@@ -203,6 +224,11 @@ export default function AdminOverview() {
   return (
     <RequireAdmin>
       <AdminLayout title="Overview">
+        {loadError && (
+          <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {loadError}
+          </div>
+        )}
         <div className="mb-6 rounded-3xl border border-white/70 bg-slate-950 p-6 text-white shadow-2xl shadow-slate-300/70">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>

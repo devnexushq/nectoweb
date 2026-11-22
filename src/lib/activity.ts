@@ -49,10 +49,6 @@ function normalize(value: unknown) {
     .toLowerCase();
 }
 
-function hasValue(value: unknown) {
-  return normalize(value).length > 0;
-}
-
 export function getActivityPath(role: Role) {
   if (role === "customer") return "/c/activity";
   if (role === "worker") return "/w/activity";
@@ -75,21 +71,47 @@ export async function fetchProfileLocation(role: Role, userId: string): Promise<
   };
 }
 
+function textContainsToken(haystack: string, needle: string) {
+  if (!haystack || !needle) return false;
+  if (haystack === needle) return true;
+  return haystack.includes(needle) || needle.includes(haystack);
+}
+
 function locationMatches(item: ActivityFeedItem, profile: ProfileLocation) {
   if (item.visibility_scope === "all_india") return true;
 
+  const pArea = normalize(profile.area);
+  const pCity = normalize(profile.city);
+  const pDistrict = normalize(profile.district);
+  const pState = normalize(profile.state);
+
   if (item.visibility_scope === "state") {
-    return !hasValue(item.state) || normalize(profile.state) === normalize(item.state);
+    const targetState = normalize(item.state);
+    if (!targetState) return true;
+    return textContainsToken(pState, targetState) || textContainsToken(pArea, targetState);
   }
 
   if (item.visibility_scope === "district") {
-    return !hasValue(item.district) || normalize(profile.district) === normalize(item.district);
+    const targetDistrict = normalize(item.district);
+    if (!targetDistrict) return true;
+    return (
+      textContainsToken(pDistrict, targetDistrict) ||
+      textContainsToken(pCity, targetDistrict) ||
+      textContainsToken(pArea, targetDistrict)
+    );
   }
 
-  const areaMatch = hasValue(item.area) && normalize(profile.area) === normalize(item.area);
-  const cityMatch = hasValue(item.city) && normalize(profile.city) === normalize(item.city);
-  const noLocalTarget = !hasValue(item.area) && !hasValue(item.city);
-  return noLocalTarget || areaMatch || cityMatch;
+  const targetArea = normalize(item.area);
+  const targetCity = normalize(item.city);
+  if (!targetArea && !targetCity) return true;
+
+  const areaMatch =
+    Boolean(targetArea) &&
+    (textContainsToken(pArea, targetArea) || textContainsToken(pCity, targetArea));
+  const cityMatch =
+    Boolean(targetCity) &&
+    (textContainsToken(pCity, targetCity) || textContainsToken(pArea, targetCity));
+  return areaMatch || cityMatch;
 }
 
 function isVisibleForRole(item: ActivityFeedItem, role: Role, profile: ProfileLocation) {
@@ -122,7 +144,9 @@ export async function fetchVisibleShopOffers(role: Role, userId: string) {
   const profile = await fetchProfileLocation(role, userId);
   const { data, error } = await db
     .from("activity_feed")
-    .select("*, shops!activity_feed_linked_shop_id_fkey(shop_name, photo_url, category, area)")
+    .select(
+      "*, shops!activity_feed_linked_shop_id_fkey(shop_name, photo_url, category, area, approval_status)",
+    )
     .eq("type", "offer")
     .eq("status", "published")
     .order("created_at", { ascending: false });
@@ -133,10 +157,15 @@ export async function fetchVisibleShopOffers(role: Role, userId: string) {
   }
 
   const now = Date.now();
-  return ((data ?? []) as ActivityFeedItem[]).filter((item) => {
+  return (
+    (data ?? []) as Array<ActivityFeedItem & { shops?: { approval_status?: string | null } | null }>
+  ).filter((item) => {
+    const shopStatus = item.shops?.approval_status;
+    if (shopStatus && shopStatus !== "approved") return false;
+    const startOk = !item.offer_start_at || new Date(item.offer_start_at).getTime() <= now;
     const expiry = item.offer_end_at ?? item.expires_at;
     const notExpired = !expiry || new Date(expiry).getTime() >= now;
-    return notExpired && isVisibleForRole(item, role, profile);
+    return startOk && notExpired && isVisibleForRole(item, role, profile);
   });
 }
 

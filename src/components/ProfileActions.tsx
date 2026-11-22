@@ -22,7 +22,15 @@ import {
 import { Field, TextArea, VisibilitySelector } from "@/components/FormBits";
 import { PinCodeField } from "@/components/PinCodeField";
 import { supabase } from "@/integrations/supabase/client";
-import { clearAccount, getUserId, setUserPincode, setUserArea, type Role } from "@/lib/role";
+import { validateFlexiblePhone } from "@/lib/phone";
+import {
+  clearAccount,
+  getUserId,
+  setUserPincode,
+  setUserArea,
+  setUserPhone,
+  type Role,
+} from "@/lib/role";
 
 type Props = {
   role: Role;
@@ -88,25 +96,86 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
   async function save() {
     const id = getUserId();
     if (!id) return;
-    setSaving(true);
-    const { id: _omit, registered_at, created_at, rating, ...patch } = form ?? {};
 
-    // Validate role-specific discovery visibility & PIN requirements
-    if (role === "worker" || role === "shop") {
-      const vis = form?.visibility === "all_india" ? "all_india" : "local";
-      patch.visibility = vis;
-      if (vis === "local") {
-        const pin = String(form?.pincode || "").trim();
-        if (!pin || !/^\d{6}$/.test(pin)) {
-          setSaving(false);
-          return toast.error("PIN code (6 digits) is required for Local visibility");
-        }
-      }
-    } else {
-      // Customers do not have discovery visibility settings
-      delete patch.visibility;
+    const { id: _omit, registered_at, created_at, rating, ...rawPatch } = form ?? {};
+    const patch: Record<string, any> = { ...rawPatch };
+
+    // Validate required role fields and normalize E.164 phone numbers
+    const phoneCheck = validateFlexiblePhone(String(patch.phone ?? ""), "IN");
+    if (!phoneCheck.isValid || !phoneCheck.e164) {
+      return toast.error("Please enter a valid phone number");
+    }
+    patch.phone = phoneCheck.e164;
+
+    if (!String(patch.area ?? "").trim()) {
+      return toast.error("Area / City is required");
+    }
+    patch.area = String(patch.area).trim();
+    patch.pincode = String(patch.pincode ?? "").trim() || null;
+    if (patch.pincode && !/^\d{6}$/.test(patch.pincode)) {
+      return toast.error("PIN code must be 6 digits");
     }
 
+    if (role === "customer") {
+      if (!String(patch.name ?? "").trim()) {
+        return toast.error("Full Name is required");
+      }
+      patch.name = String(patch.name).trim();
+      delete patch.visibility;
+    } else if (role === "worker") {
+      if (!String(patch.name ?? "").trim() || !String(patch.job_type ?? "").trim()) {
+        return toast.error("Name and Job Type are required");
+      }
+      patch.name = String(patch.name).trim();
+      patch.job_type = String(patch.job_type).trim();
+      const exp = Number(patch.experience);
+      if (Number.isNaN(exp) || exp < 0) {
+        return toast.error("Experience must be 0 or more years");
+      }
+      patch.experience = Math.floor(exp);
+    } else {
+      if (
+        !String(patch.shop_name ?? "").trim() ||
+        !String(patch.owner_name ?? "").trim() ||
+        !String(patch.category ?? "").trim()
+      ) {
+        return toast.error("Shop Name, Owner Name, and Category are required");
+      }
+      patch.shop_name = String(patch.shop_name).trim();
+      patch.owner_name = String(patch.owner_name).trim();
+      patch.category = String(patch.category).trim();
+    }
+
+    if (role === "worker" || role === "shop") {
+      const rawWa = String(patch.whatsapp ?? "").trim();
+      if (rawWa) {
+        const waCheck = validateFlexiblePhone(rawWa, "IN");
+        if (!waCheck.isValid || !waCheck.e164) {
+          return toast.error("Please enter a valid WhatsApp number");
+        }
+        patch.whatsapp = waCheck.e164;
+      } else {
+        patch.whatsapp = patch.phone;
+      }
+
+      const rawPhoto = String(patch.photo_url ?? "").trim();
+      if (rawPhoto) {
+        if (!/^https?:\/\//i.test(rawPhoto)) {
+          return toast.error("Photo URL must start with http:// or https://");
+        }
+        patch.photo_url = rawPhoto;
+      } else {
+        patch.photo_url = null;
+      }
+
+      const vis = form?.visibility === "all_india" ? "all_india" : "local";
+      patch.visibility = vis;
+      if (vis === "local" && (!patch.pincode || !/^\d{6}$/.test(patch.pincode))) {
+        return toast.error("PIN code (6 digits) is required for Local visibility");
+      }
+    }
+
+    setSaving(true);
     let res = await supabase.from(TABLE[role]).update(patch).eq("id", id).select("*").maybeSingle();
 
     if (res.error && res.error.code === "42703") {
@@ -120,17 +189,30 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
     }
 
     setSaving(false);
-    if (res.error) return toast.error("Could not save changes");
+    if (res.error) {
+      if (
+        res.error.code === "23505" ||
+        res.error.message.toLowerCase().includes("unique") ||
+        res.error.message.toLowerCase().includes("duplicate")
+      ) {
+        return toast.error("That phone number is already registered");
+      }
+      return toast.error("Could not save changes");
+    }
+
     toast.success("Profile updated");
     setEditOpen(false);
     if (res.data) {
-      if (res.data.pincode) {
-        setUserPincode(res.data.pincode);
-        window.dispatchEvent(
-          new CustomEvent("necto_pincode_updated", { detail: res.data.pincode }),
-        );
+      const nextPin = res.data.pincode ? String(res.data.pincode).trim() : "";
+      if (nextPin) {
+        setUserPincode(nextPin);
+      } else {
+        localStorage.removeItem("necto_user_pincode");
       }
+      window.dispatchEvent(new CustomEvent("necto_pincode_updated", { detail: nextPin }));
+
       if (res.data.area) setUserArea(res.data.area);
+      if (res.data.phone) setUserPhone(res.data.phone);
       onUpdated(res.data);
     }
   }
@@ -141,21 +223,16 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
     setDeleting(true);
     try {
       if (role === "shop") {
-        // Clean up shop products to prevent orphan records
         await supabase.from("products").delete().eq("shop_id", id);
-        // Clean up shop offers from activity_feed
         await supabase.from("activity_feed").delete().eq("linked_shop_id", id);
-        // Clean up contacts directed to this shop
+        await supabase.from("reviews").delete().eq("shop_id", id);
         await supabase.from("contacts_log").delete().eq("to_id", id).eq("to_type", "shop");
-        // Clean up viewed records
         await supabase.from("activity_views").delete().eq("user_id", `shop:${id}`);
       } else if (role === "worker") {
-        // Clean up contacts directed to this worker
+        await supabase.from("reviews").delete().eq("worker_id", id);
         await supabase.from("contacts_log").delete().eq("to_id", id).eq("to_type", "worker");
-        // Clean up viewed records
         await supabase.from("activity_views").delete().eq("user_id", `worker:${id}`);
       } else if (role === "customer") {
-        // Clean up customer viewed records
         await supabase.from("activity_views").delete().eq("user_id", `customer:${id}`);
       }
 
@@ -164,13 +241,15 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
         setDeleting(false);
         return toast.error("Could not delete profile");
       }
+
+      setDeleting(false);
+      clearAccount();
+      toast.success("Profile deleted");
+      navigate("/", { replace: true });
     } catch {
-      // Fallback
+      setDeleting(false);
+      toast.error("Could not delete profile. Please try again.");
     }
-    setDeleting(false);
-    clearAccount();
-    toast.success("Profile deleted");
-    navigate("/", { replace: true });
   }
 
   return (

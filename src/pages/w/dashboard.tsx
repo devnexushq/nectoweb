@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 import { TodaysUpdateCard } from "@/components/TodaysUpdateCard";
 
+import { withTimeout } from "@/lib/safeAsync";
+
 export default function WorkerDashboard() {
   const ready = useRoleGuard("worker");
   const [me, setMe] = useState<any>(null);
@@ -15,20 +17,29 @@ export default function WorkerDashboard() {
   useEffect(() => {
     const id = getUserId();
     if (!id) return;
+    let cancelled = false;
     (async () => {
-      const [{ data: w }, { data: logs }] = await Promise.all([
-        supabase.from("workers").select("*").eq("id", id).maybeSingle(),
-        supabase
-          .from("contacts_log")
-          .select("contact_type")
-          .eq("to_id", id)
-          .eq("to_type", "worker"),
-      ]);
-      setMe(w);
+      const result = await withTimeout(
+        Promise.all([
+          supabase.from("workers").select("*").eq("id", id).maybeSingle(),
+          supabase
+            .from("contacts_log")
+            .select("contact_type")
+            .eq("to_id", id)
+            .eq("to_type", "worker"),
+        ]),
+      );
+      if (cancelled || !result) return;
+      const [{ data: w }, { data: logs }] = result;
+      setMe(w ?? null);
       const total = logs?.length ?? 0;
       const wa = logs?.filter((l) => l.contact_type === "whatsapp").length ?? 0;
-      setStats({ total, wa, call: total - wa });
+      const call = logs?.filter((l) => l.contact_type === "call").length ?? 0;
+      setStats({ total, wa, call });
     })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (!ready) return null;

@@ -4,6 +4,16 @@ import { Copy, Edit3, Eye, EyeOff, Plus, Trash2, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { getUserId } from "@/lib/role";
 import {
@@ -40,22 +50,29 @@ export default function ShopOffersPage() {
   const [offers, setOffers] = useState<ShopOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ShopOffer | null>(null);
 
-  async function load() {
+  async function load(cancelledCheck?: () => boolean) {
     const shopId = getUserId();
     if (!shopId) return;
     setLoading(true);
     try {
-      setOffers(await fetchShopOffers(shopId));
+      const data = await fetchShopOffers(shopId);
+      if (!cancelledCheck?.()) setOffers(data);
     } catch (error) {
-      toast.error((error as Error).message || "Could not load offers.");
+      if (!cancelledCheck?.()) toast.error((error as Error).message || "Could not load offers.");
     } finally {
-      setLoading(false);
+      if (!cancelledCheck?.()) setLoading(false);
     }
   }
 
   useEffect(() => {
-    if (ready) load();
+    if (!ready) return;
+    let cancelled = false;
+    void load(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, [ready]);
 
   const grouped = useMemo(() => {
@@ -68,24 +85,34 @@ export default function ShopOffersPage() {
     );
   }, [offers]);
 
-  async function hideOffer(offer: ShopOffer) {
+  async function setOfferStatus(offer: ShopOffer, nextStatus: "published" | "hidden") {
     const shopId = getUserId();
-    if (!shopId) return;
+    if (!shopId || busyId) return;
     setBusyId(offer.id);
     try {
-      await updateOfferStatus(shopId, offer.id, "hidden");
-      toast.success("Offer hidden.");
+      if (nextStatus === "published") {
+        const activeCount = offers.filter(
+          (o) => o.id !== offer.id && bucketFor(o) === "active",
+        ).length;
+        if (activeCount >= 3) {
+          toast.error("You can keep up to 3 active published offers at a time.");
+          return;
+        }
+      }
+      await updateOfferStatus(shopId, offer.id, nextStatus);
+      toast.success(nextStatus === "hidden" ? "Offer hidden." : "Offer published.");
       await load();
     } catch (error) {
-      toast.error((error as Error).message || "Could not hide offer.");
+      toast.error((error as Error).message || "Could not update offer.");
     } finally {
       setBusyId(null);
     }
   }
 
-  async function removeOffer(offer: ShopOffer) {
-    const ok = window.confirm(`Delete offer: ${offer.title}? This cannot be undone.`);
-    if (!ok) return;
+  async function confirmRemoveOffer() {
+    if (!deleteTarget) return;
+    const offer = deleteTarget;
+    setDeleteTarget(null);
     const shopId = getUserId();
     if (!shopId) return;
     setBusyId(offer.id);
@@ -102,7 +129,7 @@ export default function ShopOffersPage() {
 
   async function duplicateOffer(offer: ShopOffer) {
     const shopId = getUserId();
-    if (!shopId) return;
+    if (!shopId || busyId) return;
     setBusyId(offer.id);
     try {
       await saveShopOffer(shopId, {
@@ -213,14 +240,25 @@ export default function ShopOffersPage() {
                           <Edit3 className="h-4 w-4" />
                           Edit
                         </Link>
-                        <button
-                          disabled={busyId === offer.id}
-                          onClick={() => hideOffer(offer)}
-                          className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted disabled:opacity-60"
-                        >
-                          <EyeOff className="h-4 w-4" />
-                          Hide
-                        </button>
+                        {offer.status !== "hidden" ? (
+                          <button
+                            disabled={busyId === offer.id}
+                            onClick={() => setOfferStatus(offer, "hidden")}
+                            className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted disabled:opacity-60"
+                          >
+                            <EyeOff className="h-4 w-4" />
+                            Hide
+                          </button>
+                        ) : (
+                          <button
+                            disabled={busyId === offer.id}
+                            onClick={() => setOfferStatus(offer, "published")}
+                            className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted disabled:opacity-60"
+                          >
+                            <Eye className="h-4 w-4" />
+                            Publish
+                          </button>
+                        )}
                         <button
                           disabled={busyId === offer.id}
                           onClick={() => duplicateOffer(offer)}
@@ -231,7 +269,7 @@ export default function ShopOffersPage() {
                         </button>
                         <button
                           disabled={busyId === offer.id}
-                          onClick={() => removeOffer(offer)}
+                          onClick={() => setDeleteTarget(offer)}
                           className="inline-flex h-9 items-center gap-2 rounded-lg border border-destructive/20 px-3 text-sm font-semibold text-destructive hover:bg-destructive/5 disabled:opacity-60"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -246,6 +284,31 @@ export default function ShopOffersPage() {
           ))}
         </div>
       )}
+      <AlertDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete offer?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove {deleteTarget?.title || "this offer"}. This cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemoveOffer}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }

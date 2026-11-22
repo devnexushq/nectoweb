@@ -1,14 +1,29 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") ?? "";
+  const allowedList = (Deno.env.get("ALLOWED_ORIGINS") ?? "")
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const isAllowedOrigin =
+    Boolean(origin) &&
+    (allowedList.length > 0
+      ? allowedList.includes(origin)
+      : origin.startsWith("https://") || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
+  return {
+    "Access-Control-Allow-Origin": isAllowedOrigin ? origin : "https://nectoweb.vercel.app",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    Vary: "Origin",
+  };
+}
 
 const VALID_SUPPORT = ["open", "in_progress", "resolved"];
+const VALID_MODERATION_TABLES = ["workers", "shops", "customers"] as const;
+const VALID_APPROVAL_STATUSES = ["approved", "rejected", "suspended", "pending"] as const;
 
-function json(body: unknown, status = 200) {
+function json(body: unknown, status = 200, corsHeaders: Record<string, string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -16,13 +31,14 @@ function json(body: unknown, status = 200) {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405, corsHeaders);
 
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return json({ error: "Unauthorized" }, 401);
+      return json({ error: "Unauthorized" }, 401, corsHeaders);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -34,7 +50,7 @@ Deno.serve(async (req) => {
     });
     const token = authHeader.replace("Bearer ", "");
     const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims) return json({ error: "Unauthorized" }, 401);
+    if (claimsErr || !claimsData?.claims) return json({ error: "Unauthorized" }, 401, corsHeaders);
 
     const userId = claimsData.claims.sub as string;
     const userEmail = (claimsData.claims.email as string) ?? null;
@@ -46,24 +62,56 @@ Deno.serve(async (req) => {
       .eq("user_id", userId)
       .eq("role", "admin")
       .maybeSingle();
-    if (roleErr) return json({ error: "Role check failed" }, 500);
-    if (!roleRow) return json({ error: "Forbidden" }, 403);
+    if (roleErr) return json({ error: "Role check failed" }, 500, corsHeaders);
+    if (!roleRow) return json({ error: "Forbidden" }, 403, corsHeaders);
 
     const body = await req.json().catch(() => null);
-    if (!body || typeof body.action !== "string") return json({ error: "Invalid body" }, 400);
+    if (!body || typeof body.action !== "string") {
+      return json({ error: "Invalid body" }, 400, corsHeaders);
+    }
 
     const { action } = body;
 
-    if (["approve", "reject", "suspend", "set_status"].includes(action)) {
-      return json({ error: "Manual approval workflow is disabled" }, 410);
+    if (action === "update_approval_status") {
+      const table = body.table as (typeof VALID_MODERATION_TABLES)[number];
+      const id = body.id as string;
+      const status = body.status as (typeof VALID_APPROVAL_STATUSES)[number];
+      if (
+        !id ||
+        !VALID_MODERATION_TABLES.includes(table) ||
+        !VALID_APPROVAL_STATUSES.includes(status)
+      ) {
+        return json({ error: "Invalid moderation input" }, 400, corsHeaders);
+      }
+
+      const { data: updated, error } = await admin
+        .from(table)
+        .update({ approval_status: status })
+        .eq("id", id)
+        .select("id, approval_status")
+        .maybeSingle();
+      if (error) return json({ error: error.message }, 400, corsHeaders);
+      if (!updated) return json({ error: "Record not found" }, 404, corsHeaders);
+
+      await admin.from("activity_logs").insert({
+        actor_id: userId,
+        actor_email: userEmail,
+        action: `status_${status}`,
+        entity_type: table,
+        entity_id: id,
+        metadata: { new_status: status },
+      });
+      return json({ ok: true, data: updated }, 200, corsHeaders);
     }
 
     if (action === "update_support_status") {
       const id = body.id as string;
       const status = body.status as string;
-      if (!id || !VALID_SUPPORT.includes(status)) return json({ error: "Invalid input" }, 400);
+      if (!id || !VALID_SUPPORT.includes(status)) {
+        return json({ error: "Invalid input" }, 400, corsHeaders);
+      }
       const { error } = await admin.from("support_queries").update({ status }).eq("id", id);
-      if (error) return json({ error: error.message }, 400);
+      if (error) return json({ error: error.message }, 400, corsHeaders);
       await admin.from("activity_logs").insert({
         actor_id: userId,
         actor_email: userEmail,
@@ -72,16 +120,17 @@ Deno.serve(async (req) => {
         entity_id: id,
         metadata: { to: status },
       });
-      return json({ ok: true });
+      return json({ ok: true }, 200, corsHeaders);
     }
 
     if (action === "set_product_visibility") {
       const id = body.id as string;
       const visibility = body.visibility as string;
-      if (!id || !["visible", "hidden"].includes(visibility))
-        return json({ error: "Invalid input" }, 400);
+      if (!id || !["visible", "hidden"].includes(visibility)) {
+        return json({ error: "Invalid input" }, 400, corsHeaders);
+      }
       const { error } = await admin.from("products").update({ visibility }).eq("id", id);
-      if (error) return json({ error: error.message }, 400);
+      if (error) return json({ error: error.message }, 400, corsHeaders);
       await admin.from("activity_logs").insert({
         actor_id: userId,
         actor_email: userEmail,
@@ -90,11 +139,11 @@ Deno.serve(async (req) => {
         entity_id: id,
         metadata: { visibility },
       });
-      return json({ ok: true });
+      return json({ ok: true }, 200, corsHeaders);
     }
 
-    return json({ error: "Unknown action" }, 400);
+    return json({ error: "Unknown action" }, 400, corsHeaders);
   } catch (e) {
-    return json({ error: (e as Error).message }, 500);
+    return json({ error: (e as Error).message }, 500, corsHeaders);
   }
 });

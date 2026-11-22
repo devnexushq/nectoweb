@@ -15,6 +15,7 @@ import {
   Rocket,
   NotebookPen,
   CheckCircle2,
+  Trash2,
 } from "lucide-react";
 
 type Counts = {
@@ -65,8 +66,18 @@ export default function FounderVault() {
 
   useEffect(() => {
     if (!founder) return;
+    let cancelled = false;
     const saved = localStorage.getItem(NOTE_KEY);
-    setNotes(saved ? JSON.parse(saved) : DEFAULT_NOTES);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setNotes(Array.isArray(parsed) ? parsed : DEFAULT_NOTES);
+      } catch {
+        setNotes(DEFAULT_NOTES);
+      }
+    } else {
+      setNotes(DEFAULT_NOTES);
+    }
     const head = { count: "exact" as const, head: true };
     Promise.all([
       supabase.from("customers").select("*", head),
@@ -77,6 +88,7 @@ export default function FounderVault() {
       supabase.from("workers").select("area,job_type"),
       supabase.from("shops").select("area,category"),
     ]).then(([c, w, s, logs, cr, wr, sr]) => {
+      if (cancelled) return;
       const contactRows = logs.data ?? [];
       setCounts({
         users: (c.count ?? 0) + (w.count ?? 0) + (s.count ?? 0),
@@ -113,6 +125,9 @@ export default function FounderVault() {
           .map(([name, value]) => ({ name, value })),
       );
     });
+    return () => {
+      cancelled = true;
+    };
   }, [founder]);
 
   const weakAreas = useMemo(() => cities.filter((c) => c.value <= 1).slice(0, 3), [cities]);
@@ -129,6 +144,12 @@ export default function FounderVault() {
     setNotes(next);
     localStorage.setItem(NOTE_KEY, JSON.stringify(next));
     setDraft({ title: "", tag: "Strategy", body: "" });
+  };
+
+  const deleteNote = (noteId: string) => {
+    const next = notes.filter((n) => n.id !== noteId);
+    setNotes(next);
+    localStorage.setItem(NOTE_KEY, JSON.stringify(next));
   };
 
   return (
@@ -221,9 +242,19 @@ export default function FounderVault() {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="font-semibold">{n.title}</div>
-                      <span className="rounded-full bg-cyan-300/10 px-2 py-0.5 text-xs text-cyan-100">
-                        {n.tag}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-cyan-300/10 px-2 py-0.5 text-xs text-cyan-100">
+                          {n.tag}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => deleteNote(n.id)}
+                          aria-label={`Delete ${n.title}`}
+                          className="rounded-lg p-1 text-slate-400 hover:bg-white/10 hover:text-rose-300"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                     <p className="mt-1 text-sm text-slate-300">{n.body}</p>
                   </div>

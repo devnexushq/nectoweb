@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
 import { TodaysUpdateCard } from "@/components/TodaysUpdateCard";
 
+import { withTimeout } from "@/lib/safeAsync";
+
 export default function ShopDashboard() {
   const ready = useRoleGuard("shop");
   const [me, setMe] = useState<any>(null);
@@ -15,16 +17,29 @@ export default function ShopDashboard() {
   useEffect(() => {
     const id = getUserId();
     if (!id) return;
+    let cancelled = false;
     (async () => {
-      const [{ data: s }, { data: logs }] = await Promise.all([
-        supabase.from("shops").select("*").eq("id", id).maybeSingle(),
-        supabase.from("contacts_log").select("contact_type").eq("to_id", id).eq("to_type", "shop"),
-      ]);
-      setMe(s);
+      const result = await withTimeout(
+        Promise.all([
+          supabase.from("shops").select("*").eq("id", id).maybeSingle(),
+          supabase
+            .from("contacts_log")
+            .select("contact_type")
+            .eq("to_id", id)
+            .eq("to_type", "shop"),
+        ]),
+      );
+      if (cancelled || !result) return;
+      const [{ data: s }, { data: logs }] = result;
+      setMe(s ?? null);
       const total = logs?.length ?? 0;
       const wa = logs?.filter((l) => l.contact_type === "whatsapp").length ?? 0;
-      setStats({ total, wa, call: total - wa });
+      const call = logs?.filter((l) => l.contact_type === "call").length ?? 0;
+      setStats({ total, wa, call });
     })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (!ready) return null;

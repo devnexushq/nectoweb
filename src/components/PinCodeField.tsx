@@ -68,6 +68,7 @@ export function PinCodeField({
         .then(async (res) => {
           if (!res.ok) throw new Error("Network response was not ok");
           const data: IndiaPostResponseItem[] = await res.json();
+          if (controller.signal.aborted) return;
           const first = data?.[0];
 
           if (
@@ -100,15 +101,18 @@ export function PinCodeField({
           }
         })
         .catch((err) => {
-          if (err.name === "AbortError") return;
+          if (err.name === "AbortError" || controller.signal.aborted) return;
           console.warn("[PinCodeHelper] Lookup failed:", err);
           setOffices([]);
           setStatusMessage("Could not auto-fill area. Please type your area manually below.");
         })
         .finally(() => {
-          setLoading(false);
+          if (!controller.signal.aborted) setLoading(false);
         });
     }
+    return () => {
+      abortControllerRef.current?.abort();
+    };
   }, [pincode, onAreaResolved]);
 
   function handleSelectOffice(office: PostOfficeItem) {

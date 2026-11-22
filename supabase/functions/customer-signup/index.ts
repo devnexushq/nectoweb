@@ -36,10 +36,14 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => null);
     if (!body) return json({ error: "Invalid request payload" }, 400);
 
-    const { name, area, phone, pincode, countryCode = "IN", terms_accepted } = body;
+    const { name, area, phone, pincode, countryCode = "IN", terms_accepted, terms_version } = body;
 
     if (!name || !area || !phone) {
       return json({ error: "Missing required fields: name, area, phone" }, 400);
+    }
+
+    if (terms_accepted === false) {
+      return json({ error: "Terms and conditions must be accepted" }, 400);
     }
 
     // Backend Phone Validation via libphonenumber-js
@@ -96,9 +100,12 @@ Deno.serve(async (req) => {
       phone: e164Phone,
       approval_status: "approved",
       approval_notes: null,
-      terms_accepted: terms_accepted !== false,
+      terms_accepted: true,
       terms_accepted_at: new Date().toISOString(),
-      terms_version: "2026-06-07",
+      terms_version:
+        typeof terms_version === "string" && terms_version.trim()
+          ? terms_version.trim()
+          : "June 2026 v1.0",
     };
 
     let insertRes = await supabase

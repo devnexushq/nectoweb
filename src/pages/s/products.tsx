@@ -3,9 +3,21 @@ import { toast } from "sonner";
 import { Plus, Trash2, X, Upload, Image as ImageIcon, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useRoleGuard } from "@/hooks/useRoleGuard";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserId } from "@/lib/role";
+
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
 export default function Products() {
   const ready = useRoleGuard("shop");
@@ -13,28 +25,47 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
-  async function refresh() {
+  async function refresh(cancelledCheck?: () => boolean) {
     const id = getUserId();
     if (!id) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("products")
       .select("*")
       .eq("shop_id", id)
       .order("created_at", { ascending: false });
+    if (cancelledCheck?.()) return;
+    if (error) {
+      toast.error("Could not load products");
+    }
     setItems(data ?? []);
     setLoading(false);
   }
   useEffect(() => {
-    refresh();
+    let cancelled = false;
+    void refresh(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  async function remove(productId: string) {
-    if (!confirm("Delete this product?")) return;
+  async function confirmRemove() {
+    if (!deleteTarget) return;
     const id = getUserId();
     if (!id) return;
-    await supabase.from("products").delete().eq("id", productId).eq("shop_id", id);
-    refresh();
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", deleteTarget.id)
+      .eq("shop_id", id);
+    setDeleteTarget(null);
+    if (error) {
+      toast.error("Could not delete product");
+      return;
+    }
+    toast.success("Product deleted");
+    void refresh();
   }
 
   if (!ready) return null;
@@ -62,7 +93,13 @@ export default function Products() {
             <div key={p.id} className="rounded-xl border border-border overflow-hidden bg-white">
               <div className="h-28 bg-muted flex items-center justify-center">
                 {p.photo_url ? (
-                  <img src={p.photo_url} alt={p.name} className="h-full w-full object-cover" />
+                  <img
+                    src={p.photo_url}
+                    alt={p.name}
+                    loading="lazy"
+                    decoding="async"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <span className="text-xs text-muted-foreground">No image</span>
                 )}
@@ -83,8 +120,9 @@ export default function Products() {
                     Edit
                   </button>
                   <button
-                    onClick={() => remove(p.id)}
+                    onClick={() => setDeleteTarget(p)}
                     className="h-7 w-7 rounded-md border border-border text-destructive hover:bg-destructive/5 inline-flex items-center justify-center"
+                    aria-label={`Delete ${p.name}`}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -100,10 +138,35 @@ export default function Products() {
           onClose={() => setOpen(false)}
           onSaved={() => {
             setOpen(false);
-            refresh();
+            void refresh();
           }}
         />
       )}
+      <AlertDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete product?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove {deleteTarget?.name || "this product"} from your shop
+              listing.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemove}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppShell>
   );
 }
@@ -130,6 +193,14 @@ function ProductModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  useEffect(() => {
     return () => {
       if (previewUrl && previewUrl.startsWith("blob:")) {
         URL.revokeObjectURL(previewUrl);
@@ -138,8 +209,8 @@ function ProductModal({
   }, [previewUrl]);
 
   function handleFile(file: File) {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file (PNG, JPG, WebP)");
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      toast.error("Please upload a JPG, PNG, WebP, or GIF image");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
@@ -237,6 +308,9 @@ function ProductModal({
   return (
     <div
       id="product-modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="product-modal-title"
       className="fixed inset-0 z-50 bg-black/40 flex items-end sm:items-center justify-center p-4 overflow-y-auto"
       onClick={onClose}
     >
@@ -246,10 +320,13 @@ function ProductModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold">{initial ? "Edit Product" : "Add Product"}</h2>
+          <h2 id="product-modal-title" className="text-lg font-bold">
+            {initial ? "Edit Product" : "Add Product"}
+          </h2>
           <button
             type="button"
             id="close-product-modal-btn"
+            aria-label="Close"
             onClick={onClose}
             className="h-8 w-8 rounded-full hover:bg-muted flex items-center justify-center transition"
           >
@@ -258,7 +335,10 @@ function ProductModal({
         </div>
         <form onSubmit={save} className="space-y-3.5">
           <div>
-            <label className="text-xs font-semibold text-muted-foreground block mb-1">
+            <label
+              htmlFor="product-name-input"
+              className="text-xs font-semibold text-muted-foreground block mb-1"
+            >
               Product Name *
             </label>
             <input
@@ -271,7 +351,10 @@ function ProductModal({
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-muted-foreground block mb-1">
+            <label
+              htmlFor="product-description-input"
+              className="text-xs font-semibold text-muted-foreground block mb-1"
+            >
               Description (optional)
             </label>
             <textarea
@@ -285,7 +368,10 @@ function ProductModal({
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-muted-foreground block mb-1">
+            <label
+              htmlFor="product-price-input"
+              className="text-xs font-semibold text-muted-foreground block mb-1"
+            >
               Price (₹) *
             </label>
             <input
@@ -304,7 +390,7 @@ function ProductModal({
               ref={fileInputRef}
               id="product-photo-file-input"
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/gif"
               className="hidden"
               onChange={(e) => {
                 const file = e.target.files?.[0];
