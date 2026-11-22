@@ -34,7 +34,11 @@ export function TodaysUpdateCard({
 
   const handlePost = async () => {
     const trimmed = text.trim();
-    if (!trimmed || !id) return;
+    if (!trimmed || saving) return;
+    if (!id) {
+      toast.error("Profile is still loading or unavailable. Please retry.");
+      return;
+    }
 
     setSaving(true);
     const nowIso = new Date().toISOString();
@@ -61,7 +65,7 @@ export function TodaysUpdateCard({
   };
 
   const handleClear = async () => {
-    if (!id) return;
+    if (!id || clearing) return;
 
     setClearing(true);
     const { error } = await supabase

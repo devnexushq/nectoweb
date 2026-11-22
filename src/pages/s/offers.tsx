@@ -49,18 +49,27 @@ export default function ShopOffersPage() {
   const ready = useRoleGuard("shop");
   const [offers, setOffers] = useState<ShopOffer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ShopOffer | null>(null);
 
   async function load(cancelledCheck?: () => boolean) {
     const shopId = getUserId();
-    if (!shopId) return;
+    if (!shopId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await fetchShopOffers(shopId);
       if (!cancelledCheck?.()) setOffers(data);
     } catch (error) {
-      if (!cancelledCheck?.()) toast.error((error as Error).message || "Could not load offers.");
+      if (!cancelledCheck?.()) {
+        const msg = (error as Error).message || "Could not load offers.";
+        setLoadError(msg);
+        toast.error(msg);
+      }
     } finally {
       if (!cancelledCheck?.()) setLoading(false);
     }
@@ -179,6 +188,17 @@ export default function ShopOffersPage() {
       {loading ? (
         <div className="mt-5 rounded-2xl border border-border bg-white p-8 text-center text-sm text-muted-foreground">
           Loading offers...
+        </div>
+      ) : loadError ? (
+        <div className="mt-5 rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3">
+          <p className="text-sm font-medium text-destructive">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-white hover:bg-primary/90"
+          >
+            Retry
+          </button>
         </div>
       ) : offers.length === 0 ? (
         <EmptyState

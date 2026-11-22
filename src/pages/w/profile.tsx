@@ -12,6 +12,8 @@ export default function WorkerProfile() {
   const ready = useRoleGuard("worker");
   const [me, setMe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     const id = getUserId();
@@ -20,15 +22,22 @@ export default function WorkerProfile() {
       return;
     }
     let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
     withTimeout(supabase.from("workers").select("*").eq("id", id).maybeSingle()).then((result) => {
       if (cancelled) return;
-      setMe(result?.data ?? null);
+      if (!result || result.error) {
+        setLoadError("Could not load profile. Please check your connection.");
+        setLoading(false);
+        return;
+      }
+      setMe(result.data ?? null);
       setLoading(false);
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadTick]);
 
   const lock = useMemo(() => editLockDaysLeft(me?.registered_at), [me]);
 
@@ -65,6 +74,17 @@ export default function WorkerProfile() {
             middleSlot={<LegalInfoSection />}
           />
           <InstallButton className="w-full h-12 rounded-xl" size="lg" variant="outline" />
+        </div>
+      ) : loadError ? (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-center space-y-3">
+          <p className="text-sm font-medium text-destructive">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => setReloadTick((t) => t + 1)}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-white hover:bg-primary/90"
+          >
+            Retry
+          </button>
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">

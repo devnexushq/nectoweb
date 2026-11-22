@@ -86,6 +86,7 @@ export function ReviewsSection({
   const [totalReviewCount, setTotalReviewCount] = useState(0);
   const [liveAverageRating, setLiveAverageRating] = useState<number>(Number(initialRating ?? 0));
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [hasContacted, setHasContacted] = useState(false);
   const [checkingContact, setCheckingContact] = useState(false);
   const [myExistingReview, setMyExistingReview] = useState<ReviewItem | null>(null);
@@ -132,6 +133,7 @@ export function ReviewsSection({
 
   // Fetch recent 10 reviews + exact full rating summary without callback-induced loops
   const loadReviews = useCallback(async () => {
+    setLoadError(null);
     try {
       const [recentRes, statsRes] = await Promise.all([
         supabase
@@ -152,6 +154,7 @@ export function ReviewsSection({
           return;
         }
         console.warn("Error fetching reviews:", recentRes.error.message);
+        setLoadError("Could not load reviews. Please check your connection.");
         return;
       }
 
@@ -174,7 +177,9 @@ export function ReviewsSection({
         onRatingUpdatedRef.current?.(liveAvg);
       }
     } catch {
-      // Graceful fallback
+      if (mountedRef.current) {
+        setLoadError("Could not load reviews. Please check your connection.");
+      }
     } finally {
       if (mountedRef.current) setLoading(false);
     }
@@ -273,6 +278,7 @@ export function ReviewsSection({
   };
 
   const handleSubmitReview = async () => {
+    if (submitting) return;
     const activePhone = customerPhone || getUserPhone();
     if (!isCustomer || !activePhone) {
       toast.error("Only registered customers can leave reviews.");
@@ -469,6 +475,17 @@ export function ReviewsSection({
           <div className="py-6 text-center text-xs text-muted-foreground flex items-center justify-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
             Loading reviews...
+          </div>
+        ) : loadError ? (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-center space-y-2.5">
+            <p className="text-xs font-medium text-destructive">{loadError}</p>
+            <button
+              type="button"
+              onClick={() => void loadReviews()}
+              className="inline-flex h-8 items-center justify-center rounded-lg bg-primary px-3.5 text-xs font-semibold text-white hover:bg-primary/90"
+            >
+              Retry
+            </button>
           </div>
         ) : reviews.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border/80 p-6 text-center">

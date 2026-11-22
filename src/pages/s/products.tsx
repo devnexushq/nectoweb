@@ -23,13 +23,19 @@ export default function Products() {
   const ready = useRoleGuard("shop");
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
 
   async function refresh(cancelledCheck?: () => boolean) {
     const id = getUserId();
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setLoadError(null);
     const { data, error } = await supabase
       .from("products")
       .select("*")
@@ -37,7 +43,10 @@ export default function Products() {
       .order("created_at", { ascending: false });
     if (cancelledCheck?.()) return;
     if (error) {
+      setLoadError("Could not load products. Please check your connection.");
       toast.error("Could not load products");
+      setLoading(false);
+      return;
     }
     setItems(data ?? []);
     setLoading(false);
@@ -82,6 +91,17 @@ export default function Products() {
       </button>
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading...</p>
+      ) : loadError ? (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-center space-y-3">
+          <p className="text-sm font-medium text-destructive">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-white hover:bg-primary/90"
+          >
+            Retry
+          </button>
+        </div>
       ) : items.length === 0 ? (
         <EmptyState
           title="No products yet"
@@ -234,6 +254,7 @@ function ProductModal({
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (saving) return;
     const trimmedName = form.name.trim();
     const trimmedPrice = form.price.trim();
     if (!trimmedName || !trimmedPrice) {
@@ -266,20 +287,21 @@ function ProductModal({
 
         if (uploadError) {
           console.error("Image upload failed:", uploadError);
-          toast.error(
-            `Image upload failed (${uploadError.message || "Storage error"}). Product details will still be saved.`,
+          setSaving(false);
+          return toast.error(
+            `Image upload failed (${uploadError.message || "Storage error"}). Retry upload or remove the photo.`,
           );
-        } else {
-          const { data: publicUrlData } = supabase.storage
-            .from("product-images")
-            .getPublicUrl(filePath);
-          if (publicUrlData?.publicUrl) {
-            finalPhotoUrl = publicUrlData.publicUrl;
-          }
+        }
+        const { data: publicUrlData } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(filePath);
+        if (publicUrlData?.publicUrl) {
+          finalPhotoUrl = publicUrlData.publicUrl;
         }
       } catch (err) {
         console.error("Storage upload exception:", err);
-        toast.error("Image upload failed. Saving product details without new image.");
+        setSaving(false);
+        return toast.error("Image upload failed. Retry upload or remove the photo.");
       }
     }
 

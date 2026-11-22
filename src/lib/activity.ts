@@ -119,7 +119,11 @@ function isVisibleForRole(item: ActivityFeedItem, role: Role, profile: ProfileLo
   return targetMatches && locationMatches(item, profile);
 }
 
-export async function fetchOfficialUpdates(role: Role, userId: string) {
+export async function fetchOfficialUpdates(
+  role: Role,
+  userId: string,
+  options?: { throwOnError?: boolean },
+) {
   const profile = await fetchProfileLocation(role, userId);
   const { data, error } = await db
     .from("activity_feed")
@@ -130,6 +134,7 @@ export async function fetchOfficialUpdates(role: Role, userId: string) {
 
   if (error) {
     console.warn("[Activity] Could not load official updates", error.message);
+    if (options?.throwOnError) throw error;
     return [] as ActivityFeedItem[];
   }
 
@@ -140,7 +145,11 @@ export async function fetchOfficialUpdates(role: Role, userId: string) {
   });
 }
 
-export async function fetchVisibleShopOffers(role: Role, userId: string) {
+export async function fetchVisibleShopOffers(
+  role: Role,
+  userId: string,
+  options?: { throwOnError?: boolean },
+) {
   const profile = await fetchProfileLocation(role, userId);
   const { data, error } = await db
     .from("activity_feed")
@@ -153,6 +162,7 @@ export async function fetchVisibleShopOffers(role: Role, userId: string) {
 
   if (error) {
     console.warn("[Activity] Could not load shop offers", error.message);
+    if (options?.throwOnError) throw error;
     return [] as ActivityFeedItem[];
   }
 

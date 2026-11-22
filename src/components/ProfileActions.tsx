@@ -94,6 +94,7 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
   }
 
   async function save() {
+    if (saving) return;
     const id = getUserId();
     if (!id) return;
 
@@ -176,16 +177,12 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
     }
 
     setSaving(true);
-    let res = await supabase.from(TABLE[role]).update(patch).eq("id", id).select("*").maybeSingle();
+    const db = supabase as any;
+    let res = await db.from(TABLE[role]).update(patch).eq("id", id).select("*").maybeSingle();
 
     if (res.error && res.error.code === "42703") {
       const { pincode: _p, ...fallbackPatch } = patch;
-      res = await supabase
-        .from(TABLE[role])
-        .update(fallbackPatch)
-        .eq("id", id)
-        .select("*")
-        .maybeSingle();
+      res = await db.from(TABLE[role]).update(fallbackPatch).eq("id", id).select("*").maybeSingle();
     }
 
     setSaving(false);
@@ -218,22 +215,37 @@ export function ProfileActions({ role, me, lockDaysLeft, onUpdated, middleSlot }
   }
 
   async function doDelete() {
+    if (deleting) return;
     const id = getUserId();
     if (!id) return;
     setDeleting(true);
     try {
+      const cleanupOps: PromiseLike<{ error: { code?: string; message?: string } | null }>[] = [];
       if (role === "shop") {
-        await supabase.from("products").delete().eq("shop_id", id);
-        await supabase.from("activity_feed").delete().eq("linked_shop_id", id);
-        await supabase.from("reviews").delete().eq("shop_id", id);
-        await supabase.from("contacts_log").delete().eq("to_id", id).eq("to_type", "shop");
-        await supabase.from("activity_views").delete().eq("user_id", `shop:${id}`);
+        cleanupOps.push(
+          supabase.from("products").delete().eq("shop_id", id),
+          supabase.from("activity_feed").delete().eq("linked_shop_id", id),
+          supabase.from("reviews").delete().eq("shop_id", id),
+          supabase.from("contacts_log").delete().eq("to_id", id).eq("to_type", "shop"),
+          supabase.from("activity_views").delete().eq("user_id", `shop:${id}`),
+        );
       } else if (role === "worker") {
-        await supabase.from("reviews").delete().eq("worker_id", id);
-        await supabase.from("contacts_log").delete().eq("to_id", id).eq("to_type", "worker");
-        await supabase.from("activity_views").delete().eq("user_id", `worker:${id}`);
+        cleanupOps.push(
+          supabase.from("reviews").delete().eq("worker_id", id),
+          supabase.from("contacts_log").delete().eq("to_id", id).eq("to_type", "worker"),
+          supabase.from("activity_views").delete().eq("user_id", `worker:${id}`),
+        );
       } else if (role === "customer") {
-        await supabase.from("activity_views").delete().eq("user_id", `customer:${id}`);
+        cleanupOps.push(supabase.from("activity_views").delete().eq("user_id", `customer:${id}`));
+      }
+
+      const cleanupResults = await Promise.all(cleanupOps);
+      const cleanupFailure = cleanupResults.find(
+        (res) => res.error && res.error.code !== "42P01" && res.error.code !== "PGRST205",
+      );
+      if (cleanupFailure?.error) {
+        setDeleting(false);
+        return toast.error("Could not remove related profile data. Please try again.");
       }
 
       const { error } = await supabase.from(TABLE[role]).delete().eq("id", id);

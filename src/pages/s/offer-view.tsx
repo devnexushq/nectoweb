@@ -13,12 +13,19 @@ export default function ShopOfferView() {
   const { id } = useParams();
   const [offer, setOffer] = useState<ShopOffer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     if (!ready || !id) return;
     const shopId = getUserId();
-    if (!shopId) return;
+    if (!shopId) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
     fetchShopOffer(shopId, id)
       .then((row) => {
         if (cancelled) return;
@@ -30,7 +37,11 @@ export default function ShopOfferView() {
         }
       })
       .catch((error) => {
-        if (!cancelled) toast.error((error as Error).message || "Could not load offer.");
+        if (!cancelled) {
+          const msg = (error as Error).message || "Could not load offer.";
+          setLoadError(msg);
+          toast.error(msg);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -38,7 +49,7 @@ export default function ShopOfferView() {
     return () => {
       cancelled = true;
     };
-  }, [ready, id, navigate]);
+  }, [ready, id, navigate, reloadTick]);
 
   if (!ready) return null;
 
@@ -47,6 +58,17 @@ export default function ShopOfferView() {
       {loading ? (
         <div className="rounded-2xl border border-border bg-white p-8 text-center text-sm text-muted-foreground">
           Loading offer...
+        </div>
+      ) : loadError ? (
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3">
+          <p className="text-sm font-medium text-destructive">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => setReloadTick((t) => t + 1)}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-white hover:bg-primary/90"
+          >
+            Retry
+          </button>
         </div>
       ) : (
         offer && (

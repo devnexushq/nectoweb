@@ -11,6 +11,8 @@ export default function ShopContacts() {
   const ready = useRoleGuard("shop");
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
   useEffect(() => {
     const id = getUserId();
     if (!id) {
@@ -18,6 +20,8 @@ export default function ShopContacts() {
       return;
     }
     let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
     withTimeout(
       supabase
         .from("contacts_log")
@@ -27,18 +31,34 @@ export default function ShopContacts() {
         .order("timestamp", { ascending: false }),
     ).then((result) => {
       if (cancelled) return;
-      setLogs(result?.data ?? []);
+      if (!result || result.error) {
+        setLoadError("Could not load contacts. Please check your connection.");
+        setLoading(false);
+        return;
+      }
+      setLogs(result.data ?? []);
       setLoading(false);
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadTick]);
   if (!ready) return null;
   return (
     <AppShell role="shop" title="Contacts">
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading...</p>
+      ) : loadError ? (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-center space-y-3">
+          <p className="text-sm font-medium text-destructive">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => setReloadTick((t) => t + 1)}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-white hover:bg-primary/90"
+          >
+            Retry
+          </button>
+        </div>
       ) : logs.length === 0 ? (
         <EmptyState
           title="No contacts yet"

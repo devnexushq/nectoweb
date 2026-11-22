@@ -13,11 +13,19 @@ export default function ShopDashboard() {
   const ready = useRoleGuard("shop");
   const [me, setMe] = useState<any>(null);
   const [stats, setStats] = useState({ total: 0, wa: 0, call: 0 });
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     const id = getUserId();
-    if (!id) return;
+    if (!id) {
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
     (async () => {
       const result = await withTimeout(
         Promise.all([
@@ -29,18 +37,28 @@ export default function ShopDashboard() {
             .eq("to_type", "shop"),
         ]),
       );
-      if (cancelled || !result) return;
-      const [{ data: s }, { data: logs }] = result;
-      setMe(s ?? null);
+      if (cancelled) return;
+      if (!result) {
+        setLoadError("Could not load dashboard data. Please check your connection.");
+        setLoading(false);
+        return;
+      }
+      const [sRes, logsRes] = result;
+      if (sRes.error || logsRes.error) {
+        setLoadError("Could not load your latest dashboard stats. Please retry.");
+      }
+      setMe(sRes.data ?? null);
+      const logs = logsRes.data;
       const total = logs?.length ?? 0;
       const wa = logs?.filter((l) => l.contact_type === "whatsapp").length ?? 0;
       const call = logs?.filter((l) => l.contact_type === "call").length ?? 0;
       setStats({ total, wa, call });
+      setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadTick]);
 
   if (!ready) return null;
   return (
@@ -48,10 +66,23 @@ export default function ShopDashboard() {
       <h2 className="text-xl font-bold">Welcome{me?.shop_name ? `, ${me.shop_name}` : ""} 🏪</h2>
       <p className="text-sm text-muted-foreground">Track customer interest in real time.</p>
 
+      {loadError && (
+        <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-3 flex items-center justify-between gap-3">
+          <p className="text-xs sm:text-sm text-destructive font-medium">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => setReloadTick((t) => t + 1)}
+            className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-3 gap-3 mt-4">
-        <Stat icon={Users} label="Total" value={stats.total} />
-        <Stat icon={MessageCircle} label="WhatsApp" value={stats.wa} accent />
-        <Stat icon={Phone} label="Calls" value={stats.call} />
+        <Stat icon={Users} label="Total" value={loading ? "—" : stats.total} />
+        <Stat icon={MessageCircle} label="WhatsApp" value={loading ? "—" : stats.wa} accent />
+        <Stat icon={Phone} label="Calls" value={loading ? "—" : stats.call} />
       </div>
 
       <section className="mt-6 rounded-2xl border border-primary/15 bg-gradient-to-br from-white to-primary/5 p-4 shadow-sm">

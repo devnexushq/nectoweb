@@ -41,13 +41,13 @@ export function ContactButtons({
   async function log(kind: "whatsapp" | "call") {
     try {
       const fromPhone = getUserPhone();
-      await supabase.from("contacts_log").insert({
+      const { error } = await supabase.from("contacts_log").insert({
         from_phone: fromPhone || null,
         to_id: toId,
         to_type: toType,
         contact_type: kind,
       });
-      onContactLogged?.();
+      if (!error) onContactLogged?.();
     } catch {
       // Silently continue so contact action is never blocked
     }

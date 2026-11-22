@@ -30,7 +30,14 @@ import { isFounderUser, maskEmail } from "@/lib/admin/founder";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
-const NAV = [
+type AdminNavItem = {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  end?: boolean;
+};
+
+const NAV: AdminNavItem[] = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/admin/customers", label: "Customers", icon: Users },
   { to: "/admin/workers", label: "Workers", icon: Hammer },
@@ -45,7 +52,11 @@ const NAV = [
   { to: "/admin/health", label: "System Health", icon: Server },
   { to: "/admin/seo", label: "SEO Center", icon: Globe2 },
 ];
-const FOUNDER_NAV = { to: "/admin/founder-vault", label: "Founder Vault", icon: Crown };
+const FOUNDER_NAV: AdminNavItem = {
+  to: "/admin/founder-vault",
+  label: "Founder Vault",
+  icon: Crown,
+};
 
 export default function AdminLayout({ children, title }: { children: ReactNode; title: string }) {
   const { user } = useAdminAuth();

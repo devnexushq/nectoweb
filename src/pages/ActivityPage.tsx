@@ -49,6 +49,8 @@ function useActivityData(role: Role, ready: boolean) {
   const [offers, setOffers] = useState<ActivityFeedItem[]>([]);
   const [viewedIds, setViewedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
 
   const viewerKey = useMemo(() => {
     const userId = getUserId();
@@ -61,37 +63,54 @@ function useActivityData(role: Role, ready: boolean) {
 
     async function load() {
       const userId = getUserId();
-      if (!userId) return;
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
+      setLoadError(null);
       const key = getActivityViewerKey(role, userId);
       const result = await withTimeout(
         Promise.all([
-          fetchOfficialUpdates(role, userId),
-          fetchVisibleShopOffers(role, userId),
+          fetchOfficialUpdates(role, userId, { throwOnError: true }),
+          fetchVisibleShopOffers(role, userId, { throwOnError: true }),
           fetchViewedActivityIds(key),
         ]),
       );
-      if (!cancelled) {
-        const [officialItems, offerItems, viewed] = result ?? [[], [], new Set<string>()];
-        setUpdates(officialItems);
-        setOffers(offerItems);
-        setViewedIds(viewed);
+      if (cancelled) return;
+      if (!result) {
+        setLoadError("Could not load updates. Please check your connection and try again.");
         setLoading(false);
+        return;
       }
+      const [officialItems, offerItems, viewed] = result;
+      setUpdates(officialItems);
+      setOffers(offerItems);
+      setViewedIds(viewed);
+      setLoading(false);
     }
 
     load();
     return () => {
       cancelled = true;
     };
-  }, [ready, role]);
+  }, [ready, role, reloadTick]);
 
-  return { updates, offers, viewedIds, setViewedIds, viewerKey, loading };
+  return {
+    updates,
+    offers,
+    viewedIds,
+    setViewedIds,
+    viewerKey,
+    loading,
+    loadError,
+    retry: () => setReloadTick((t) => t + 1),
+  };
 }
 
 export default function ActivityPage({ role }: { role: Role }) {
   const ready = useRoleGuard(role);
-  const { updates, offers, viewedIds, loading } = useActivityData(role, ready);
+  const { updates, offers, viewedIds, loading, loadError, retry } = useActivityData(role, ready);
 
   if (!ready) return null;
 
@@ -101,6 +120,19 @@ export default function ActivityPage({ role }: { role: Role }) {
   return (
     <AppShell role={role} title="Activity" backTo={roleHomePath(role)} backLabel="Back to home">
       <p className="text-sm text-muted-foreground">Stay updated with what's happening on Necto.</p>
+
+      {loadError && (
+        <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-3.5 flex items-center justify-between gap-3">
+          <p className="text-xs sm:text-sm text-destructive font-medium">{loadError}</p>
+          <button
+            type="button"
+            onClick={retry}
+            className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary/90"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       <div className="mt-5 grid gap-3">
         <CategoryCard
@@ -199,10 +231,8 @@ export function ActivityCategoryPage({
   category: ActivityCategory;
 }) {
   const ready = useRoleGuard(role);
-  const { updates, offers, viewedIds, setViewedIds, viewerKey, loading } = useActivityData(
-    role,
-    ready,
-  );
+  const { updates, offers, viewedIds, setViewedIds, viewerKey, loading, loadError, retry } =
+    useActivityData(role, ready);
   const [selected, setSelected] = useState<ActivityFeedItem | null>(null);
 
   const items = category === "official" ? updates : category === "shop-offers" ? offers : [];
@@ -258,6 +288,17 @@ export function ActivityCategoryPage({
           {loading ? (
             <div className="rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">
               Loading {category === "official" ? "official updates" : "shop offers"}...
+            </div>
+          ) : loadError ? (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3">
+              <p className="text-sm font-medium text-destructive">{loadError}</p>
+              <button
+                type="button"
+                onClick={retry}
+                className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-white hover:bg-primary/90"
+              >
+                Retry
+              </button>
             </div>
           ) : items.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border bg-muted/20 p-8 text-center">

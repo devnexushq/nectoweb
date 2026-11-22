@@ -17,11 +17,7 @@ export function useCustomerSessionBackfill() {
     if (role === "customer" && userId && !phone) {
       let isMounted = true;
 
-      supabase
-        .from("customers")
-        .select("phone")
-        .eq("id", userId)
-        .maybeSingle()
+      Promise.resolve(supabase.from("customers").select("phone").eq("id", userId).maybeSingle())
         .then(({ data, error }) => {
           if (!isMounted) return;
           if (!error && data?.phone) {

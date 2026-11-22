@@ -23,6 +23,8 @@ export function WorkerProfileView() {
   const { id } = useParams() as { id: string };
   const [w, setW] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
   const [contactTrigger, setContactTrigger] = useState(0);
 
   const handleRatingUpdated = useCallback((newRating: number) => {
@@ -32,6 +34,7 @@ export function WorkerProfileView() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setLoadError(null);
     (async () => {
       const fetchWorker = async () => {
         let res = await supabase
@@ -52,15 +55,33 @@ export function WorkerProfileView() {
 
       const result = await withTimeout(fetchWorker());
       if (cancelled) return;
-      setW(result?.data ?? null);
+      if (!result || result.error) {
+        setLoadError("Could not load worker profile. Please check your connection.");
+        setLoading(false);
+        return;
+      }
+      setW(result.data ?? null);
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, reloadTick]);
 
   if (loading) return <div className="py-10 text-center text-muted-foreground">Loading...</div>;
+  if (loadError)
+    return (
+      <div className="my-6 rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3">
+        <p className="text-sm font-medium text-destructive">{loadError}</p>
+        <button
+          type="button"
+          onClick={() => setReloadTick((t) => t + 1)}
+          className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-white hover:bg-primary/90"
+        >
+          Retry
+        </button>
+      </div>
+    );
   if (!w) return <div className="py-10 text-center text-muted-foreground">Worker not found.</div>;
 
   const isFresh = isUpdateFresh(w.latest_update, w.latest_update_at);
@@ -146,6 +167,8 @@ export function ShopProfileView() {
   const [s, setS] = useState<any | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
   const [contactTrigger, setContactTrigger] = useState(0);
 
   const handleRatingUpdated = useCallback((newRating: number) => {
@@ -155,6 +178,7 @@ export function ShopProfileView() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setLoadError(null);
     (async () => {
       const fetchShop = async () => {
         let res = await supabase
@@ -185,17 +209,35 @@ export function ShopProfileView() {
         ]),
       );
       if (cancelled) return;
-      const [{ data }, { data: prods }] = result ?? [{ data: null }, { data: [] as any[] }];
-      setS(data);
-      setProducts(prods ?? []);
+      if (!result || result[0].error) {
+        setLoadError("Could not load shop profile. Please check your connection.");
+        setLoading(false);
+        return;
+      }
+      const [shopRes, prodRes] = result;
+      setS(shopRes.data);
+      setProducts(prodRes.data ?? []);
       setLoading(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, reloadTick]);
 
   if (loading) return <div className="py-10 text-center text-muted-foreground">Loading...</div>;
+  if (loadError)
+    return (
+      <div className="my-6 rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3">
+        <p className="text-sm font-medium text-destructive">{loadError}</p>
+        <button
+          type="button"
+          onClick={() => setReloadTick((t) => t + 1)}
+          className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-4 text-xs font-semibold text-white hover:bg-primary/90"
+        >
+          Retry
+        </button>
+      </div>
+    );
   if (!s) return <div className="py-10 text-center text-muted-foreground">Shop not found.</div>;
 
   const isFresh = isUpdateFresh(s.latest_update, s.latest_update_at);

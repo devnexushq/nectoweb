@@ -39,12 +39,13 @@ export default function ShopOfferEditor() {
     if (!ready) return;
     const shopId = getUserId();
     if (!shopId) return;
+    const currentShopId = shopId;
     let cancelled = false;
 
     async function load() {
       try {
         if (id) {
-          const offer = await fetchShopOffer(shopId, id);
+          const offer = await fetchShopOffer(currentShopId, id);
           if (cancelled) return;
           if (!offer) {
             toast.error("Offer not found.");
@@ -55,7 +56,7 @@ export default function ShopOfferEditor() {
           setInitialStatus(offer.status);
           setPublished(offer.status === "published");
         } else {
-          const shop = await fetchShopProfile(shopId);
+          const shop = await fetchShopProfile(currentShopId);
           if (cancelled) return;
           setForm({
             ...EMPTY_OFFER_FORM,
